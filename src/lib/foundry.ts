@@ -1,3 +1,5 @@
+import "server-only";
+import { providerResponse } from "./ai/providers";
 import { z } from "zod";
 import { Insight, Mode } from "./intelligence";
 import { MatchEvent, player } from "./match";
@@ -33,57 +35,9 @@ export function foundryConfigured() {
     !!process.env.FOUNDRY_DEPLOYMENT
   );
 }
-type ResponseOutput = {
-  type: string;
-  name?: string;
-  call_id?: string;
-  arguments?: string;
-  content?: { type: string; text?: string }[];
-  [key: string]: unknown;
-};
-async function response(
-  body: Record<string, unknown>,
-): Promise<{ output: ResponseOutput[] }> {
-  const endpoint = new URL(process.env.FOUNDRY_ENDPOINT!);
-  if (
-    endpoint.protocol !== "https:" ||
-    endpoint.username !== "" ||
-    endpoint.password !== "" ||
-    endpoint.search !== "" ||
-    endpoint.hash !== "" ||
-    (endpoint.port !== "" && endpoint.port !== "443") ||
-    !["/", "/openai/v1", "/openai/v1/"].includes(endpoint.pathname) ||
-    !/(\.openai\.azure\.com|\.services\.ai\.azure\.com)$/.test(
-      endpoint.hostname,
-    )
-  )
-    throw new Error("Expected an Azure Foundry endpoint");
-  const url =
-    endpoint.href.replace(/\/$/, "").replace(/\/openai\/v1$/, "") +
-    "/openai/v1/responses";
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "api-key": process.env.FOUNDRY_API_KEY!,
-    },
-    body: JSON.stringify({
-      model: process.env.FOUNDRY_DEPLOYMENT,
-      store: false,
-      max_output_tokens: 1800,
-      ...body,
-    }),
-    signal: AbortSignal.timeout(25000),
-  });
-  if (!res.ok) throw new Error(`Foundry HTTP ${res.status}`);
-  const data = await res.json();
-  if (
-    !Array.isArray(data.output) ||
-    (data.status && data.status !== "completed")
-  )
-    throw new Error("Invalid or incomplete Foundry response");
-  return data;
-}
+// Compatibility entry point for the original Foundry workflow. Public routes use ai/service.
+const response = (body: Record<string, unknown>) =>
+  providerResponse("foundry", body);
 export async function narrate(
   insight: Insight,
   events: MatchEvent[],

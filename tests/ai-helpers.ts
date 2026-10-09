@@ -1,0 +1,56 @@
+import { vi } from "vitest";
+import type { EvidencePacket } from "../src/lib/ai/evidence";
+export function editorialBaseline(packet: EvidencePacket) {
+  const ids: string[] = [];
+  if (packet.facts.some((f) => f.id === "score")) ids.push("score");
+  const goal = packet.events.findLast((e) => e.type === "goal");
+  if (goal && packet.facts.some((f) => f.id === `moment-${goal.id}`))
+    ids.push(`moment-${goal.id}`);
+  if (packet.facts.some((f) => f.id === "no-pattern")) ids.push("no-pattern");
+  for (const fact of [...packet.facts].sort((a, b) => b.priority - a.priority))
+    if (!ids.includes(fact.id) && ids.length < 4) ids.push(fact.id);
+  return { factIds: ids };
+}
+export function mockProvider(
+  packet: EvidencePacket,
+  output: unknown = editorialBaseline(packet),
+) {
+  return vi
+    .fn()
+    .mockResolvedValueOnce(
+      Response.json({
+        status: "completed",
+        usage: { input_tokens: 100, output_tokens: 20 },
+        output: [
+          {
+            type: "function_call",
+            name: "get_verified_evidence",
+            call_id: "evidence",
+            arguments: JSON.stringify({ insightId: packet.id }),
+          },
+        ],
+      }),
+    )
+    .mockResolvedValueOnce(
+      Response.json({
+        status: "completed",
+        usage: { input_tokens: 500, output_tokens: 30 },
+        output: [
+          {
+            type: "message",
+            content: [{ type: "output_text", text: JSON.stringify(output) }],
+          },
+        ],
+      }),
+    );
+}
+export function configure(provider = "openai") {
+  vi.stubEnv("AI_ENABLED", "true");
+  vi.stubEnv("AI_PROVIDER", provider);
+  vi.stubEnv("OPENAI_API_KEY", "test-only");
+  vi.stubEnv("FOUNDRY_API_KEY", "test-only");
+  vi.stubEnv("FOUNDRY_ENDPOINT", "https://example.openai.azure.com");
+  vi.stubEnv("FOUNDRY_DEPLOYMENT", "test-deployment");
+  vi.stubEnv("AI_REDIS_URL", "");
+  vi.stubEnv("AI_USAGE_STORE", "memory");
+}

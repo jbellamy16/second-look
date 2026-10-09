@@ -48,8 +48,12 @@ import {
   Insight,
   Mode,
   recap,
+  rankInsights,
 } from "@/lib/intelligence";
 import type { Narrative } from "@/lib/foundry";
+import { buildEvidence } from "@/lib/ai/evidence";
+import type { Provenance } from "@/lib/ai/service";
+import { ProvenanceDetails, providerLabel } from "./provenance";
 import { Pitch } from "./pitch";
 type Section = "match" | "insights" | "stats" | "lineups" | "players";
 type Prefs = {
@@ -105,13 +109,22 @@ export function MatchApp() {
   const [replay, setReplay] = useState<{ ids: string[]; index: number } | null>(
     null,
   );
-  const [foundry, setFoundry] = useState(false),
+  const [provider, setProvider] = useState("offline"),
     [loading, setLoading] = useState(false),
     [notice, setNotice] = useState("");
   const [narrative, setNarrative] = useState<{
     key: string;
     value: Narrative;
+    provenance: Provenance;
   } | null>(null);
+  const [seenEvidenceIds, setSeenEvidenceIds] = useState<string[]>([]);
+  const [recapNarrative, setRecapNarrative] = useState<{
+    key: string;
+    value: Narrative;
+    provenance: Provenance;
+  } | null>(null);
+  const [recapNotice, setRecapNotice] = useState("");
+  const [recapLoading, setRecapLoading] = useState(false);
   const [focusedPlayer, setFocusedPlayer] = useState("harbor-9");
   const requestVersion = useRef(0);
   const events = useMemo(() => generateMatch(scenario), [scenario]);
@@ -123,22 +136,11 @@ export function MatchApp() {
   );
   const insights = useMemo(
     () =>
-      allInsights
-        .filter((i) => prefs.categories.includes(i.category))
-        .sort((a, b) => {
-          const rank = (i: Insight) =>
-            i.strength +
-            (i.team === prefs.team ? 10 : 0) +
-            (prefs.player &&
-            visible.some(
-              (e) =>
-                i.evidenceIds.includes(e.id) && e.playerId === prefs.player,
-            )
-              ? 5
-              : 0);
-          return rank(b) - rank(a);
-        }),
-    [allInsights, prefs, visible],
+      rankInsights(allInsights, visible, prefs.mode, {
+        ...prefs,
+        seenEvidenceIds,
+      }).map((r) => r.insight),
+    [allInsights, prefs, visible, seenEvidenceIds],
   );
   const insight =
     insights.find((i) => `${i.team}-${i.category}` === selectedKey) ??
@@ -181,6 +183,29 @@ export function MatchApp() {
   const currentNarrative =
     narrative?.key === displayKey ? narrative.value : null;
   const summary = recap(visible, time, prefs.mode);
+  const recapKey = JSON.stringify({ scenario, time, prefs, seenEvidenceIds });
+  const currentRecap = recapNarrative?.key === recapKey ? recapNarrative : null;
+  function computedProvenance(selected?: Insight): Provenance {
+    const packet = buildEvidence(
+      visible,
+      time,
+      prefs.mode,
+      { ...prefs, seenEvidenceIds },
+      selected,
+    );
+    return {
+      provider: "offline",
+      cached: false,
+      cutoff: time,
+      activity: [],
+      validation: [
+        "Events filtered at viewer timestamp",
+        "Comparisons computed from recorded events",
+      ],
+      limitations: packet.limitations,
+      facts: packet.facts,
+    };
+  }
   const dialogRef = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     try {
@@ -204,7 +229,11 @@ export function MatchApp() {
     setReady(true);
     fetch("/api/insights")
       .then((r) => r.json())
-      .then((d) => setFoundry(d.mode === "foundry"))
+      .then((d) =>
+        setProvider(
+          ["foundry", "openai"].includes(d.mode) ? d.mode : "offline",
+        ),
+      )
       .catch(() => {});
   }, []);
   useEffect(() => {
@@ -254,7 +283,9 @@ export function MatchApp() {
     requestVersion.current++;
     setNotice("");
     setLoading(false);
-  }, [displayKey]);
+    setRecapLoading(false);
+    setRecapNotice("");
+  }, [displayKey, recapKey]);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [section]);
@@ -265,6 +296,10 @@ export function MatchApp() {
     setNarrative(null);
   }
   function selectInsight(i: Insight) {
+    if (insight)
+      setSeenEvidenceIds((seen) =>
+        [...new Set([...seen, ...insight.evidenceIds])].slice(-200),
+      );
     setSelectedKey(`${i.team}-${i.category}`);
     setSelectedEvent(null);
     setReplay(null);
@@ -272,15 +307,12 @@ export function MatchApp() {
     setTab("visual");
     setSection("match");
     requestAnimationFrame(() =>
-      document
-        .querySelector(".detail-panel")
-        ?.scrollIntoView({
-          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
-            .matches
-            ? "instant"
-            : "smooth",
-          block: "start",
-        }),
+      document.querySelector(".detail-panel")?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+        block: "start",
+      }),
     );
   }
   function selectEvent(e: MatchEvent) {
@@ -294,6 +326,7 @@ export function MatchApp() {
   }
   function changeScenario(s: Scenario) {
     setScenario(s);
+    setSeenEvidenceIds([]);
     seek(DEMO_TIME);
     setPlaying(false);
     setSelectedKey(null);
@@ -319,6 +352,52 @@ export function MatchApp() {
       block: "center",
     });
   }
+  async function narrateRecap() {
+    if (recapLoading) return;
+    setPlaying(false);
+    setRecapLoading(true);
+    setRecapNotice("");
+    const version = ++requestVersion.current;
+    try {
+      const res = await fetch("/api/recap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scenario,
+          time: Math.floor(time),
+          mode: prefs.mode,
+          preferences: {
+            team: prefs.team,
+            player: prefs.player,
+            categories: prefs.categories,
+            seenEvidenceIds,
+          },
+        }),
+      });
+      if (!res.ok) throw new Error("Request failed");
+      const data = await res.json();
+      if (version !== requestVersion.current) return;
+      if (["openai", "foundry"].includes(data.source) && data.narrative)
+        setRecapNarrative({
+          key: recapKey,
+          value: data.narrative,
+          provenance: data.provenance,
+        });
+      setRecapNotice(
+        data.notice ??
+          (data.source === "offline"
+            ? "Verified event-derived recap. AI narration is disabled."
+            : ""),
+      );
+    } catch {
+      if (version === requestVersion.current)
+        setRecapNotice(
+          "Narration is unavailable. Your verified recap is still here.",
+        );
+    } finally {
+      if (version === requestVersion.current) setRecapLoading(false);
+    }
+  }
   async function explain() {
     if (!insight || loading) return;
     setPlaying(false);
@@ -340,8 +419,12 @@ export function MatchApp() {
       if (!res.ok) throw new Error("Request failed");
       const data = await res.json();
       if (version !== requestVersion.current) return;
-      if (data.source === "foundry" && data.narrative)
-        setNarrative({ key: displayKey, value: data.narrative });
+      if (["foundry", "openai"].includes(data.source) && data.narrative)
+        setNarrative({
+          key: displayKey,
+          value: data.narrative,
+          provenance: data.provenance,
+        });
       setNotice(
         data.notice ??
           (data.source === "offline"
@@ -444,7 +527,9 @@ export function MatchApp() {
           <div className="topbar-right">
             <span className="engine-badge">
               <span className="status-dot" />
-              {foundry ? "Foundry configured" : "Offline intelligence demo"}
+              {provider !== "offline"
+                ? `${providerLabel(provider)} configured`
+                : "Offline intelligence demo"}
             </span>
             <button
               className="icon-button mobile-settings"
@@ -1040,7 +1125,7 @@ export function MatchApp() {
                         <>
                           <span className="source-label">
                             {currentNarrative
-                              ? "MICROSOFT FOUNDRY NARRATIVE"
+                              ? `${providerLabel(narrative!.provenance.provider).toUpperCase()} · VERIFIED STORY`
                               : "DETERMINISTIC · VERIFIED EXPLANATION"}
                           </span>
                           <p className="explanation-text">
@@ -1053,7 +1138,7 @@ export function MatchApp() {
                           </div>
                           <p className="limitations">
                             {prefs.mode === "analyst"
-                              ? "Observation → event retrieval → narrative → evidence validation. Numerical claims stay in computed metrics. Model prose still requires human judgment."
+                              ? "AI selects verified statements; recorded events supply every fact. Editorial relevance still requires human judgment."
                               : "Every number comes from recorded events. An explanation is an interpretation, not a prediction."}
                           </p>
                         </>
@@ -1064,6 +1149,15 @@ export function MatchApp() {
                         </span>
                         <p>{currentNarrative?.watch ?? insight.watch}</p>
                       </div>
+                      <ProvenanceDetails
+                        provenance={
+                          currentNarrative
+                            ? narrative!.provenance
+                            : computedProvenance(insight)
+                        }
+                        events={visible}
+                        insights={[insight]}
+                      />
                       {prefs.mode === "analyst" && (
                         <div className="analyst-note">
                           <strong>Measurement notes</strong>
@@ -1087,8 +1181,8 @@ export function MatchApp() {
                         <Sparkles size={14} />
                         {loading
                           ? "Retrieving verified evidence…"
-                          : foundry
-                            ? "Explain with Microsoft Foundry"
+                          : provider !== "offline"
+                            ? `Explain with ${providerLabel(provider)}`
                             : "Explore the explanation"}
                       </button>
                       {notice && (
@@ -1390,6 +1484,7 @@ export function MatchApp() {
                 seek(60 * 60);
                 setSelectedKey(null);
                 setPrefs(defaultPrefs);
+                setSeenEvidenceIds([]);
                 setTab("visual");
                 setSpeed(16);
                 setPlaying(true);
@@ -1403,6 +1498,7 @@ export function MatchApp() {
               onClick={() => {
                 changeScenario("pressure");
                 setPrefs(defaultPrefs);
+                setSeenEvidenceIds([]);
                 setTab("visual");
                 setSpeed(8);
                 setSection("match");
@@ -1474,7 +1570,40 @@ export function MatchApp() {
               <strong>{summary.score}</strong>
               <Crest team="riverside" />
             </div>
-            <p className="recap-summary">{summary.summary}</p>
+            <p className="recap-summary">
+              {currentRecap?.value.explanation ?? summary.summary}
+            </p>
+            {currentRecap && (
+              <div className="why-card">
+                <span>WHY IT MATTERS</span>
+                <p>{currentRecap.value.why}</p>
+              </div>
+            )}
+            <div className="recap-ai">
+              <button
+                className="narrate-button"
+                disabled={recapLoading || loading}
+                onClick={narrateRecap}
+              >
+                <Sparkles size={14} />{" "}
+                {recapLoading
+                  ? "Choosing the important developments…"
+                  : provider !== "offline"
+                    ? `Catch me up with ${providerLabel(provider)}`
+                    : "Review verified recap"}
+              </button>
+              {recapNotice && (
+                <p className="notice" role="status">
+                  {recapNotice}
+                </p>
+              )}
+              {currentRecap && (
+                <p className="source-label">
+                  {providerLabel(currentRecap.provenance.provider)} · VERIFIED
+                  STORY
+                </p>
+              )}
+            </div>
             <div className="recap-timeline">
               {summary.moments.length ? (
                 summary.moments.map((m) => (
@@ -1515,8 +1644,13 @@ export function MatchApp() {
                 <Focus size={16} />
                 WHAT TO WATCH NEXT
               </span>
-              <p>{summary.watch}</p>
+              <p>{currentRecap?.value.watch ?? summary.watch}</p>
             </div>
+            <ProvenanceDetails
+              provenance={currentRecap?.provenance ?? computedProvenance()}
+              events={visible}
+              insights={insights}
+            />
             <p className="limitations">
               Event-derived recap · no events beyond {clock(time)} included.
             </p>
@@ -1640,7 +1774,7 @@ export function MatchApp() {
                 [
                   "03",
                   "Explain",
-                  "Optional Microsoft Foundry narration retrieves verified evidence through a tool.",
+                  "Optional OpenAI or Microsoft Foundry narration retrieves verified evidence through a tool.",
                 ],
                 ["04", "Explore", "Trace a story back to recorded events."],
               ].map(([n, t, d]) => (
@@ -1654,8 +1788,8 @@ export function MatchApp() {
               ))}
             </div>
             <p className="limitations">
-              {foundry
-                ? "Foundry is configured. Narration runs only when you select “Explain with Microsoft Foundry”."
+              {provider !== "offline"
+                ? `${providerLabel(provider)} is configured. Narration runs only when you request an explanation or AI recap.`
                 : "Currently in offline demo mode. Narratives and recaps are deterministic, not AI-generated."}{" "}
               Clubs and players are fictional. No broadcast footage, licensed
               football data, or continuous player tracking is used.
