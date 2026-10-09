@@ -2,7 +2,9 @@
 
 ## Status for this implementation
 
-No live OpenAI or Foundry calls were made. Actual API usage and cost: **0 requests, $0**. Mocked token counts and timings are test fixtures, never evidence of live cost or latency. No public deployment or paid infrastructure was created.
+An owner-authorized OpenAI test on October 9, 2026 completed **four real HTTP 200 Responses requests**, but both recaps fell back during application validation. Returned usage totaled **6,117 input tokens and 586 output tokens**, an estimated **$0.00722475** at the standard GPT-5.4 Mini rates; actual billing was not inspected. The failed Fan and Analyst workflows took approximately 5.37s and 4.13s. This confirms API access, not successful narration. No Foundry live calls, public deployment or paid infrastructure creation occurred.
+
+Follow-up work makes local credentials load correctly under Vitest, accepts nullable provider envelope fields, reports the exact failed validation stage, and retains only public selection IDs plus usage/status metadata for diagnostics. Another live run requires a new request allowance. Human semantic review remains pending. Mocked token counts and timings remain clearly separate from these real observations.
 
 The default repeatable suite covers 180 combinations: pressure/substitution/quiet × seeds 202632/43/71 × timestamps 0/1800/3300/3804/5400 × Fan/Analyst × OpenAI/Foundry. It compares score, evidence counts, timestamps, mandatory context and rendered claims with regenerated event data. Additional tests reject forged evidence/statistics, unknown facts, duplicate facts, arbitrary free-form prose, omitted score/abstention/goal context, wrong tools, incomplete responses, refusal and HTTP failures. Ordinary tests never require a provider key.
 
@@ -51,11 +53,11 @@ Current human sign-off: **pending**. Current live editorial benefit: **unmeasure
 
 Only after the owner explicitly authorizes spending:
 
-1. Configure ignored `.env.local` with `AI_ENABLED=true`, `AI_PROVIDER=openai`, `OPENAI_API_KEY`, and `OPENAI_MODEL=gpt-5.4-mini`. For isolated local testing, set `AI_USAGE_STORE=memory`; for production, an existing TLS Redis store is mandatory. Set conservative quotas. Do not create a service as part of this procedure without separate approval.
-2. Run `SECOND_LOOK_AUTHORIZE_LIVE=yes npm run eval:live`. It runs two pressure recaps, Fan and Analyst, for **at most four new Responses requests**, subject to cache and usage limits. This command is deliberately separate from CI.
+1. Configure ignored `.env.local` with `AI_ENABLED=false`, `AI_PROVIDER=openai`, `OPENAI_API_KEY`, and `OPENAI_MODEL=gpt-5.4-mini`. For isolated local testing, set `AI_USAGE_STORE=memory`; for production, an existing TLS Redis store is mandatory. Set conservative quotas. Do not create a service as part of this procedure without separate approval.
+2. Run `npm run ai:check` first; it reports configuration presence only, never prints keys or calls the API. After approval, run `AI_ENABLED=true SECOND_LOOK_AUTHORIZE_LIVE=yes npm run eval:live`. The enablement override applies only to this test process; normal app inference stays disabled. The runner explicitly loads AI settings from `.env.local` even under Vitest, preserves shell overrides, and never accepts authorization from the file. It runs two pressure recaps, Fan and Analyst, for **at most four new Responses requests**, subject to cache and usage limits. A test-transport guard enforces the four-request ceiling; each invocation needs its own owner-approved allowance. This command is deliberately separate from CI.
 3. Inspect `artifacts/ai-live-evaluation.json`, including provider, cache flag, usage completeness, timing, evidence, and empty human-review fields. A cached result is not a new live test. An offline result fails the live test; provider errors may have incurred unknown billable usage.
 4. Review against the deterministic baseline and submit a human sign-off. Expand to the remaining scenarios only with an agreed additional request budget.
-5. Restore `AI_ENABLED=false` after local testing. Foundry uses the same steps with its endpoint/key/deployment and `AI_PROVIDER=foundry` when access returns.
+5. Keep `AI_ENABLED=false` in `.env.local` after local testing. Foundry uses the same steps with its endpoint/key/deployment and `AI_PROVIDER=foundry` when access returns.
 
 The cost helper estimates standard GPT-5.4 Mini token charges at $0.75/M input, $0.075/M cached input and $4.50/M output, verified in the [official model documentation](https://developers.openai.com/api/docs/models/gpt-5.4-mini) on October 9, 2026. Unknown models, missing usage, and Foundry return unknown cost; the helper never assumes they are free. Compare estimates to actual billing. Alerts are not spending caps.
 

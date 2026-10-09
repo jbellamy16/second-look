@@ -4,7 +4,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { controlledNarration, usageStoreReady } from "./controls";
 import { configuredProvider, modelFor, type ProviderMode } from "./providers";
-import { composeNarration, type NarrationResult } from "./narration";
+import {
+  composeNarration,
+  NarrationFailure,
+  type NarrationResult,
+} from "./narration";
 import type { EvidencePacket } from "./evidence";
 export type Provenance = {
   provider: ProviderMode;
@@ -80,9 +84,19 @@ export async function narratePacket(packet: EvidencePacket) {
         usage: result.usage,
       } satisfies Provenance,
     };
-  } catch {
+  } catch (error) {
     return {
       ...fallback,
+      ...(error instanceof NarrationFailure
+        ? {
+            failureStage: error.stage,
+            provenance: {
+              ...fallback.provenance,
+              activity: error.activity,
+              validation: [...fallback.provenance.validation, ...error.checks],
+            },
+          }
+        : {}),
       notice:
         "AI narration is unavailable, busy, at its usage limit, or did not pass validation. The verified offline explanation is available; you can try again shortly.",
     };

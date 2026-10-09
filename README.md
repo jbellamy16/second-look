@@ -18,7 +18,7 @@ Watching football and understanding how a match is changing are different things
 - Pattern detection for attacking-third ball wins, shot frequency, and passing activity, with equal 15-minute comparison windows and supporting event IDs.
 - Fan mode, analyst mode, timestamp-safe Catch Me Up, lineups, and player action maps.
 - Device-local team, player, mode, and insight category preferences that filter and reorder observations.
-- Server-side OpenAI (GPT-5.4 Mini) and Microsoft Foundry Responses API adapters with shared forced evidence retrieval, structured selection, validation, and honest provider attribution. **Both are mock-tested; no live inference was performed for this change.**
+- Server-side OpenAI (GPT-5.4 Mini) and Microsoft Foundry Responses API adapters with shared forced evidence retrieval, structured selection, validation, and honest provider attribution. **Both are mock-tested. An authorized OpenAI check confirmed API access, but narration validation still needs a successful live recheck; Foundry remains unverified live.**
 - Optional AI Catch Me Up, contextual insight narration, and expandable “How Second Look knows” evidence.
 - Shared Redis quotas, cache, and deduplication; inference remains off by default.
 - Explicit offline demonstration mode; request failures or invalid model output fall back to computed explanations without claiming AI generation.
@@ -147,7 +147,7 @@ Read [submission preparation](docs/SUBMISSION.md) for the pitch, demo flow, 90-s
 - Deploy and verify the public Azure URL; test on actual mobile Safari and run an accessibility audit.
 - The feed simplifies football mechanics and only detects three pattern families; validate it with football domain review.
 - No audio, multilingual narratives, authentication, or persisted cross-device preferences.
-- AI editorial quality and latency remain unverified with live requests. Configure an existing shared Redis store before production inference.
+- AI editorial quality remains unverified; the first authorized OpenAI check reached the API but returned the deterministic fallback. Configure an existing shared Redis store before production inference.
 - Consider a measured substitution comparison detector and exportable broadcast insight JSON as follow-up refinements.
 
 Original application graphics are SVG/CSS. UI symbols use Lucide (ISC license); third-party library licenses remain applicable. No affiliation with fictional teams is implied, and no official league branding is reproduced.

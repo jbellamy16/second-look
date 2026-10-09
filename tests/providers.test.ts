@@ -137,3 +137,39 @@ it("cost estimates use recorded usage and never invent prices for Foundry", asyn
     estimateCost({ ...result, usage: { ...result.usage, complete: false } }),
   ).toBeNull();
 });
+
+it("accepts nullable envelope fields without weakening fact validation", async () => {
+  configure();
+  const baseline = mockProvider(packet);
+  const responses = [await baseline(), await baseline()];
+  const first = await responses[0].json();
+  const second = await responses[1].json();
+  second.output.unshift({
+    type: "reasoning",
+    content: null,
+    name: null,
+    arguments: null,
+    call_id: null,
+    summary: [],
+  });
+  const mock = vi
+    .fn()
+    .mockResolvedValueOnce(Response.json(first))
+    .mockResolvedValueOnce(Response.json(second));
+  vi.stubGlobal("fetch", mock);
+  expect((await composeNarration(packet, "openai")).selectedFactIds).toEqual(
+    editorialBaseline(packet).factIds,
+  );
+});
+it("diagnoses rejected selections without exposing private model reasoning", async () => {
+  configure();
+  vi.stubGlobal("fetch", mockProvider(packet, { factIds: ["score"] }));
+  await expect(composeNarration(packet, "openai")).rejects.toMatchObject({
+    stage: "story_validation",
+    activity: [
+      "get_verified_evidence completed",
+      "Structured story selection received",
+    ],
+    checks: ["Missing decisive goal"],
+  });
+});

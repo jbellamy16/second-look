@@ -2,7 +2,7 @@
 
 ## Current status
 
-No Azure deployment or live OpenAI/Foundry call has been verified. On October 9, 2026, `az account show` required login. The owner chose setup instructions rather than cloud provisioning. Nothing in this repository provisions resources automatically.
+No Azure deployment or accepted live AI narration has been verified. An authorized OpenAI test reached the API, but both recaps fell back during validation; Foundry remains unverified live. On October 9, 2026, `az account show` required login. The owner chose setup instructions rather than cloud provisioning. Nothing in this repository provisions resources automatically.
 
 ## 1. Prepare an existing App Service
 
