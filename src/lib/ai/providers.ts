@@ -53,12 +53,12 @@ const responseSchema = z.object({
     z
       .object({
         type: z.string(),
-        name: z.string().optional(),
-        call_id: z.string().optional(),
-        arguments: z.string().optional(),
+        name: z.string().nullish(),
+        call_id: z.string().nullish(),
+        arguments: z.string().nullish(),
         content: z
-          .array(z.object({ type: z.string(), text: z.string().optional() }))
-          .optional(),
+          .array(z.object({ type: z.string(), text: z.string().nullish() }))
+          .nullish(),
       })
       .passthrough(),
   ),
@@ -106,6 +106,8 @@ export async function providerResponse(
   if (!res.ok) throw new Error("Provider unavailable");
   const parsed = responseSchema.safeParse(await res.json());
   if (!parsed.success)
-    throw new Error("Invalid or incomplete provider response");
+    throw new Error("Invalid or incomplete provider response", {
+      cause: parsed.error,
+    });
   return parsed.data;
 }
