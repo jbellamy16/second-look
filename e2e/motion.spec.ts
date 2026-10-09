@@ -219,3 +219,16 @@ test("mid-pass motion freezes on pause and cancels when reduced motion changes",
   await expect(ball).toHaveCount(0);
   await expect(page.getByTestId("clock")).toContainText("63:24");
 });
+
+test("an existing insight keeps keyboard focus across match-minute updates", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto("/");
+  await page.getByRole("button", { name: "Play match", exact: true }).click();
+  const card = page.locator(".insight-card").first();
+  await card.focus();
+  await page.clock.runFor(6000);
+  await expect(page.getByTestId("clock")).toContainText("64:12");
+  await expect(card).toBeFocused();
+});

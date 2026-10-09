@@ -8,7 +8,7 @@ The existing brand, Lucide/football glyphs, fictional club crests and player ide
 
 We evaluated [Motion for React's lightweight options](https://motion.dev/docs/react-reduce-bundle-size). CSS transitions, native dialog discrete transitions, Web Animations for interruptible feedback, and a single SVG requestAnimationFrame loop cover this scope. No animation dependency was added.
 
-Navigation, mode switches and evidence tabs share a moving selection indicator. Indicators measure only when selection or size changes. Content remains immediately usable; reading transitions preserve contrast. Navigation remembers each section's scroll position. Cards and controls have quiet hover, press and keyboard-focus feedback. Exact metric values update immediately, without fabricated intermediate counts. Statistic bars animate with transforms.
+Navigation, mode switches and evidence tabs share a moving selection indicator. Indicators measure only when selection or size changes. Insight cards keep a stable identity across minute updates, preserving focus and avoiding repeated entrance animations. Content remains immediately usable; reading transitions preserve contrast. Navigation remembers each section's scroll position. Cards and controls have quiet hover, press and keyboard-focus feedback. Exact metric values update immediately, without fabricated intermediate counts. Statistic bars animate with transforms.
 
 Native dialogs retain their content through entrance/exit, restore opener focus, contain keyboard focus, lock background scrolling, support Escape and backdrop dismissal, and preserve mobile safe areas. Catch Me Up retains the verified briefing while narration loads, with a restrained progress line and a short reveal when a verified result arrives.
 
@@ -52,7 +52,7 @@ The performance sample is a local headless-browser diagnostic, not a guarantee f
 
 - TypeScript and production build pass.
 - Unit tests: 115 pass locally; the Redis integration test is intentionally skipped when no Redis test service is configured. CI supplies Redis.
-- Production Chromium browser suite: 57 pass across desktop, Android-sized touch and iPhone-sized touch projects. Includes all existing tests and 18 new motion checks.
+- Production Chromium browser suite: 60 pass across desktop, Android-sized touch and iPhone-sized touch projects. Includes all existing tests and 21 new motion checks.
 - Axe WCAG 2 A/AA and 2.1 AA scans pass across the main screens and dialogs, including the 320px recap.
 - WebKit smoke review at 320px passes with motion enabled and reduced: replay pause/seek, modes, dialog closing, player selection and no horizontal overflow.
 - Final production recordings and raw frame/long-task/layout-shift measurements are included alongside this document.

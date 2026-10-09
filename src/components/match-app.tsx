@@ -914,7 +914,7 @@ export function MatchApp() {
                         <button
                           aria-pressed={insight?.id === i.id}
                           className={`insight-card ${insight?.id === i.id ? "selected" : ""}`}
-                          key={i.id}
+                          key={`${i.team}-${i.category}`}
                           onClick={() => selectInsight(i)}
                         >
                           <InsightIcon category={i.category} />
@@ -1051,7 +1051,7 @@ export function MatchApp() {
                   <>
                     <Reveal
                       className="detail-intro"
-                      change={`${selectedKey}-${prefs.mode}`}
+                      change={`${insight.team}-${insight.category}-${prefs.mode}`}
                     >
                       <InsightIcon category={insight.category} />
                       <span className="eyebrow">THE STORY RIGHT NOW</span>
@@ -1100,7 +1100,7 @@ export function MatchApp() {
                     </div>
                     <Reveal
                       className="detail-content"
-                      change={`${tab}-${selectedKey}-${prefs.mode}-${currentNarrative ? "ai" : "verified"}`}
+                      change={`${tab}-${insight.team}-${insight.category}-${prefs.mode}-${currentNarrative ? "ai" : "verified"}`}
                     >
                       {tab === "visual" ? (
                         <>
@@ -1281,7 +1281,7 @@ export function MatchApp() {
                 insights.map((i) => (
                   <button
                     className="wide-insight"
-                    key={i.id}
+                    key={`${i.team}-${i.category}`}
                     onClick={() => selectInsight(i)}
                   >
                     <InsightIcon category={i.category} />
