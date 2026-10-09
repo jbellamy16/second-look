@@ -1,5 +1,12 @@
 "use client";
-import { useId } from "react";
+import { type RefObject, useLayoutEffect, useId, useRef } from "react";
+import {
+  actionPoint,
+  pitchPoint,
+  playbackTime,
+  type PlaybackSample,
+} from "@/lib/playback";
+import { useReducedMotion } from "./motion";
 import { MatchEvent, player, clock, TEAMS } from "@/lib/match";
 export function Pitch({
   events,
@@ -7,28 +14,31 @@ export function Pitch({
   onSelect,
   compact = false,
   sequence = false,
+  playback,
 }: {
   events: MatchEvent[];
   selected?: string;
   onSelect?: (event: MatchEvent) => void;
   compact?: boolean;
   sequence?: boolean;
+  playback?: {
+    sample: RefObject<PlaybackSample>;
+    end: number;
+    nextTime: number;
+    running: boolean;
+  };
 }) {
   const id = useId().replace(/:/g, "");
-  const point = (e: MatchEvent, end = false) => {
-    const p = end && e.end ? e.end : e.position;
-    return {
-      x: 50 + (e.team === "harbor" ? p.x : 100 - p.x) * 9,
-      y: 45 + (e.team === "harbor" ? p.y : 100 - p.y) * 5.5,
-    };
-  };
+  const point = pitchPoint;
+  const activeEvent = events.find((event) => event.id === selected);
   const filtered = events.filter(
     (e) => !["possession", "substitution", "foul", "goal"].includes(e.type),
   );
   return (
     <svg
       viewBox="0 0 1000 640"
-      className={`pitch ${compact ? "compact" : ""}`}
+      className={`pitch ${compact ? "compact" : ""} ${playback ? "replay-pitch" : ""}`}
+      data-event-cutoff={events.at(-1)?.time}
       role={onSelect ? "group" : "img"}
       aria-label={
         sequence
@@ -74,6 +84,7 @@ export function Pitch({
             e.end && (
               <path
                 key={`line-${e.id}`}
+                className={`event-path ${e.id === selected ? "active-path" : ""} ${e.type}`}
                 d={`M${p.x} ${p.y}L${q.x} ${q.y}`}
                 stroke={TEAMS[e.team].color}
                 strokeWidth="3"
@@ -98,7 +109,8 @@ export function Pitch({
         return (
           <g
             key={e.id}
-            className={`event-point ${onSelect ? "event-marker" : ""}`}
+            className={`event-point ${onSelect ? "event-marker" : ""} ${active ? "is-selected" : ""} event-${e.type}`}
+            data-event-time={e.time}
             tabIndex={onSelect ? 0 : undefined}
             role={onSelect ? "button" : undefined}
             aria-label={`${clock(e.time)} ${e.type} by ${player(e.playerId).name}`}
@@ -121,6 +133,7 @@ export function Pitch({
             />
             {active && (
               <circle
+                className="selection-ring"
                 cx={p.x}
                 cy={p.y}
                 r="27"
@@ -196,11 +209,106 @@ export function Pitch({
           </g>
         );
       })}
+      {playback && activeEvent && (
+        <RecordedBall
+          key={activeEvent.id}
+          event={activeEvent}
+          playback={playback}
+        />
+      )}
+      {activeEvent?.type === "goal" && (
+        <g className="goal-moment" aria-hidden="true">
+          <rect
+            x="375"
+            y="12"
+            width="250"
+            height="44"
+            rx="8"
+            fill="#071320"
+            stroke={TEAMS[activeEvent.team].color}
+          />
+          <text
+            x="500"
+            y="40"
+            textAnchor="middle"
+            fill="#f8fbff"
+            fontSize="18"
+            fontWeight="650"
+          >
+            RECORDED GOAL · {TEAMS[activeEvent.team].short.toUpperCase()}
+          </text>
+        </g>
+      )}
       {!filtered.length && (
         <text x="500" y="325" fill="#a6b6cb" textAnchor="middle" fontSize="18">
           No events in this view
         </text>
       )}
     </svg>
+  );
+}
+
+function RecordedBall({
+  event,
+  playback,
+}: {
+  event: MatchEvent;
+  playback: NonNullable<Parameters<typeof Pitch>[0]["playback"]>;
+}) {
+  const ref = useRef<SVGGElement>(null);
+  const trace = useRef<SVGPathElement>(null);
+  const reduced = useReducedMotion();
+  const { sample, end, nextTime, running } = playback;
+  useLayoutEffect(() => {
+    let frame = 0;
+    const draw = () => {
+      const time = playbackTime(sample.current, performance.now(), end);
+      const p = reduced
+        ? pitchPoint(event, true)
+        : actionPoint(event, time, nextTime);
+      const progress =
+        reduced || nextTime <= event.time
+          ? 1
+          : Math.max(
+              0,
+              Math.min(1, (time - event.time) / (nextTime - event.time)),
+            );
+      trace.current?.setAttribute("stroke-dashoffset", String(1 - progress));
+      ref.current?.setAttribute("transform", `translate(${p.x} ${p.y})`);
+      if (running && !reduced && time < nextTime)
+        frame = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => cancelAnimationFrame(frame);
+  }, [event, sample, end, nextTime, running, reduced, sample.current.time]);
+  const initial = pitchPoint(event, true);
+  const start = pitchPoint(event);
+  return (
+    <>
+      {event.end && (
+        <path
+          ref={trace}
+          d={`M${start.x} ${start.y}L${initial.x} ${initial.y}`}
+          pathLength="1"
+          strokeDasharray="1"
+          strokeDashoffset="1"
+          stroke={TEAMS[event.team].color}
+          strokeWidth="4"
+          fill="none"
+          pointerEvents="none"
+          aria-hidden="true"
+        />
+      )}
+      <g
+        ref={ref}
+        className="recorded-ball"
+        transform={`translate(${initial.x} ${initial.y})`}
+        pointerEvents="none"
+        aria-hidden="true"
+      >
+        <circle r="12" fill="#071320" fillOpacity=".8" />
+        <circle r="6" fill="#fff" stroke="#071320" strokeWidth="2" />
+      </g>
+    </>
   );
 }

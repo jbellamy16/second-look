@@ -62,6 +62,8 @@ import { buildEvidence } from "@/lib/ai/evidence";
 import type { Provenance } from "@/lib/ai/service";
 import { ProvenanceDetails, providerLabel } from "./provenance";
 import { Pitch } from "./pitch";
+import { EvidenceReplay } from "./evidence-replay";
+import { Metric, Reveal, SelectionGroup, usePageVisibility } from "./motion";
 type Section = "match" | "insights" | "stats" | "lineups" | "players";
 type Prefs = {
   mode: Mode;
@@ -108,9 +110,10 @@ export function MatchApp() {
   const [tab, setTab] = useState<"visual" | "evidence" | "explanation">(
     "visual",
   );
-  const [replay, setReplay] = useState<{ ids: string[]; index: number } | null>(
-    null,
-  );
+  const [replay, setReplay] = useState<{
+    ids: string[];
+    version: number;
+  } | null>(null);
   const [provider, setProvider] = useState("offline"),
     [loading, setLoading] = useState(false),
     [notice, setNotice] = useState("");
@@ -129,6 +132,9 @@ export function MatchApp() {
   const [recapLoading, setRecapLoading] = useState(false);
   const [focusedPlayer, setFocusedPlayer] = useState("harbor-9");
   const requestVersion = useRef(0);
+  const visiblePage = usePageVisibility();
+  const matchTime = useRef(time);
+  matchTime.current = time;
   const events = useMemo(() => generateMatch(scenario), [scenario]);
   const visible = useMemo(() => eventsAt(events, time), [events, time]);
   const stats = useMemo(() => statistics(visible), [visible]);
@@ -166,19 +172,18 @@ export function MatchApp() {
     : latest
       ? sequenceFor(visible, latest)
       : [];
-  const pitchEvents = replay
-    ? visible.filter((e) =>
-        replay.ids.slice(0, replay.index + 1).includes(e.id),
-      )
+  const pitchEvents = playing
+    ? sequence
     : event
       ? sequence
       : insight
         ? evidence
         : sequence;
-  const activePitchEvent = replay
-    ? visible.find((e) => e.id === replay.ids[replay.index])
-    : event;
-  const selectableEvents = (replay ? sequence : pitchEvents).filter(
+  const activePitchEvent = playing ? latest : event;
+  const replayEvents = replay
+    ? visible.filter((e) => replay.ids.includes(e.id))
+    : [];
+  const selectableEvents = pitchEvents.filter(
     (e) => !["goal", "foul", "substitution", "possession"].includes(e.type),
   );
   const displayKey = `${scenario}-${time}-${prefs.mode}-${insight?.id}`;
@@ -209,6 +214,11 @@ export function MatchApp() {
     };
   }
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const retainedModal = useRef(modal);
+  if (modal) retainedModal.current = modal;
+  const dialogContent = modal ?? retainedModal.current;
+  const scrollPositions = useRef<Partial<Record<Section, number>>>({});
+  const previousSection = useRef(section);
   useEffect(() => {
     try {
       const stored = JSON.parse(
@@ -246,40 +256,35 @@ export function MatchApp() {
   }, [prefs, ready]);
   useEffect(() => {
     if (!playing) return;
+    const started = performance.now();
+    const initial = matchTime.current;
     const timer = setInterval(
-      () => setTime((t) => Math.min(DURATION, t + speed)),
-      1000,
+      () =>
+        setTime(
+          Math.min(
+            DURATION,
+            Math.floor(
+              initial + ((performance.now() - started) * speed) / 1000,
+            ),
+          ),
+        ),
+      250,
     );
     return () => clearInterval(timer);
   }, [playing, speed]);
   useEffect(() => {
-    if (time >= DURATION) setPlaying(false);
-  }, [time]);
+    if (time >= DURATION || !visiblePage) setPlaying(false);
+  }, [time, visiblePage]);
   useEffect(() => {
-    if (
-      !replay ||
-      replay.index >= replay.ids.length - 1 ||
-      modal ||
-      section !== "match"
-    )
-      return;
-    const currentTime =
-      visible.find((e) => e.id === replay.ids[replay.index])?.time ?? 0;
-    const nextTime =
-      visible.find((e) => e.id === replay.ids[replay.index + 1])?.time ??
-      currentTime;
-    const timer = setTimeout(
-      () =>
-        setReplay((r) =>
-          r && r.index < r.ids.length - 1 ? { ...r, index: r.index + 1 } : r,
-        ),
-      Math.max(0, ((nextTime - currentTime) * 1000) / 8),
-    );
-    return () => clearTimeout(timer);
-  }, [replay, modal, section, visible]);
-  useEffect(() => {
-    if (modal) dialogRef.current?.showModal();
-    else dialogRef.current?.close();
+    if (modal) {
+      setPlaying(false);
+      dialogRef.current?.showModal();
+      const overflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = overflow;
+      };
+    } else dialogRef.current?.close();
   }, [modal]);
   useEffect(() => {
     requestVersion.current++;
@@ -289,10 +294,20 @@ export function MatchApp() {
     setRecapNotice("");
   }, [displayKey, recapKey]);
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
+    window.scrollTo({
+      top: scrollPositions.current[section] ?? 0,
+      behavior: "instant",
+    });
+    previousSection.current = section;
+    const remember = () => {
+      scrollPositions.current[previousSection.current] = window.scrollY;
+    };
+    window.addEventListener("scroll", remember, { passive: true });
+    return () => window.removeEventListener("scroll", remember);
   }, [section]);
   function seek(t: number) {
     setTime(t);
+    setPlaying(false);
     setSelectedEvent(null);
     setReplay(null);
     setNarrative(null);
@@ -346,7 +361,7 @@ export function MatchApp() {
       .map((e) => e.id);
     setPlaying(false);
     setSelectedEvent(ids.at(-1) ?? anchor.id);
-    setReplay({ ids, index: 0 });
+    setReplay({ ids, version: performance.now() });
     document.querySelector(".pitch-panel")?.scrollIntoView({
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
         ? "instant"
@@ -470,7 +485,12 @@ export function MatchApp() {
           />
         </a>
         <div className="nav-caption">THE MATCH, UNDERSTOOD</div>
-        <nav aria-label="Main navigation">
+        <SelectionGroup
+          className="main-navigation"
+          label="Main navigation"
+          navigation
+          value={section}
+        >
           {nav.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -486,7 +506,7 @@ export function MatchApp() {
               )}
             </button>
           ))}
-        </nav>
+        </SelectionGroup>
         <div className="sidebar-bottom">
           <div className="demo-card">
             <span className="tiny-label">
@@ -598,10 +618,14 @@ export function MatchApp() {
                 <Crest team="harbor" />
               </div>
               <div className="score">
-                <strong data-testid="score">
-                  {stats.harbor.goals}
+                <strong
+                  data-testid="score"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  <Metric value={stats.harbor.goals} important />
                   <span>:</span>
-                  {stats.riverside.goals}
+                  <Metric value={stats.riverside.goals} important />
                 </strong>
                 <span className="match-clock" data-testid="clock">
                   {clock(time)} <i />{" "}
@@ -634,7 +658,11 @@ export function MatchApp() {
               {nav.find((n) => n.id === section)?.label}
               <span>Follow the evidence.</span>
             </div>
-            <div className="mode-switch" aria-label="Viewing mode">
+            <SelectionGroup
+              className="mode-switch"
+              label="Viewing mode"
+              value={prefs.mode}
+            >
               <button
                 aria-pressed={prefs.mode === "fan"}
                 className={prefs.mode === "fan" ? "selected" : ""}
@@ -651,10 +679,13 @@ export function MatchApp() {
                 <BarChart3 size={16} />
                 Analyst mode
               </button>
-            </div>
+            </SelectionGroup>
           </div>
-          {section === "match" && (
-            <div className="match-grid">
+          {
+            <div
+              className="match-grid section-enter"
+              hidden={section !== "match"}
+            >
               <div className="match-left">
                 <section className="panel pitch-panel">
                   <div className="panel-header">
@@ -695,57 +726,63 @@ export function MatchApp() {
                       {TEAMS.riverside.short}
                     </span>
                   </div>
-                  <Pitch
-                    events={pitchEvents}
-                    selected={activePitchEvent?.id}
-                    onSelect={selectEvent}
-                    sequence={!!event || !!replay || !insight}
-                  />
-                  <div className="event-inspector">
-                    <div>
-                      <span className="card-kicker">
-                        {replay
-                          ? replay.index === replay.ids.length - 1
-                            ? "REPLAY COMPLETE"
-                            : "REPLAYING RECORDED ACTIONS"
-                          : activePitchEvent
-                            ? "SELECTED ACTION"
-                            : "EXPLORE THE EVIDENCE"}
-                      </span>
-                      <p>
-                        {activePitchEvent
-                          ? `${clock(activePitchEvent.time)} · ${player(activePitchEvent.playerId).name} · ${activePitchEvent.type}${activePitchEvent.type === "pass" ? (activePitchEvent.success ? " completed" : " incomplete") : activePitchEvent.outcome ? ` · ${activePitchEvent.outcome}` : ""}`
-                          : "Select a marker or choose an event to see the sequence."}
-                      </p>
-                    </div>
-                    {selectableEvents.length > 0 && (
-                      <select
-                        aria-label="Recorded event"
-                        value={
-                          activePitchEvent?.id &&
-                          selectableEvents.some(
-                            (e) => e.id === activePitchEvent.id,
-                          )
-                            ? activePitchEvent.id
-                            : ""
-                        }
-                        onChange={(e) => {
-                          const chosen = visible.find(
-                            (v) => v.id === e.target.value,
-                          );
-                          if (chosen) selectEvent(chosen);
-                        }}
-                      >
-                        <option value="">Choose an event</option>
-                        {selectableEvents.map((e) => (
-                          <option key={e.id} value={e.id}>
-                            {clock(e.time)} · {e.type} ·{" "}
-                            {player(e.playerId).name}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
+                  {replay && replayEvents.length ? (
+                    <EvidenceReplay
+                      key={replay.version}
+                      events={replayEvents}
+                      suspended={!!modal || section !== "match"}
+                    />
+                  ) : (
+                    <>
+                      <Pitch
+                        events={pitchEvents}
+                        selected={activePitchEvent?.id}
+                        onSelect={selectEvent}
+                        sequence={playing || !!event || !!replay || !insight}
+                      />
+                      <div className="event-inspector">
+                        <div>
+                          <span className="card-kicker">
+                            {activePitchEvent
+                              ? "SELECTED ACTION"
+                              : "EXPLORE THE EVIDENCE"}
+                          </span>
+                          <p>
+                            {activePitchEvent
+                              ? `${clock(activePitchEvent.time)} · ${player(activePitchEvent.playerId).name} · ${activePitchEvent.type}${activePitchEvent.type === "pass" ? (activePitchEvent.success ? " completed" : " incomplete") : activePitchEvent.outcome ? ` · ${activePitchEvent.outcome}` : ""}`
+                              : "Select a marker or choose an event to see the sequence."}
+                          </p>
+                        </div>
+                        {selectableEvents.length > 0 && (
+                          <select
+                            aria-label="Recorded event"
+                            value={
+                              activePitchEvent?.id &&
+                              selectableEvents.some(
+                                (e) => e.id === activePitchEvent.id,
+                              )
+                                ? activePitchEvent.id
+                                : ""
+                            }
+                            onChange={(e) => {
+                              const chosen = visible.find(
+                                (v) => v.id === e.target.value,
+                              );
+                              if (chosen) selectEvent(chosen);
+                            }}
+                          >
+                            <option value="">Choose an event</option>
+                            {selectableEvents.map((e) => (
+                              <option key={e.id} value={e.id}>
+                                {clock(e.time)} · {e.type} ·{" "}
+                                {player(e.playerId).name}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    </>
+                  )}
                   {(event || replay) && (
                     <div className="replay-controls">
                       <button className="text-button" onClick={replayEvidence}>
@@ -771,7 +808,7 @@ export function MatchApp() {
                     </span>
                     <span>
                       {replay
-                        ? `Event ${replay.index + 1} of ${replay.ids.length} · 8×`
+                        ? `Match held at ${clock(time)}`
                         : insight && !event
                           ? `${clock(insight.start)} — ${clock(insight.end)}`
                           : "No continuous tracking"}
@@ -941,9 +978,11 @@ export function MatchApp() {
                       <div key={label}>
                         <span>{label}</span>
                         <strong>
-                          <em>{a}</em>
+                          <em>
+                            <Metric value={a} />
+                          </em>
                           <i>—</i>
-                          {b}
+                          <Metric value={b} />
                         </strong>
                       </div>
                     ))}
@@ -1010,7 +1049,10 @@ export function MatchApp() {
                 </div>
                 {insight ? (
                   <>
-                    <div className="detail-intro">
+                    <Reveal
+                      className="detail-intro"
+                      change={`${selectedKey}-${prefs.mode}`}
+                    >
                       <InsightIcon category={insight.category} />
                       <span className="eyebrow">THE STORY RIGHT NOW</span>
                       <h2>{insight.headline}</h2>
@@ -1024,8 +1066,12 @@ export function MatchApp() {
                         Last 15 minutes<span>·</span>
                         {TEAMS[insight.team].short}
                       </div>
-                    </div>
-                    <div className="detail-tabs">
+                    </Reveal>
+                    <SelectionGroup
+                      className="detail-tabs"
+                      label="Insight details"
+                      value={tab}
+                    >
                       {(["visual", "evidence", "explanation"] as const).map(
                         (t) => (
                           <button
@@ -1040,7 +1086,7 @@ export function MatchApp() {
                           </button>
                         ),
                       )}
-                    </div>
+                    </SelectionGroup>
                     <div className="detail-footer primary-action">
                       <button
                         className="sequence-button"
@@ -1052,7 +1098,10 @@ export function MatchApp() {
                         Show me the sequence <ArrowRight size={20} />
                       </button>
                     </div>
-                    <div className="detail-content">
+                    <Reveal
+                      className="detail-content"
+                      change={`${tab}-${selectedKey}-${prefs.mode}-${currentNarrative ? "ai" : "verified"}`}
+                    >
                       {tab === "visual" ? (
                         <>
                           <div className="comparison-label">
@@ -1061,7 +1110,7 @@ export function MatchApp() {
                           </div>
                           <div className="comparison-numbers">
                             <strong>
-                              {insight.current}
+                              <Metric value={insight.current} />
                               <small>NOW</small>
                             </strong>
                             <div className="comparison-change">
@@ -1069,7 +1118,7 @@ export function MatchApp() {
                               <span>+{insight.current - insight.previous}</span>
                             </div>
                             <strong className="previous">
-                              {insight.previous}
+                              <Metric value={insight.previous} />
                               <small>BEFORE</small>
                             </strong>
                           </div>
@@ -1179,10 +1228,10 @@ export function MatchApp() {
                           </p>
                         </div>
                       )}
-                    </div>
+                    </Reveal>
                     <div className="detail-footer">
                       <button
-                        className="narrate-button"
+                        className={`narrate-button ${loading ? "is-loading" : ""}`}
                         disabled={loading}
                         onClick={explain}
                       >
@@ -1221,9 +1270,9 @@ export function MatchApp() {
                 )}
               </aside>
             </div>
-          )}
+          }
           {section === "insights" && (
-            <section className="panel section-panel">
+            <section className="panel section-panel section-enter">
               <div className="panel-header">
                 <h2>Verified observations</h2>
                 <span>At {clock(time)}</span>
@@ -1259,7 +1308,7 @@ export function MatchApp() {
             </section>
           )}
           {section === "stats" && (
-            <section className="panel section-panel">
+            <section className="panel section-panel section-enter">
               <div className="panel-header">
                 <h2>Match statistics</h2>
                 <span>Computed through {clock(time)}</span>
@@ -1289,7 +1338,7 @@ export function MatchApp() {
                 <div className="stat-row" key={k}>
                   <div>
                     <strong>
-                      {stats.harbor[k]}
+                      <Metric value={stats.harbor[k]} />
                       {k === "accuracy" ? "%" : ""}
                     </strong>
                     <span>
@@ -1307,16 +1356,23 @@ export function MatchApp() {
                       }
                     </span>
                     <strong>
-                      {stats.riverside[k]}
+                      <Metric value={stats.riverside[k]} />
                       {k === "accuracy" ? "%" : ""}
                     </strong>
                   </div>
-                  <div className="stat-bars">
-                    <i
-                      style={{
-                        width: `${stats.harbor[k] + stats.riverside[k] === 0 ? 50 : (stats.harbor[k] / (stats.harbor[k] + stats.riverside[k])) * 100}%`,
-                      }}
-                    />
+                  <div
+                    className="stat-bars"
+                    style={
+                      {
+                        "--share":
+                          stats.harbor[k] + stats.riverside[k] === 0
+                            ? 0.5
+                            : stats.harbor[k] /
+                              (stats.harbor[k] + stats.riverside[k]),
+                      } as React.CSSProperties
+                    }
+                  >
+                    <i />
                     <i />
                   </div>
                 </div>
@@ -1332,7 +1388,7 @@ export function MatchApp() {
           {section === "lineups" && (
             <div className="lineup-grid">
               {(Object.keys(TEAMS) as TeamId[]).map((t) => (
-                <section className="panel section-panel" key={t}>
+                <section className="panel section-panel section-enter" key={t}>
                   <div className="panel-header">
                     <h2>
                       <Crest small team={t} />
@@ -1364,7 +1420,7 @@ export function MatchApp() {
             </div>
           )}
           {section === "players" && (
-            <section className="panel section-panel">
+            <section className="panel section-panel section-enter">
               <div className="panel-header">
                 <h2>Player focus</h2>
                 <select
@@ -1379,7 +1435,7 @@ export function MatchApp() {
                   ))}
                 </select>
               </div>
-              <div className="player-focus">
+              <Reveal className="player-focus" change={focusedPlayer}>
                 <div>
                   <PlayerIdentity player={player(focusedPlayer)} />
                   <h2>{player(focusedPlayer).name}</h2>
@@ -1459,7 +1515,7 @@ export function MatchApp() {
                     there.
                   </p>
                 </div>
-              </div>
+              </Reveal>
             </section>
           )}
           <div className="bottom-row">
@@ -1528,23 +1584,52 @@ export function MatchApp() {
       <dialog
         ref={dialogRef}
         aria-label={
-          modal === "recap"
+          dialogContent === "recap"
             ? "Catch me up"
-            : modal === "settings"
+            : dialogContent === "settings"
               ? "Your experience"
               : "About Second Look"
         }
-        className={`modal ${modal === "recap" ? "recap-modal" : ""}`}
-        onCancel={() => setModal(null)}
+        className={`modal ${dialogContent === "recap" ? "recap-modal" : ""}`}
+        onKeyDown={(e) => {
+          if (e.key !== "Tab") return;
+          const controls = [
+            ...e.currentTarget.querySelectorAll<HTMLElement>(
+              'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, [tabindex="0"]',
+            ),
+          ].filter((el) => el.getClientRects().length > 0);
+          const first = controls[0],
+            last = controls.at(-1);
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last?.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first?.focus();
+          }
+        }}
+        onCancel={(e) => {
+          e.preventDefault();
+          setModal(null);
+        }}
         onClick={(e) => {
-          if (e.target === e.currentTarget) setModal(null);
+          if (e.target === e.currentTarget) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            if (
+              e.clientX < rect.left ||
+              e.clientX > rect.right ||
+              e.clientY < rect.top ||
+              e.clientY > rect.bottom
+            )
+              setModal(null);
+          }
         }}
       >
         <div className="modal-header">
           <span className="eyebrow">
-            {modal === "settings"
+            {dialogContent === "settings"
               ? "MAKE IT YOUR MATCH"
-              : modal === "recap"
+              : dialogContent === "recap"
                 ? "BACK IN THE GAME"
                 : "BEHIND SECOND LOOK"}
           </span>
@@ -1556,7 +1641,7 @@ export function MatchApp() {
             <X size={20} />
           </button>
         </div>
-        {modal === "recap" ? (
+        {dialogContent === "recap" ? (
           <>
             <div className="recap-heading">
               <span className="recap-icon">
@@ -1575,18 +1660,20 @@ export function MatchApp() {
               <strong>{summary.score}</strong>
               <Crest team="riverside" />
             </div>
-            <p className="recap-summary">
-              {currentRecap?.value.explanation ?? summary.summary}
-            </p>
+            <Reveal change={currentRecap?.key ?? "verified"}>
+              <p className="recap-summary">
+                {currentRecap?.value.explanation ?? summary.summary}
+              </p>
+            </Reveal>
             {currentRecap && (
               <div className="why-card">
                 <span>WHY IT MATTERS</span>
                 <p>{currentRecap.value.why}</p>
               </div>
             )}
-            <div className="recap-ai">
+            <div className="recap-ai" aria-busy={recapLoading}>
               <button
-                className="narrate-button"
+                className={`narrate-button ${recapLoading ? "is-loading" : ""}`}
                 disabled={recapLoading || loading}
                 onClick={narrateRecap}
               >
@@ -1670,7 +1757,7 @@ export function MatchApp() {
               Back to the match <Play size={16} />
             </button>
           </>
-        ) : modal === "settings" ? (
+        ) : dialogContent === "settings" ? (
           <>
             <h2>Your match. Your perspective.</h2>
             <p className="muted">Preferences are saved on this device.</p>

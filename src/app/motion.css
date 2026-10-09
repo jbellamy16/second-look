@@ -1,0 +1,366 @@
+/* One vocabulary, shared with the Web Animations helpers in motion.tsx. */
+:root {
+  --motion-micro: 150ms;
+  --motion-standard: 220ms;
+  --motion-panel: 280ms;
+  --motion-visual: 420ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-state: cubic-bezier(0.4, 0, 0.2, 1);
+}
+button,
+select,
+summary,
+a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition:
+    background-color var(--motion-micro) var(--ease-state),
+    color var(--motion-micro) var(--ease-state),
+    border-color var(--motion-micro) var(--ease-state),
+    transform var(--motion-micro) var(--ease-out);
+}
+button:hover {
+  filter: none;
+}
+button:active:not(:disabled) {
+  transform: translateY(1px) scale(0.985);
+}
+button:disabled {
+  cursor: default;
+}
+@media (hover: hover) {
+  :is(.icon-button, .text-button, .narrate-button, .help-button):hover {
+    background-color: #61a8ff12;
+  }
+  :is(.insight-card, .player-row, .evidence-list button):hover {
+    border-color: #61a8ff80;
+    background-color: #61a8ff0a;
+  }
+  :is(.primary-button, .sequence-button):hover {
+    background-color: var(--sl-blue-light);
+  }
+}
+:focus-visible {
+  outline: 2px solid var(--sl-blue-light);
+  outline-offset: 4px;
+}
+
+.selection-group {
+  position: relative;
+  isolation: isolate;
+}
+.selection-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: -1;
+  border-radius: var(--sl-radius-control);
+  background: #347cff18;
+  box-shadow: inset 0 0 0 1px #347cff45;
+  transition: transform var(--motion-standard) var(--ease-out);
+}
+.main-navigation .nav-item.active {
+  background: transparent;
+  border-color: transparent;
+}
+.main-navigation .nav-item.active::before {
+  content: none;
+}
+.main-navigation .selection-indicator::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--sl-blue);
+}
+.mode-switch .selection-indicator {
+  background: var(--sl-blue);
+}
+.mode-switch button.selected {
+  background: transparent;
+}
+.detail-tabs .selection-indicator {
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  border-bottom: 2px solid var(--sl-blue-light);
+}
+.detail-tabs button.selected::after {
+  content: none;
+}
+.section-enter {
+  animation: section-in var(--motion-standard) var(--ease-out);
+}
+@keyframes section-in {
+  from {
+    opacity: 1;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.match-grid[hidden] {
+  display: none;
+}
+.insight-card {
+  animation: insight-in var(--motion-standard) var(--ease-out);
+}
+@keyframes insight-in {
+  from {
+    opacity: 1;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.analyst-note,
+.recap-summary,
+.recap-timeline {
+  animation: content-in var(--motion-standard) var(--ease-out);
+}
+@keyframes content-in {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* Exact values are rendered immediately; feedback never counts through invented values. */
+.motion-metric,
+.score strong .motion-metric,
+.stat-row strong .motion-metric,
+.stat-summary .motion-metric {
+  display: inline-block;
+  font: inherit;
+  color: inherit;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.modal {
+  opacity: 0;
+  transform: translateY(12px) scale(0.99);
+  transition:
+    opacity var(--motion-panel) var(--ease-out),
+    transform var(--motion-panel) var(--ease-out),
+    display var(--motion-panel) allow-discrete,
+    overlay var(--motion-panel) allow-discrete;
+  overscroll-behavior: contain;
+  max-height: calc(
+    100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+  );
+}
+.modal[open] {
+  opacity: 1;
+  transform: none;
+}
+.modal::backdrop {
+  background: #030a11cb;
+  opacity: 0;
+  backdrop-filter: none;
+  transition:
+    opacity var(--motion-panel) var(--ease-out),
+    display var(--motion-panel) allow-discrete,
+    overlay var(--motion-panel) allow-discrete;
+}
+.modal[open]::backdrop {
+  opacity: 1;
+}
+@starting-style {
+  .modal[open] {
+    opacity: 0;
+    transform: translateY(12px) scale(0.99);
+  }
+  .modal[open]::backdrop {
+    opacity: 0;
+  }
+}
+.is-loading {
+  position: relative;
+  overflow: hidden;
+}
+.is-loading::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 45%;
+  background: var(--sl-blue-light);
+  animation: loading-progress calc(var(--motion-visual) * 3) var(--ease-state)
+    infinite;
+}
+@keyframes loading-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(325%);
+  }
+}
+
+.event-point {
+  transition: opacity var(--motion-micro) var(--ease-out);
+}
+.event-point.is-selected .selection-ring {
+  animation: selection-in var(--motion-standard) var(--ease-out);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes selection-in {
+  from {
+    opacity: 0.3;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.marker-tooltip {
+  animation: content-in var(--motion-micro) var(--ease-out);
+}
+.event-path {
+  fill: none;
+  transition: opacity var(--motion-standard) var(--ease-out);
+}
+.replay-pitch .event-path:not(.active-path) {
+  opacity: 0.3;
+}
+.replay-pitch .event-point:not(.is-selected) {
+  opacity: 0.55;
+}
+.active-path.pass {
+  animation: pass-reveal var(--motion-standard) var(--ease-out);
+}
+@keyframes pass-reveal {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 0.85;
+  }
+}
+.event-recovery.is-selected .selection-ring,
+.event-interception.is-selected .selection-ring {
+  stroke: var(--sl-green);
+}
+.event-shot.is-selected .selection-ring {
+  stroke: var(--sl-warning);
+}
+.goal-moment {
+  animation: goal-in var(--motion-visual) var(--ease-out);
+}
+@keyframes goal-in {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.recorded-ball {
+  filter: none;
+}
+.replay-transport {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px 8px;
+}
+.replay-progress {
+  flex: 1;
+  min-width: 0;
+}
+.replay-progress label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--sl-muted);
+  font-variant-numeric: tabular-nums;
+}
+.replay-progress input {
+  width: 100%;
+  min-height: 32px;
+  accent-color: var(--sl-blue-light);
+  cursor: pointer;
+}
+.replay-caption {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 20px 14px;
+  color: var(--sl-muted);
+  font-size: 10px;
+}
+.replay-controls {
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+@media (max-width: 600px) {
+  .main-navigation .selection-indicator::before {
+    top: auto;
+    bottom: 0;
+    height: 2px;
+    left: 20%;
+    width: 60%;
+  }
+  .replay-transport {
+    padding-inline: 12px;
+    gap: 6px;
+  }
+  .replay-caption {
+    padding-inline: 14px;
+  }
+  .modal {
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after,
+  .modal::backdrop {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  button:active:not(:disabled) {
+    transform: none;
+  }
+  .is-loading::after {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+.stat-bars {
+  position: relative;
+  display: block;
+}
+.stat-bars i {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  transition: transform var(--motion-standard) var(--ease-out);
+}
+.stat-bars i:first-child {
+  transform-origin: left;
+  transform: scaleX(var(--share));
+}
+.stat-bars i:last-child {
+  transform-origin: right;
+  transform: scaleX(calc(1 - var(--share)));
+}

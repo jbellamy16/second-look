@@ -225,6 +225,14 @@ test("every major screen fits the viewport and captures review evidence", async 
     await page.screenshot({
       path: `artifacts/${testInfo.project.name}-${file}.png`,
     });
+    // Audit the presented dialog once its entrance/backdrop transition finishes.
+    await page.getByRole("dialog").evaluate(async (el) => {
+      await Promise.all(
+        el
+          .getAnimations({ subtree: true })
+          .map((a) => a.finished.catch(() => {})),
+      );
+    });
     const dialogAudit = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
       .analyze();
