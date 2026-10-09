@@ -91,13 +91,15 @@ it.each([
   { factIds: ["score", "invented-statistic"] },
   { factIds: ["score", "score"] },
   { factIds: ["score"], explanation: "Harbor dominated possession" },
-  { factIds: ["score"] },
 ])("rejects unsupported or misleading selection %j", (value) => {
   expect(() => renderSelection(value, packet)).toThrow();
 });
 it("requires abstention when no pattern qualifies and rejects forged comparison metrics", () => {
   const quiet = buildEvidence(generateMatch("quiet"), 0, "fan");
-  expect(() => renderSelection({ factIds: ["score"] }, quiet)).toThrow();
+  expect(renderSelection({ factIds: [] }, quiet).selectedFactIds).toEqual([
+    "score",
+    "no-pattern",
+  ]);
   expect(
     renderSelection({ factIds: ["score", "no-pattern"] }, quiet).narrative
       .explanation,
@@ -163,13 +165,16 @@ it("accepts nullable envelope fields without weakening fact validation", async (
 });
 it("diagnoses rejected selections without exposing private model reasoning", async () => {
   configure();
-  vi.stubGlobal("fetch", mockProvider(packet, { factIds: ["score"] }));
+  vi.stubGlobal(
+    "fetch",
+    mockProvider(packet, { factIds: ["invented-statistic"] }),
+  );
   await expect(composeNarration(packet, "openai")).rejects.toMatchObject({
     stage: "story_validation",
     activity: [
       "get_verified_evidence completed",
       "Structured story selection received",
     ],
-    checks: ["Missing decisive goal"],
+    checks: ["Unsupported claim"],
   });
 });

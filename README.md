@@ -18,7 +18,7 @@ Watching football and understanding how a match is changing are different things
 - Pattern detection for attacking-third ball wins, shot frequency, and passing activity, with equal 15-minute comparison windows and supporting event IDs.
 - Fan mode, analyst mode, timestamp-safe Catch Me Up, lineups, and player action maps.
 - Device-local team, player, mode, and insight category preferences that filter and reorder observations.
-- Server-side OpenAI (GPT-5.4 Mini) and Microsoft Foundry Responses API adapters with shared forced evidence retrieval, structured selection, validation, and honest provider attribution. **Both are mock-tested. An authorized OpenAI check confirmed API access, but narration validation still needs a successful live recheck; Foundry remains unverified live.**
+- Server-side OpenAI (GPT-5.4 Mini) and Microsoft Foundry Responses API adapters with shared forced evidence retrieval, structured selection, validation, and honest provider attribution. **Both are mock-tested. OpenAI Fan narration passed an authorized live check. An Analyst context omission is fixed and verified by replaying the captured selection; the revised flow still needs live verification. Foundry remains unverified live.**
 - Optional AI Catch Me Up, contextual insight narration, and expandable “How Second Look knows” evidence.
 - Shared Redis quotas, cache, and deduplication; inference remains off by default.
 - Explicit offline demonstration mode; request failures or invalid model output fall back to computed explanations without claiming AI generation.
@@ -105,8 +105,8 @@ AI runs only after an explicit **Explain with…** or **Catch me up with…** ac
 
 1. Deterministic detectors find supported changes in equal time windows. Editorial ranking considers magnitude, support, recency, novelty, previously viewed evidence, preferences and audience. This score is not statistical confidence.
 2. The provider must call `get_verified_evidence` with the current observation ID. Only already-recorded events, comparisons and verified statements are supplied.
-3. The model chooses and orders useful statements. Insight context can include contributors, recorded shots after high recoveries, and zero-baseline cautions. Recaps prioritize score, the latest available goal, supported changes and explicit abstention.
-4. The server rejects unknown facts, duplicate selections, omitted mandatory context, arbitrary prose, wrong tools, incomplete responses and refusals. It renders every factual sentence from checked data. AI cannot invent statistics or causal claims through this contract.
+3. The server supplies required match context; the model chooses and orders additional useful statements. Insight context can include contributors, recorded shots after high recoveries, and zero-baseline cautions. Recaps prioritize score, the latest available goal, supported changes and explicit abstention.
+4. The server rejects unknown facts, duplicate selections, arbitrary prose, wrong tools, incomplete responses and refusals. It renders every factual sentence from checked data. AI cannot invent statistics or causal claims through this contract.
 5. The drawer shows actual provider/model, selected observations, events, comparisons, completed tool activity, validation and limitations. It never exposes private reasoning. Errors show deterministic content without an AI label.
 
 This is **constrained editorial narration**, not unrestricted generated prose. It trades writing freedom for verifiable claims. Whether live AI selects more useful stories than deterministic ranking remains an evaluation question; mock tests do not establish model quality. The original Foundry free-text helper remains for compatibility tests, but public routes use the stronger shared workflow.
@@ -127,7 +127,7 @@ See `.env.example` for all settings. Legacy `FOUNDRY_ENABLED=true` still selects
 
 ## Azure deployment
 
-Deployment has **not** been performed. Azure CLI was unauthenticated; the owner requested instructions for now. No resources or recurring charges were created. See [the deployment runbook](docs/DEPLOYMENT.md).
+Deployment has **not** been performed. The owner logged into Azure CLI but reported that the required access remains unavailable. No resources or recurring charges were created. See [the deployment runbook](docs/DEPLOYMENT.md).
 
 Included:
 
@@ -143,11 +143,11 @@ Read [submission preparation](docs/SUBMISSION.md) for the pitch, demo flow, 90-s
 
 ## Known limits and next work
 
-- Authorize a small live OpenAI evaluation, then review Fan/Analyst usefulness with a human football reviewer. Verify Foundry when access returns.
+- Review Fan/Analyst usefulness with a human football reviewer; another live check of the revised flow needs fresh authorization. Verify Foundry when access returns.
 - Deploy and verify the public Azure URL; test on actual mobile Safari and run an accessibility audit.
 - The feed simplifies football mechanics and only detects three pattern families; validate it with football domain review.
 - No audio, multilingual narratives, authentication, or persisted cross-device preferences.
-- AI editorial quality remains unverified; the first authorized OpenAI check reached the API but returned the deterministic fallback. Configure an existing shared Redis store before production inference.
+- AI editorial benefit remains unmeasured; Fan passed live validation, while the revised Analyst composition is verified only by captured-response replay. Configure an existing shared Redis store before production inference.
 - Consider a measured substitution comparison detector and exportable broadcast insight JSON as follow-up refinements.
 
 Original application graphics are SVG/CSS. UI symbols use Lucide (ISC license); third-party library licenses remain applicable. No affiliation with fictional teams is implied, and no official league branding is reproduced.
