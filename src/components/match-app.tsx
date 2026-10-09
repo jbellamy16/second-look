@@ -12,7 +12,6 @@ import {
   Clock3,
   Crosshair,
   Focus,
-  Goal,
   LayoutGrid,
   ListVideo,
   Pause,
@@ -20,11 +19,19 @@ import {
   RotateCcw,
   Settings2,
   Shield,
-  Sparkles,
+  Tactics,
+  Shot,
+  Recovery,
+  Momentum,
+  MatchEvents,
+  Competition,
+  EventIcon,
+  type IconSize,
   TrendingUp,
   Users,
   X,
-} from "lucide-react";
+} from "./icons";
+import { Crest, PlayerIdentity } from "./team-identity";
 import {
   activePlayers,
   clock,
@@ -55,6 +62,8 @@ import { buildEvidence } from "@/lib/ai/evidence";
 import type { Provenance } from "@/lib/ai/service";
 import { ProvenanceDetails, providerLabel } from "./provenance";
 import { Pitch } from "./pitch";
+import { EvidenceReplay } from "./evidence-replay";
+import { Metric, Reveal, SelectionGroup, usePageVisibility } from "./motion";
 type Section = "match" | "insights" | "stats" | "lineups" | "players";
 type Prefs = {
   mode: Mode;
@@ -68,26 +77,21 @@ const defaultPrefs: Prefs = {
   player: "",
   categories: ["pressure", "chances", "rhythm"],
 };
-function Crest({ team, small = false }: { team: TeamId; small?: boolean }) {
-  return (
-    <span
-      className={`crest ${team} ${small ? "small" : ""}`}
-      aria-hidden="true"
-    >
-      <Shield size={small ? 26 : 42} strokeWidth={1.3} />
-      <span>{team === "harbor" ? "H" : "R"}</span>
-    </span>
-  );
-}
-function InsightIcon({ category }: { category: Category }) {
+function InsightIcon({
+  category,
+  size = 24,
+}: {
+  category: Category;
+  size?: IconSize;
+}) {
   return (
     <span className={`insight-icon ${category}`}>
       {category === "pressure" ? (
-        <TrendingUp size={21} />
+        <Recovery size={size} />
       ) : category === "chances" ? (
-        <ArrowUpRight size={22} />
+        <Shot size={size} />
       ) : (
-        <Activity size={21} />
+        <Momentum size={size} />
       )}
     </span>
   );
@@ -106,9 +110,10 @@ export function MatchApp() {
   const [tab, setTab] = useState<"visual" | "evidence" | "explanation">(
     "visual",
   );
-  const [replay, setReplay] = useState<{ ids: string[]; index: number } | null>(
-    null,
-  );
+  const [replay, setReplay] = useState<{
+    ids: string[];
+    version: number;
+  } | null>(null);
   const [provider, setProvider] = useState("offline"),
     [loading, setLoading] = useState(false),
     [notice, setNotice] = useState("");
@@ -127,6 +132,9 @@ export function MatchApp() {
   const [recapLoading, setRecapLoading] = useState(false);
   const [focusedPlayer, setFocusedPlayer] = useState("harbor-9");
   const requestVersion = useRef(0);
+  const visiblePage = usePageVisibility();
+  const matchTime = useRef(time);
+  matchTime.current = time;
   const events = useMemo(() => generateMatch(scenario), [scenario]);
   const visible = useMemo(() => eventsAt(events, time), [events, time]);
   const stats = useMemo(() => statistics(visible), [visible]);
@@ -164,19 +172,18 @@ export function MatchApp() {
     : latest
       ? sequenceFor(visible, latest)
       : [];
-  const pitchEvents = replay
-    ? visible.filter((e) =>
-        replay.ids.slice(0, replay.index + 1).includes(e.id),
-      )
+  const pitchEvents = playing
+    ? sequence
     : event
       ? sequence
       : insight
         ? evidence
         : sequence;
-  const activePitchEvent = replay
-    ? visible.find((e) => e.id === replay.ids[replay.index])
-    : event;
-  const selectableEvents = (replay ? sequence : pitchEvents).filter(
+  const activePitchEvent = playing ? latest : event;
+  const replayEvents = replay
+    ? visible.filter((e) => replay.ids.includes(e.id))
+    : [];
+  const selectableEvents = pitchEvents.filter(
     (e) => !["goal", "foul", "substitution", "possession"].includes(e.type),
   );
   const displayKey = `${scenario}-${time}-${prefs.mode}-${insight?.id}`;
@@ -207,6 +214,11 @@ export function MatchApp() {
     };
   }
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const retainedModal = useRef(modal);
+  if (modal) retainedModal.current = modal;
+  const dialogContent = modal ?? retainedModal.current;
+  const scrollPositions = useRef<Partial<Record<Section, number>>>({});
+  const previousSection = useRef(section);
   useEffect(() => {
     try {
       const stored = JSON.parse(
@@ -244,40 +256,35 @@ export function MatchApp() {
   }, [prefs, ready]);
   useEffect(() => {
     if (!playing) return;
+    const started = performance.now();
+    const initial = matchTime.current;
     const timer = setInterval(
-      () => setTime((t) => Math.min(DURATION, t + speed)),
-      1000,
+      () =>
+        setTime(
+          Math.min(
+            DURATION,
+            Math.floor(
+              initial + ((performance.now() - started) * speed) / 1000,
+            ),
+          ),
+        ),
+      250,
     );
     return () => clearInterval(timer);
   }, [playing, speed]);
   useEffect(() => {
-    if (time >= DURATION) setPlaying(false);
-  }, [time]);
+    if (time >= DURATION || !visiblePage) setPlaying(false);
+  }, [time, visiblePage]);
   useEffect(() => {
-    if (
-      !replay ||
-      replay.index >= replay.ids.length - 1 ||
-      modal ||
-      section !== "match"
-    )
-      return;
-    const currentTime =
-      visible.find((e) => e.id === replay.ids[replay.index])?.time ?? 0;
-    const nextTime =
-      visible.find((e) => e.id === replay.ids[replay.index + 1])?.time ??
-      currentTime;
-    const timer = setTimeout(
-      () =>
-        setReplay((r) =>
-          r && r.index < r.ids.length - 1 ? { ...r, index: r.index + 1 } : r,
-        ),
-      Math.max(0, ((nextTime - currentTime) * 1000) / 8),
-    );
-    return () => clearTimeout(timer);
-  }, [replay, modal, section, visible]);
-  useEffect(() => {
-    if (modal) dialogRef.current?.showModal();
-    else dialogRef.current?.close();
+    if (modal) {
+      setPlaying(false);
+      dialogRef.current?.showModal();
+      const overflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = overflow;
+      };
+    } else dialogRef.current?.close();
   }, [modal]);
   useEffect(() => {
     requestVersion.current++;
@@ -287,10 +294,20 @@ export function MatchApp() {
     setRecapNotice("");
   }, [displayKey, recapKey]);
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
+    window.scrollTo({
+      top: scrollPositions.current[section] ?? 0,
+      behavior: "instant",
+    });
+    previousSection.current = section;
+    const remember = () => {
+      scrollPositions.current[previousSection.current] = window.scrollY;
+    };
+    window.addEventListener("scroll", remember, { passive: true });
+    return () => window.removeEventListener("scroll", remember);
   }, [section]);
   function seek(t: number) {
     setTime(t);
+    setPlaying(false);
     setSelectedEvent(null);
     setReplay(null);
     setNarrative(null);
@@ -344,7 +361,7 @@ export function MatchApp() {
       .map((e) => e.id);
     setPlaying(false);
     setSelectedEvent(ids.at(-1) ?? anchor.id);
-    setReplay({ ids, index: 0 });
+    setReplay({ ids, version: performance.now() });
     document.querySelector(".pitch-panel")?.scrollIntoView({
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
         ? "instant"
@@ -443,7 +460,7 @@ export function MatchApp() {
   }
   const nav = [
     { id: "match", label: "Match centre", icon: LayoutGrid },
-    { id: "insights", label: "Insights", icon: Sparkles },
+    { id: "insights", label: "Insights", icon: Tactics },
     { id: "stats", label: "Match stats", icon: BarChart3 },
     { id: "lineups", label: "Lineups", icon: Users },
     { id: "players", label: "Player focus", icon: Focus },
@@ -468,7 +485,12 @@ export function MatchApp() {
           />
         </a>
         <div className="nav-caption">THE MATCH, UNDERSTOOD</div>
-        <nav aria-label="Main navigation">
+        <SelectionGroup
+          className="main-navigation"
+          label="Main navigation"
+          navigation
+          value={section}
+        >
           {nav.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -477,14 +499,14 @@ export function MatchApp() {
               onClick={() => setSection(id)}
               className={`nav-item ${section === id ? "active" : ""}`}
             >
-              <Icon size={18} />
+              <Icon size={20} />
               <span>{label}</span>
               {id === "insights" && insights.length > 0 && (
                 <b>{insights.length}</b>
               )}
             </button>
           ))}
-        </nav>
+        </SelectionGroup>
         <div className="sidebar-bottom">
           <div className="demo-card">
             <span className="tiny-label">
@@ -495,7 +517,7 @@ export function MatchApp() {
               <br />A different perspective.
             </p>
             <button onClick={() => setModal("about")}>
-              About this demo <ArrowUpRight size={14} />
+              About this demo <ArrowUpRight size={16} />
             </button>
           </div>
           <button
@@ -503,7 +525,7 @@ export function MatchApp() {
             aria-label="Your experience"
             onClick={() => setModal("settings")}
           >
-            <Settings2 size={18} />
+            <Settings2 size={20} />
             Your experience
           </button>
           <span className="version">SECOND LOOK / 2026</span>
@@ -521,7 +543,7 @@ export function MatchApp() {
           </a>
           <div className="breadcrumb">
             {nav.find((n) => n.id === section)?.label}{" "}
-            <ChevronRight size={13} />
+            <ChevronRight size={16} />
             <span>Harbor vs Riverside</span>
           </div>
           <div className="topbar-right">
@@ -536,14 +558,14 @@ export function MatchApp() {
               aria-label="Your experience"
               onClick={() => setModal("settings")}
             >
-              <Settings2 size={18} />
+              <Settings2 size={20} />
             </button>
             <button
               className="help-button"
               onClick={() => setModal("about")}
               aria-label="About Second Look"
             >
-              <CircleHelp size={18} />
+              <CircleHelp size={20} />
             </button>
           </div>
         </header>
@@ -573,14 +595,14 @@ export function MatchApp() {
                 setModal("recap");
               }}
             >
-              <ListVideo size={18} />
+              <ListVideo size={20} />
               Catch me up <ArrowRight size={16} />
             </button>
           </div>
           <section className="scoreboard" aria-label="Match scoreboard">
             <div className="competition">
               <span className="competition-icon">
-                <Goal size={23} />
+                <Competition size={24} />
               </span>
               <div>
                 <strong>Second Look Invitational</strong>
@@ -596,10 +618,14 @@ export function MatchApp() {
                 <Crest team="harbor" />
               </div>
               <div className="score">
-                <strong data-testid="score">
-                  {stats.harbor.goals}
+                <strong
+                  data-testid="score"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  <Metric value={stats.harbor.goals} important />
                   <span>:</span>
-                  {stats.riverside.goals}
+                  <Metric value={stats.riverside.goals} important />
                 </strong>
                 <span className="match-clock" data-testid="clock">
                   {clock(time)} <i />{" "}
@@ -632,13 +658,17 @@ export function MatchApp() {
               {nav.find((n) => n.id === section)?.label}
               <span>Follow the evidence.</span>
             </div>
-            <div className="mode-switch" aria-label="Viewing mode">
+            <SelectionGroup
+              className="mode-switch"
+              label="Viewing mode"
+              value={prefs.mode}
+            >
               <button
                 aria-pressed={prefs.mode === "fan"}
                 className={prefs.mode === "fan" ? "selected" : ""}
                 onClick={() => setPrefs({ ...prefs, mode: "fan" })}
               >
-                <Users size={14} />
+                <Users size={16} />
                 Fan mode
               </button>
               <button
@@ -646,13 +676,16 @@ export function MatchApp() {
                 className={prefs.mode === "analyst" ? "selected" : ""}
                 onClick={() => setPrefs({ ...prefs, mode: "analyst" })}
               >
-                <BarChart3 size={14} />
+                <BarChart3 size={16} />
                 Analyst mode
               </button>
-            </div>
+            </SelectionGroup>
           </div>
-          {section === "match" && (
-            <div className="match-grid">
+          {
+            <div
+              className="match-grid section-enter"
+              hidden={section !== "match"}
+            >
               <div className="match-left">
                 <section className="panel pitch-panel">
                   <div className="panel-header">
@@ -684,70 +717,76 @@ export function MatchApp() {
                   </div>
                   <div className="pitch-topline">
                     <span>
-                      <i className="team-dot harbor" />
+                      <i className="team-marker harbor" aria-hidden="true" />
                       {TEAMS.harbor.short}
                     </span>
                     <span>Harbor → · ← Riverside</span>
                     <span>
-                      <i className="team-dot riverside" />
+                      <i className="team-marker riverside" aria-hidden="true" />
                       {TEAMS.riverside.short}
                     </span>
                   </div>
-                  <Pitch
-                    events={pitchEvents}
-                    selected={activePitchEvent?.id}
-                    onSelect={selectEvent}
-                    sequence={!!event || !!replay || !insight}
-                  />
-                  <div className="event-inspector">
-                    <div>
-                      <span className="card-kicker">
-                        {replay
-                          ? replay.index === replay.ids.length - 1
-                            ? "REPLAY COMPLETE"
-                            : "REPLAYING RECORDED ACTIONS"
-                          : activePitchEvent
-                            ? "SELECTED ACTION"
-                            : "EXPLORE THE EVIDENCE"}
-                      </span>
-                      <p>
-                        {activePitchEvent
-                          ? `${clock(activePitchEvent.time)} · ${player(activePitchEvent.playerId).name} · ${activePitchEvent.type}${activePitchEvent.type === "pass" ? (activePitchEvent.success ? " completed" : " incomplete") : activePitchEvent.outcome ? ` · ${activePitchEvent.outcome}` : ""}`
-                          : "Select a marker or choose an event to see the sequence."}
-                      </p>
-                    </div>
-                    {selectableEvents.length > 0 && (
-                      <select
-                        aria-label="Recorded event"
-                        value={
-                          activePitchEvent?.id &&
-                          selectableEvents.some(
-                            (e) => e.id === activePitchEvent.id,
-                          )
-                            ? activePitchEvent.id
-                            : ""
-                        }
-                        onChange={(e) => {
-                          const chosen = visible.find(
-                            (v) => v.id === e.target.value,
-                          );
-                          if (chosen) selectEvent(chosen);
-                        }}
-                      >
-                        <option value="">Choose an event</option>
-                        {selectableEvents.map((e) => (
-                          <option key={e.id} value={e.id}>
-                            {clock(e.time)} · {e.type} ·{" "}
-                            {player(e.playerId).name}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
+                  {replay && replayEvents.length ? (
+                    <EvidenceReplay
+                      key={replay.version}
+                      events={replayEvents}
+                      suspended={!!modal || section !== "match"}
+                    />
+                  ) : (
+                    <>
+                      <Pitch
+                        events={pitchEvents}
+                        selected={activePitchEvent?.id}
+                        onSelect={selectEvent}
+                        sequence={playing || !!event || !!replay || !insight}
+                      />
+                      <div className="event-inspector">
+                        <div>
+                          <span className="card-kicker">
+                            {activePitchEvent
+                              ? "SELECTED ACTION"
+                              : "EXPLORE THE EVIDENCE"}
+                          </span>
+                          <p>
+                            {activePitchEvent
+                              ? `${clock(activePitchEvent.time)} · ${player(activePitchEvent.playerId).name} · ${activePitchEvent.type}${activePitchEvent.type === "pass" ? (activePitchEvent.success ? " completed" : " incomplete") : activePitchEvent.outcome ? ` · ${activePitchEvent.outcome}` : ""}`
+                              : "Select a marker or choose an event to see the sequence."}
+                          </p>
+                        </div>
+                        {selectableEvents.length > 0 && (
+                          <select
+                            aria-label="Recorded event"
+                            value={
+                              activePitchEvent?.id &&
+                              selectableEvents.some(
+                                (e) => e.id === activePitchEvent.id,
+                              )
+                                ? activePitchEvent.id
+                                : ""
+                            }
+                            onChange={(e) => {
+                              const chosen = visible.find(
+                                (v) => v.id === e.target.value,
+                              );
+                              if (chosen) selectEvent(chosen);
+                            }}
+                          >
+                            <option value="">Choose an event</option>
+                            {selectableEvents.map((e) => (
+                              <option key={e.id} value={e.id}>
+                                {clock(e.time)} · {e.type} ·{" "}
+                                {player(e.playerId).name}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    </>
+                  )}
                   {(event || replay) && (
                     <div className="replay-controls">
                       <button className="text-button" onClick={replayEvidence}>
-                        <RotateCcw size={14} /> Replay this sequence
+                        <RotateCcw size={16} /> Replay this sequence
                       </button>
                       <button
                         className="text-button"
@@ -756,7 +795,7 @@ export function MatchApp() {
                           setReplay(null);
                         }}
                       >
-                        Back to the pattern <ArrowRight size={14} />
+                        Back to the pattern <ArrowRight size={16} />
                       </button>
                     </div>
                   )}
@@ -769,7 +808,7 @@ export function MatchApp() {
                     </span>
                     <span>
                       {replay
-                        ? `Event ${replay.index + 1} of ${replay.ids.length} · 8×`
+                        ? `Match held at ${clock(time)}`
                         : insight && !event
                           ? `${clock(insight.start)} — ${clock(insight.end)}`
                           : "No continuous tracking"}
@@ -786,11 +825,7 @@ export function MatchApp() {
                         setPlaying(!playing);
                       }}
                     >
-                      {playing ? (
-                        <Pause size={19} fill="currentColor" />
-                      ) : (
-                        <Play size={19} fill="currentColor" />
-                      )}
+                      {playing ? <Pause size={20} /> : <Play size={20} />}
                     </button>
                     <div className="timeline">
                       <div className="timeline-events">
@@ -809,7 +844,9 @@ export function MatchApp() {
                               className={
                                 e.type === "goal" ? "goal-tick" : "sub-tick"
                               }
-                            />
+                            >
+                              <EventIcon type={e.type} size={16} />
+                            </button>
                           ))}
                       </div>
                       <input
@@ -863,7 +900,7 @@ export function MatchApp() {
                 <section className="panel insights-strip">
                   <div className="panel-header">
                     <h2>
-                      <Sparkles size={16} />
+                      <Tactics size={16} />
                       What’s changing
                     </h2>
                     <span className="subtle-label">
@@ -877,7 +914,7 @@ export function MatchApp() {
                         <button
                           aria-pressed={insight?.id === i.id}
                           className={`insight-card ${insight?.id === i.id ? "selected" : ""}`}
-                          key={i.id}
+                          key={`${i.team}-${i.category}`}
                           onClick={() => selectInsight(i)}
                         >
                           <InsightIcon category={i.category} />
@@ -916,7 +953,7 @@ export function MatchApp() {
                       className="text-button"
                       onClick={() => setSection("stats")}
                     >
-                      Explore stats <ArrowRight size={14} />
+                      Explore stats <ArrowRight size={16} />
                     </button>
                   </div>
                   <div className="stat-summary">
@@ -941,9 +978,11 @@ export function MatchApp() {
                       <div key={label}>
                         <span>{label}</span>
                         <strong>
-                          <em>{a}</em>
+                          <em>
+                            <Metric value={a} />
+                          </em>
                           <i>—</i>
-                          {b}
+                          <Metric value={b} />
                         </strong>
                       </div>
                     ))}
@@ -953,12 +992,12 @@ export function MatchApp() {
                   <details>
                     <summary>
                       <span>
-                        <Activity size={14} />
+                        <MatchEvents size={16} />
                         Recent match events
                       </span>
                       <span>
                         {latest ? clock(latest.time) : "00:00"}{" "}
-                        <ChevronDown size={14} />
+                        <ChevronDown size={16} />
                       </span>
                     </summary>
                     <div className="event-feed-list">
@@ -969,7 +1008,9 @@ export function MatchApp() {
                         .map((e) => (
                           <button key={e.id} onClick={() => selectEvent(e)}>
                             <time>{clock(e.time)}</time>
-                            <Crest small team={e.team} />
+                            <span className={`event-glyph ${e.team}`}>
+                              <EventIcon type={e.type} />
+                            </span>
                             <div>
                               <strong>
                                 {e.type.charAt(0).toUpperCase() +
@@ -977,13 +1018,13 @@ export function MatchApp() {
                                 {e.outcome ? ` · ${e.outcome}` : ""}
                               </strong>
                               <span>
-                                {player(e.playerId).name}
+                                {TEAMS[e.team].code} · {player(e.playerId).name}
                                 {e.recipientId
                                   ? ` → ${player(e.recipientId).name}`
                                   : ""}
                               </span>
                             </div>
-                            <Play size={13} />
+                            <Play size={16} />
                           </button>
                         ))}
                       {visible.length === 0 && (
@@ -998,17 +1039,20 @@ export function MatchApp() {
               <aside className="panel detail-panel">
                 <div className="panel-header">
                   <h2>
-                    <Sparkles size={16} />
+                    <Tactics size={16} />
                     Second look
                   </h2>
                   <span className="verified-label">
-                    <Check size={12} />{" "}
+                    <Check size={16} />{" "}
                     {insight ? "Evidence linked" : "Awaiting evidence"}
                   </span>
                 </div>
                 {insight ? (
                   <>
-                    <div className="detail-intro">
+                    <Reveal
+                      className="detail-intro"
+                      change={`${insight.team}-${insight.category}-${prefs.mode}`}
+                    >
                       <InsightIcon category={insight.category} />
                       <span className="eyebrow">THE STORY RIGHT NOW</span>
                       <h2>{insight.headline}</h2>
@@ -1018,12 +1062,16 @@ export function MatchApp() {
                           : insight.explanation}
                       </p>
                       <div className="insight-meta">
-                        <Clock3 size={13} />
+                        <Clock3 size={16} />
                         Last 15 minutes<span>·</span>
                         {TEAMS[insight.team].short}
                       </div>
-                    </div>
-                    <div className="detail-tabs">
+                    </Reveal>
+                    <SelectionGroup
+                      className="detail-tabs"
+                      label="Insight details"
+                      value={tab}
+                    >
                       {(["visual", "evidence", "explanation"] as const).map(
                         (t) => (
                           <button
@@ -1038,19 +1086,22 @@ export function MatchApp() {
                           </button>
                         ),
                       )}
-                    </div>
+                    </SelectionGroup>
                     <div className="detail-footer primary-action">
                       <button
                         className="sequence-button"
                         onClick={replayEvidence}
                       >
                         <span>
-                          <Play size={13} fill="currentColor" />
+                          <Play size={16} />
                         </span>
-                        Show me the sequence <ArrowRight size={17} />
+                        Show me the sequence <ArrowRight size={20} />
                       </button>
                     </div>
-                    <div className="detail-content">
+                    <Reveal
+                      className="detail-content"
+                      change={`${tab}-${insight.team}-${insight.category}-${prefs.mode}-${currentNarrative ? "ai" : "verified"}`}
+                    >
                       {tab === "visual" ? (
                         <>
                           <div className="comparison-label">
@@ -1059,15 +1110,15 @@ export function MatchApp() {
                           </div>
                           <div className="comparison-numbers">
                             <strong>
-                              {insight.current}
+                              <Metric value={insight.current} />
                               <small>NOW</small>
                             </strong>
                             <div className="comparison-change">
-                              <TrendingUp size={18} />
+                              <TrendingUp size={20} />
                               <span>+{insight.current - insight.previous}</span>
                             </div>
                             <strong className="previous">
-                              {insight.previous}
+                              <Metric value={insight.previous} />
                               <small>BEFORE</small>
                             </strong>
                           </div>
@@ -1082,12 +1133,15 @@ export function MatchApp() {
                             </div>
                           </div>
                           <div className="pitch-key">
-                            <i />
+                            <InsightIcon
+                              category={insight.category}
+                              size={16}
+                            />
                             {insight.metric} · event locations
                           </div>
                           <div className="why-card">
                             <span>
-                              <Sparkles size={14} />
+                              <Tactics size={16} />
                               WHY IT MATTERS
                             </span>
                             <p>{insight.why}</p>
@@ -1107,6 +1161,9 @@ export function MatchApp() {
                               }
                             >
                               <time>{clock(e.time)}</time>
+                              <span className={`event-glyph ${e.team}`}>
+                                <EventIcon type={e.type} />
+                              </span>
                               <div>
                                 <strong>{player(e.playerId).name}</strong>
                                 <span>
@@ -1117,7 +1174,7 @@ export function MatchApp() {
                                   <small>{e.id}</small>
                                 )}
                               </div>
-                              <Play size={13} />
+                              <Play size={16} />
                             </button>
                           ))}
                         </div>
@@ -1145,7 +1202,7 @@ export function MatchApp() {
                       )}
                       <div className="watch-next insight-watch">
                         <span>
-                          <Focus size={15} /> WHAT TO WATCH NEXT
+                          <Focus size={16} /> WHAT TO WATCH NEXT
                         </span>
                         <p>{currentNarrative?.watch ?? insight.watch}</p>
                       </div>
@@ -1171,14 +1228,14 @@ export function MatchApp() {
                           </p>
                         </div>
                       )}
-                    </div>
+                    </Reveal>
                     <div className="detail-footer">
                       <button
-                        className="narrate-button"
+                        className={`narrate-button ${loading ? "is-loading" : ""}`}
                         disabled={loading}
                         onClick={explain}
                       >
-                        <Sparkles size={14} />
+                        <Tactics size={16} />
                         {loading
                           ? "Retrieving verified evidence…"
                           : provider !== "offline"
@@ -1194,7 +1251,7 @@ export function MatchApp() {
                   </>
                 ) : (
                   <div className="detail-empty">
-                    <Crosshair size={36} />
+                    <Crosshair size={32} />
                     <h3>A little patience. A better insight.</h3>
                     <p>
                       We’re looking for meaningful changes in the event stream.
@@ -1207,15 +1264,15 @@ export function MatchApp() {
                         setPlaying(true);
                       }}
                     >
-                      Keep the match moving <Play size={14} />
+                      Keep the match moving <Play size={16} />
                     </button>
                   </div>
                 )}
               </aside>
             </div>
-          )}
+          }
           {section === "insights" && (
-            <section className="panel section-panel">
+            <section className="panel section-panel section-enter">
               <div className="panel-header">
                 <h2>Verified observations</h2>
                 <span>At {clock(time)}</span>
@@ -1224,7 +1281,7 @@ export function MatchApp() {
                 insights.map((i) => (
                   <button
                     className="wide-insight"
-                    key={i.id}
+                    key={`${i.team}-${i.category}`}
                     onClick={() => selectInsight(i)}
                   >
                     <InsightIcon category={i.category} />
@@ -1251,7 +1308,7 @@ export function MatchApp() {
             </section>
           )}
           {section === "stats" && (
-            <section className="panel section-panel">
+            <section className="panel section-panel section-enter">
               <div className="panel-header">
                 <h2>Match statistics</h2>
                 <span>Computed through {clock(time)}</span>
@@ -1281,7 +1338,7 @@ export function MatchApp() {
                 <div className="stat-row" key={k}>
                   <div>
                     <strong>
-                      {stats.harbor[k]}
+                      <Metric value={stats.harbor[k]} />
                       {k === "accuracy" ? "%" : ""}
                     </strong>
                     <span>
@@ -1299,16 +1356,23 @@ export function MatchApp() {
                       }
                     </span>
                     <strong>
-                      {stats.riverside[k]}
+                      <Metric value={stats.riverside[k]} />
                       {k === "accuracy" ? "%" : ""}
                     </strong>
                   </div>
-                  <div className="stat-bars">
-                    <i
-                      style={{
-                        width: `${stats.harbor[k] + stats.riverside[k] === 0 ? 50 : (stats.harbor[k] / (stats.harbor[k] + stats.riverside[k])) * 100}%`,
-                      }}
-                    />
+                  <div
+                    className="stat-bars"
+                    style={
+                      {
+                        "--share":
+                          stats.harbor[k] + stats.riverside[k] === 0
+                            ? 0.5
+                            : stats.harbor[k] /
+                              (stats.harbor[k] + stats.riverside[k]),
+                      } as React.CSSProperties
+                    }
+                  >
+                    <i />
                     <i />
                   </div>
                 </div>
@@ -1324,7 +1388,7 @@ export function MatchApp() {
           {section === "lineups" && (
             <div className="lineup-grid">
               {(Object.keys(TEAMS) as TeamId[]).map((t) => (
-                <section className="panel section-panel" key={t}>
+                <section className="panel section-panel section-enter" key={t}>
                   <div className="panel-header">
                     <h2>
                       <Crest small team={t} />
@@ -1356,7 +1420,7 @@ export function MatchApp() {
             </div>
           )}
           {section === "players" && (
-            <section className="panel section-panel">
+            <section className="panel section-panel section-enter">
               <div className="panel-header">
                 <h2>Player focus</h2>
                 <select
@@ -1371,13 +1435,9 @@ export function MatchApp() {
                   ))}
                 </select>
               </div>
-              <div className="player-focus">
+              <Reveal className="player-focus" change={focusedPlayer}>
                 <div>
-                  <div
-                    className={`player-monogram ${player(focusedPlayer).team}`}
-                  >
-                    {player(focusedPlayer).number}
-                  </div>
+                  <PlayerIdentity player={player(focusedPlayer)} />
                   <h2>{player(focusedPlayer).name}</h2>
                   <p>
                     {player(focusedPlayer).role} ·{" "}
@@ -1394,8 +1454,9 @@ export function MatchApp() {
                     · {clock(time)}
                   </p>
                   <div className="player-metrics">
-                    {["pass", "shot", "recovery"].map((type) => (
+                    {(["pass", "shot", "recovery"] as const).map((type) => (
                       <div key={type}>
+                        <EventIcon type={type} size={20} />
                         <strong>
                           {
                             visible.filter(
@@ -1426,9 +1487,9 @@ export function MatchApp() {
                     }
                   >
                     {prefs.player === focusedPlayer ? (
-                      <Check size={15} />
+                      <Check size={16} />
                     ) : (
-                      <Focus size={15} />
+                      <Focus size={16} />
                     )}{" "}
                     {prefs.player === focusedPlayer
                       ? "Following this player"
@@ -1454,7 +1515,7 @@ export function MatchApp() {
                     there.
                   </p>
                 </div>
-              </div>
+              </Reveal>
             </section>
           )}
           <div className="bottom-row">
@@ -1471,10 +1532,10 @@ export function MatchApp() {
                   </option>
                 ))}
               </select>
-              <ChevronDown size={14} />
+              <ChevronDown size={16} />
             </label>
             <p>
-              <Shield size={13} />
+              <Shield size={16} />
               Fictional clubs. Synthetic events. Evidence you can explore.
             </p>
             <button
@@ -1491,7 +1552,7 @@ export function MatchApp() {
                 setSection("match");
               }}
             >
-              <Play size={14} /> Watch the build-up
+              <Play size={16} /> Watch the build-up
             </button>
             <button
               className="text-button"
@@ -1504,7 +1565,7 @@ export function MatchApp() {
                 setSection("match");
               }}
             >
-              Reset demo <RotateCcw size={13} />
+              Reset demo <RotateCcw size={16} />
             </button>
           </div>
         </main>
@@ -1523,23 +1584,52 @@ export function MatchApp() {
       <dialog
         ref={dialogRef}
         aria-label={
-          modal === "recap"
+          dialogContent === "recap"
             ? "Catch me up"
-            : modal === "settings"
+            : dialogContent === "settings"
               ? "Your experience"
               : "About Second Look"
         }
-        className={`modal ${modal === "recap" ? "recap-modal" : ""}`}
-        onCancel={() => setModal(null)}
+        className={`modal ${dialogContent === "recap" ? "recap-modal" : ""}`}
+        onKeyDown={(e) => {
+          if (e.key !== "Tab") return;
+          const controls = [
+            ...e.currentTarget.querySelectorAll<HTMLElement>(
+              'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, [tabindex="0"]',
+            ),
+          ].filter((el) => el.getClientRects().length > 0);
+          const first = controls[0],
+            last = controls.at(-1);
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last?.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first?.focus();
+          }
+        }}
+        onCancel={(e) => {
+          e.preventDefault();
+          setModal(null);
+        }}
         onClick={(e) => {
-          if (e.target === e.currentTarget) setModal(null);
+          if (e.target === e.currentTarget) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            if (
+              e.clientX < rect.left ||
+              e.clientX > rect.right ||
+              e.clientY < rect.top ||
+              e.clientY > rect.bottom
+            )
+              setModal(null);
+          }
         }}
       >
         <div className="modal-header">
           <span className="eyebrow">
-            {modal === "settings"
+            {dialogContent === "settings"
               ? "MAKE IT YOUR MATCH"
-              : modal === "recap"
+              : dialogContent === "recap"
                 ? "BACK IN THE GAME"
                 : "BEHIND SECOND LOOK"}
           </span>
@@ -1551,11 +1641,11 @@ export function MatchApp() {
             <X size={20} />
           </button>
         </div>
-        {modal === "recap" ? (
+        {dialogContent === "recap" ? (
           <>
             <div className="recap-heading">
               <span className="recap-icon">
-                <ListVideo size={28} />
+                <ListVideo size={32} />
               </span>
               <h2>Here’s what you missed.</h2>
               <p>
@@ -1570,22 +1660,24 @@ export function MatchApp() {
               <strong>{summary.score}</strong>
               <Crest team="riverside" />
             </div>
-            <p className="recap-summary">
-              {currentRecap?.value.explanation ?? summary.summary}
-            </p>
+            <Reveal change={currentRecap?.key ?? "verified"}>
+              <p className="recap-summary">
+                {currentRecap?.value.explanation ?? summary.summary}
+              </p>
+            </Reveal>
             {currentRecap && (
               <div className="why-card">
                 <span>WHY IT MATTERS</span>
                 <p>{currentRecap.value.why}</p>
               </div>
             )}
-            <div className="recap-ai">
+            <div className="recap-ai" aria-busy={recapLoading}>
               <button
-                className="narrate-button"
+                className={`narrate-button ${recapLoading ? "is-loading" : ""}`}
                 disabled={recapLoading || loading}
                 onClick={narrateRecap}
               >
-                <Sparkles size={14} />{" "}
+                <Tactics size={16} />{" "}
                 {recapLoading
                   ? "Choosing the important developments…"
                   : provider !== "offline"
@@ -1662,10 +1754,10 @@ export function MatchApp() {
                 setPlaying(time < DURATION);
               }}
             >
-              Back to the match <Play size={15} fill="currentColor" />
+              Back to the match <Play size={16} />
             </button>
           </>
-        ) : modal === "settings" ? (
+        ) : dialogContent === "settings" ? (
           <>
             <h2>Your match. Your perspective.</h2>
             <p className="muted">Preferences are saved on this device.</p>
@@ -1685,7 +1777,7 @@ export function MatchApp() {
                         : "Window comparisons, event evidence, and limitations."}
                     </p>
                   </div>
-                  {prefs.mode === m && <Check size={18} />}
+                  {prefs.mode === m && <Check size={20} />}
                 </button>
               ))}
             </div>
@@ -1793,6 +1885,18 @@ export function MatchApp() {
                 : "Currently in offline demo mode. Narratives and recaps are deterministic, not AI-generated."}{" "}
               Clubs and players are fictional. No broadcast footage, licensed
               football data, or continuous player tracking is used.
+            </p>
+            <p className="limitations">
+              Interface icons by Lucide. Club marks and football glyphs created
+              for Second Look.{" "}
+              <a
+                className="asset-license-link"
+                href="/icon-licenses.txt"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Icon licenses
+              </a>
             </p>
           </>
         )}
