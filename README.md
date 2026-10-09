@@ -125,6 +125,10 @@ See `.env.example` for all settings. Legacy `FOUNDRY_ENABLED=true` still selects
 
 `npm run eval:ai` runs 180 mocked evaluations across three scenarios, three seeds, five timestamps, two audiences and both providers. It writes `artifacts/ai-evaluation.json`. Unit tests add negative claims, fallback, provider contracts, usage controls and caching. CI also runs the atomic scripts against a real Redis service. Read [AI evaluation and human review](docs/AI-EVALUATION.md) before enabling paid inference. `npm run eval:live` is a separate, authorization-gated two-recap check; it is never run by ordinary tests or CI.
 
+## Cloudflare deployment
+
+Cloudflare Workers is the current hosting target while Azure access is unavailable. The OpenNext build preserves the app, OpenAI/Foundry adapters and Azure standalone output. It isolates build inputs to exclude local secrets. OpenAI is selected but inference stays disabled with zero quotas until separately approved and shared usage storage is verified in the host runtime. See [Cloudflare deployment](docs/CLOUDFLARE.md) for build, preview, verification and publishing instructions.
+
 ## Azure deployment
 
 Deployment has **not** been performed. The owner logged into Azure CLI but reported that the required access remains unavailable. No resources or recurring charges were created. See [the deployment runbook](docs/DEPLOYMENT.md).

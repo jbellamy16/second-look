@@ -1,3 +1,12 @@
+# Cloudflare preparation — October 9, 2026
+
+- OpenNext builds the existing Next.js 16.4 application in an isolated source copy; environment files are absent and the embedded environment map is verified empty.
+- A guarded adapter workaround includes Next.js 16.4's real preview-props manifest. The initial runtime 500 is resolved.
+- All 30 browser journeys and three real API smoke checks pass under local workerd across desktop, iPhone-sized and Android-sized Chromium. Recaps in both modes remain offline and timestamp-safe.
+- Type checks and 110 local unit/evaluation tests pass; CI additionally exercises real Redis and both Node and Cloudflare browser runtimes.
+- OpenAI is selected but inference is disabled and all allowances are zero. No OpenAI key or shared Redis store has been installed in Cloudflare.
+- Cloudflare publishing is pending final hosting-cost approval for the existing Workers Standard account. No public deployment or additional inference has occurred for this change.
+
 # OpenAI diagnostic recheck — October 9, 2026
 
 - Four additional owner-authorized requests returned HTTP 200. Fan narration passed live validation in 3.50s. Analyst returned verified facts but omitted the required goal and fell back in 3.65s.
