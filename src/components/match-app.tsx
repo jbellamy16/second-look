@@ -1172,6 +1172,7 @@ export function MatchApp() {
                             <button
                               key={e.id}
                               onClick={() => selectEvent(e)}
+                              aria-pressed={selectedEvent === e.id}
                               className={
                                 selectedEvent === e.id ? "selected" : ""
                               }
@@ -1180,7 +1181,7 @@ export function MatchApp() {
                               <span className={`event-glyph ${e.team}`}>
                                 <EventIcon type={e.type} />
                               </span>
-                              <div>
+                              <div className="evidence-copy">
                                 <strong>{player(e.playerId).name}</strong>
                                 <span>
                                   {e.type} · x {e.position.x.toFixed(0)}, y{" "}

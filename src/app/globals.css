@@ -972,13 +972,14 @@ main {
   margin-bottom: 12px;
 }
 .evidence-list > button {
-  display: flex;
+  display: grid;
+  grid-template-columns: 40px auto minmax(0, 1fr) 16px;
   text-align: left;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   border-bottom: 1px solid #23343f;
   width: 100%;
-  padding: 13px 2px;
+  padding: 14px 8px;
 }
 .evidence-list > button.selected {
   background: #1e3342;
@@ -993,7 +994,11 @@ main {
   font-weight: 500;
   display: block;
 }
-.evidence-list span {
+.evidence-copy {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.evidence-copy > span {
   display: block;
   font-size: 11px;
   color: #859eb0;
@@ -1007,7 +1012,7 @@ main {
   margin-top: 6px;
 }
 .evidence-list > button > svg {
-  margin-left: auto;
+  justify-self: end;
 }
 .source-label {
   font-size: 11px;
@@ -3128,6 +3133,10 @@ footer {
   }
 }
 @media (max-width: 600px) {
+  .evidence-list > button {
+    grid-template-columns: 34px auto minmax(0, 1fr) 16px;
+    gap: 8px;
+  }
   .event-feed-list > button {
     gap: 8px;
   }
@@ -3142,12 +3151,6 @@ footer {
 
 .pitch-field > * {
   vector-effect: non-scaling-stroke;
-}
-@media (max-width: 600px) {
-  /* The text inspector carries the same information at a readable size. */
-  .marker-tooltip {
-    display: none;
-  }
 }
 .asset-license-link {
   color: var(--sl-blue-light);
