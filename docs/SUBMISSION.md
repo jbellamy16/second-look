@@ -6,9 +6,9 @@ You saw the game. Here’s what you missed. Second Look is an AI-assisted second
 
 ## Technical description
 
-A seeded event generator drives fictional football fixtures. A single timestamp gates every calculation, visualization, and recap. Statistical rules identify meaningful changes in high ball wins, shot frequency, and passing activity. Each observation carries exact evidence IDs and comparable time windows. An optional Microsoft Foundry workflow requires the model to retrieve verified evidence through a function tool before producing structured, audience-specific narrative. Schema, ID, and numerical-output checks validate the result; failures retain a clearly labeled deterministic explanation.
+A seeded event generator drives fictional football fixtures. A single timestamp gates every calculation, visualization, and recap. Statistical rules identify meaningful changes in high ball wins, shot frequency, and passing activity. Each observation carries exact evidence IDs and comparable time windows. An optional Microsoft Foundry workflow requires the model to retrieve verified evidence through a function tool before producing structured, audience-specific narrative. Both Foundry and the OpenAI alternative use verified statement selection; schema, exact fact IDs, required context and server-rendered wording validate the result; failures retain a clearly labeled deterministic explanation.
 
-The frontend is Next.js, React, TypeScript, Tailwind/CSS, and an interactive SVG pitch. Deployment preparation targets an existing Azure App Service using GitHub Actions and Next.js standalone output. No database is necessary.
+The frontend is Next.js, React, TypeScript, Tailwind/CSS, and an interactive SVG pitch. Deployment preparation targets an existing Azure App Service using GitHub Actions and Next.js standalone output. The offline demo needs no database; public AI requires shared Redis usage controls.
 
 ## Microsoft technology summary
 
@@ -29,7 +29,7 @@ Primary: overall prize. Secondary: Best Use of Microsoft Foundry.
 | UX and presentation           | Responsive pitch-first design, sequence replay, fan/analyst switch, concise recap                           |
 | Category alignment            | Synthetic football data transformed into evidence-linked narratives through Microsoft AI                    |
 
-Foundry currently interprets a rule-selected pattern. To strengthen the Foundry category entry, validate real narration quality and demonstrate the tool handoff visibly. Do not describe offline rules as model reasoning.
+Foundry can select and order verified context for an insight or recap. OpenAI supports the same workflow while Foundry access is unavailable; always identify the actual provider. To strengthen the Foundry category entry, validate real narration quality and demonstrate the tool handoff visibly. Do not describe offline rules as model reasoning.
 
 ## Repeatable demo setup
 
@@ -40,7 +40,7 @@ Foundry currently interprets a rule-selected pattern. To strengthen the Foundry 
 5. Select the high-ball-win insight. Compare current and previous windows. Inspect Evidence, select a recovery, then **Show me the sequence**. The replay follows that possession at 8× recorded timing and holds the final frame.
 6. Switch to Analyst mode for event IDs, measurement notes, and equal-duration comparisons.
 7. With real Foundry configured, select **Explain with Microsoft Foundry** and wait for the explicitly labeled response. Rehearse request latency; successful exact-input requests are cached.
-8. Open **Catch me up**. The recap includes score, significant observed events, the leading current pattern, and what to watch. It is deterministic.
+8. Open **Catch me up**. The recap includes score, significant observed events, the leading current pattern, and what to watch. It opens instantly with a deterministic recap; optional on-demand AI selects verified statements. Expand **How Second Look knows** to inspect evidence and actual tool activity.
 9. Optional: rewind to kickoff to show future evidence disappears, or choose the quiet scenario to show that the system does not invent a story.
 
 ## Suggested 90-second video

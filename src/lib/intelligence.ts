@@ -159,3 +159,53 @@ export function recap(events: MatchEvent[], time: number, mode: Mode) {
           "Watch for the first sustained change in ball wins or shot frequency."),
   };
 }
+
+export type StoryPreferences = {
+  team?: TeamId | "all";
+  player?: string;
+  categories?: Category[];
+  seenEvidenceIds?: string[];
+};
+/** Transparent editorial ranking, not a probability or significance score. */
+export function rankInsights(
+  insights: Insight[],
+  events: MatchEvent[],
+  mode: Mode,
+  prefs: StoryPreferences = {},
+) {
+  const seen = new Set(prefs.seenEvidenceIds ?? []);
+  return insights
+    .filter((i) => !prefs.categories || prefs.categories.includes(i.category))
+    .map((insight) => {
+      const support = events.filter(
+        (e) => insight.evidenceIds.includes(e.id) && e.time <= insight.end,
+      );
+      const magnitude = Math.min(10, insight.strength);
+      const quality = Math.min(3, support.length / 3);
+      const recency = support.length
+        ? Math.max(0, 1 - (insight.end - support.at(-1)!.time) / 900)
+        : 0;
+      const novelty = support.length
+        ? support.filter((e) => !seen.has(e.id)).length / support.length
+        : 0;
+      const preference =
+        (prefs.team === insight.team ? 2 : 0) +
+        (support.some((e) => e.playerId === prefs.player) ? 1 : 0);
+      const audience =
+        mode === "fan" && insight.category === "chances"
+          ? 0.5
+          : mode === "analyst" && insight.previous > 0
+            ? 0.5
+            : 0;
+      const score =
+        magnitude + quality + recency + novelty * 2 + preference + audience;
+      return {
+        insight,
+        score,
+        factors: { magnitude, quality, recency, novelty, preference, audience },
+      };
+    })
+    .sort(
+      (a, b) => b.score - a.score || a.insight.id.localeCompare(b.insight.id),
+    );
+}

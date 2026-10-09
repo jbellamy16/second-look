@@ -301,3 +301,87 @@ test("pitch markers support touch-sized selection and keyboard inspection", asyn
     label!.split(" ")[0],
   );
 });
+
+test("explainability is readable in both modes and captures the evidence drawer", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/");
+  const details = page.locator(".detail-panel .provenance");
+  await details.locator("summary").click();
+  await expect(details).toContainText("Deterministic offline");
+  await expect(details).toContainText("High ball wins: 4 vs 0");
+  await expect(details).toContainText("No completed AI tool activity");
+  await expect(details).toContainText("Known limitations");
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({
+    path: `artifacts/${testInfo.project.name}-explainability.png`,
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Analyst mode", exact: true }).click();
+  await expect(details).toContainText("descriptive threshold");
+  await page.getByRole("button", { name: "Catch me up", exact: true }).click();
+  await page.getByRole("dialog").locator(".provenance summary").click();
+  await expect(page.getByRole("dialog")).toContainText("Through 63:24");
+  await page.screenshot({
+    path: `artifacts/${testInfo.project.name}-recap-evidence.png`,
+  });
+  expect(
+    (
+      await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+        .analyze()
+    ).violations,
+  ).toEqual([]);
+});
+
+test("OpenAI UI requests narration only on demand and clears stale results on rewind", async ({
+  page,
+}) => {
+  let calls = 0;
+  await page.route("**/api/insights", async (route) => {
+    if (route.request().method() === "GET")
+      return route.fulfill({ json: { mode: "openai" } });
+    calls++;
+    await route.fulfill({
+      json: {
+        source: "openai",
+        narrative: {
+          insightId: "harbor-pressure-63",
+          explanation:
+            "Harbor are winning it higher. This is a mocked narration for a browser test.",
+          why: "The evidence shows recorded high ball wins.",
+          watch: "Watch the next recorded attack.",
+          evidenceIds: [],
+        },
+        provenance: {
+          provider: "openai",
+          model: "gpt-5.4-mini",
+          cached: false,
+          cutoff: 3804,
+          facts: [],
+          activity: ["get_verified_evidence completed"],
+          validation: ["Selection schema passed"],
+          limitations: ["Synthetic events"],
+        },
+      },
+    });
+  });
+  await page.goto("/");
+  await expect(page.getByText("OpenAI configured")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Explain with OpenAI", exact: true })
+    .click();
+  await expect(
+    page.getByText("OPENAI · VERIFIED STORY", { exact: true }),
+  ).toBeVisible();
+  expect(calls).toBe(1);
+  await page.getByRole("button", { name: "Play match", exact: true }).click();
+  await expect(page.getByTestId("clock")).not.toContainText("63:24");
+  expect(calls).toBe(1);
+  await expect(
+    page.getByText("OPENAI · VERIFIED STORY", { exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Restart match" }).click();
+  await expect(page.getByTestId("clock")).toContainText("00:00");
+  expect(calls).toBe(1);
+});

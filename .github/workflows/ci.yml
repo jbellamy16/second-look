@@ -9,6 +9,14 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      redis:
+        image: redis:7.4
+        ports: ["6379:6379"]
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 5
+    env:
+      AI_ENABLED: "false"
+      REDIS_TEST_URL: redis://127.0.0.1:6379
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -18,6 +26,10 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ai-evaluation
+          path: artifacts/ai-evaluation.json
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

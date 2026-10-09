@@ -18,7 +18,9 @@ Watching football and understanding how a match is changing are different things
 - Pattern detection for attacking-third ball wins, shot frequency, and passing activity, with equal 15-minute comparison windows and supporting event IDs.
 - Fan mode, analyst mode, timestamp-safe Catch Me Up, lineups, and player action maps.
 - Device-local team, player, mode, and insight category preferences that filter and reorder observations.
-- A real server-side Microsoft Foundry Responses API integration with forced evidence-tool retrieval, structured narrative output, and validation. **Live credentials are not configured or verified in this implementation.**
+- Server-side OpenAI (GPT-5.4 Mini) and Microsoft Foundry Responses API adapters with shared forced evidence retrieval, structured selection, validation, and honest provider attribution. **Both are mock-tested; no live inference was performed for this change.**
+- Optional AI Catch Me Up, contextual insight narration, and expandable “How Second Look knows” evidence.
+- Shared Redis quotas, cache, and deduplication; inference remains off by default.
 - Explicit offline demonstration mode; request failures or invalid model output fall back to computed explanations without claiming AI generation.
 
 ## Run locally
@@ -52,7 +54,7 @@ flowchart LR
   B --> D[Pitch / score / lineup / recap]
   C --> E[Verified insight + event IDs]
   E --> F[Fan / analyst presentation]
-  E --> G[Server-side Foundry workflow]
+  E --> G[Server-side provider workflow]
   G --> H[Forced evidence retrieval tool]
   H --> I[Structured narrative]
   I --> J[Schema and evidence validation]
@@ -63,14 +65,15 @@ flowchart LR
 
 One client playback timestamp is the source of truth. Every derived view uses the event prefix at or before that time. The server independently regenerates the selected fixture and observation; it never trusts client-supplied metrics or evidence. No database or message broker is needed for a deterministic single-match demo.
 
-| Code                            | Responsibility                                                                   |
-| ------------------------------- | -------------------------------------------------------------------------------- |
-| `src/lib/match.ts`              | Feed model, PRNG, fictional players, event generation, active lineup, statistics |
-| `src/lib/intelligence.ts`       | Thresholded pattern discovery, evidence windows, mode-specific recap             |
-| `src/lib/foundry.ts`            | Azure Responses API tool orchestration and narrative validation                  |
-| `src/app/api/insights/route.ts` | Input validation, server recomputation, request coalescing, budget, fallback     |
-| `src/components/`               | Responsive match experience and interactive SVG pitch                            |
-| `tests/`, `e2e/`                | Data invariants, API contracts, model-tool mocks, browser journeys               |
+| Code                                                          | Responsibility                                                                   |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `src/lib/match.ts`                                            | Feed model, PRNG, fictional players, event generation, active lineup, statistics |
+| `src/lib/intelligence.ts`                                     | Thresholded pattern discovery, evidence windows, mode-specific recap             |
+| `src/lib/ai/`                                                 | Provider adapters, verified evidence, story composition, shared usage controls   |
+| `src/lib/foundry.ts`                                          | Preserved legacy Foundry workflow and narrative contract compatibility           |
+| `src/app/api/insights/route.ts`, `src/app/api/recap/route.ts` | Input validation, server recomputation, narration and fallback                   |
+| `src/components/`                                             | Responsive match experience and interactive SVG pitch                            |
+| `tests/`, `e2e/`                                              | Data invariants, API contracts, model-tool mocks, browser journeys               |
 
 ## Synthetic data and explainability
 
@@ -92,31 +95,35 @@ The evidence inspector offers a readable event summary and a native event picker
 
 **Watch the build-up** restores the pressure fixture and starts at 60:00 at 16×. High-ball-win evidence qualifies shortly afterward; the default 63:24 view has Harbor ahead 1–0 with four high ball wins and four shots in the recent window, each versus zero in the previous window. **Reset demo** restores that view, Fan mode, all categories, neutral preferences, and 8× playback. Catch Me Up avoids duplicating scoring shots as separate highlights and ends with a full-time message when appropriate.
 
-## Microsoft Foundry: actual integration vs offline behavior
+## Optional AI: OpenAI, Microsoft Foundry, or offline
 
-Deterministic code handles all ingestion, statistics, pattern discovery, recap text, rendering, and preferences. Microsoft Foundry powers **optional on-demand interpretation of a verified insight**. Click **Explain with Microsoft Foundry** after configuring it. Playback itself never sends model requests.
+`AI_PROVIDER=openai|foundry|offline` selects the provider. `AI_ENABLED=true` is a separate spending opt-in. OpenAI defaults to `gpt-5.4-mini` through `/v1/responses`. Foundry retains its Azure Responses endpoint, resource key authentication, endpoint allowlist, deployment name, forced tool call, and structured-output workflow. Managed identity is not implemented. No provider is enabled by default; no resource creation or deployment is part of this change.
 
-1. **Observe:** deterministic detector proposes a supported change.
-2. **Retrieve:** the model must call `get_verified_evidence` for the selected insight. The server rejects any other ID or tool name.
-3. **Narrate:** verified statistics, bounded events, and limitations are sent as a tool result; the second response must conform to a JSON schema.
-4. **Validate:** Zod validates shape and lengths; supporting IDs must exactly match; digit/percentage claims are rejected because numbers are rendered directly from deterministic metrics.
-5. **Present:** successfully validated responses are labeled Microsoft Foundry. Unavailable or invalid responses retain a clearly labeled deterministic explanation.
+The [official model page](https://developers.openai.com/api/docs/models/gpt-5.4-mini) confirms Responses, function calling and structured-output support. Both adapters share the same evidence, output schema, validation, timeout, cache, controls and fallback. Credentials are server-only and ignored in `.env.local`; never prefix them with `NEXT_PUBLIC_`.
 
-This is purposeful, bounded tool orchestration, not a set of autonomous agents. The statistical layer determines which stories deserve narration; the model retrieves evidence and adapts the interpretation to the audience. Schema and ID checks **do not prove semantic truth** of free-form prose. Human review of real Foundry outputs remains a pre-submission requirement.
+AI runs only after an explicit **Explain with…** or **Catch me up with…** action. Playback, seeking, opening Catch Me Up, and switching audience do not call a model. Responses belong to an exact timestamp, fixture, evidence set and audience; stale results disappear when context changes.
 
-Two requests maximum per narration, bounded output tokens, 25-second timeout per request, request coalescing, a one-hour cache, at most 100 cache entries, and a default 30 uncached narrations/hour/process limit control demo costs. Failed promises remain cached for that window to avoid repeated paid retries. Rewinds do not trigger network calls. Exact timestamp + scenario + audience + category + team is the cache key. Limits are process-local and reset on restart: use one instance for the hackathon. Before public scaling, add gateway-level quotas and Azure budgets; the current limiter is not a billing ceiling.
+1. Deterministic detectors find supported changes in equal time windows. Editorial ranking considers magnitude, support, recency, novelty, previously viewed evidence, preferences and audience. This score is not statistical confidence.
+2. The provider must call `get_verified_evidence` with the current observation ID. Only already-recorded events, comparisons and verified statements are supplied.
+3. The model chooses and orders useful statements. Insight context can include contributors, recorded shots after high recoveries, and zero-baseline cautions. Recaps prioritize score, the latest available goal, supported changes and explicit abstention.
+4. The server rejects unknown facts, duplicate selections, omitted mandatory context, arbitrary prose, wrong tools, incomplete responses and refusals. It renders every factual sentence from checked data. AI cannot invent statistics or causal claims through this contract.
+5. The drawer shows actual provider/model, selected observations, events, comparisons, completed tool activity, validation and limitations. It never exposes private reasoning. Errors show deterministic content without an AI label.
 
-### Environment
+This is **constrained editorial narration**, not unrestricted generated prose. It trades writing freedom for verifiable claims. Whether live AI selects more useful stories than deterministic ranking remains an evaluation question; mock tests do not establish model quality. The original Foundry free-text helper remains for compatibility tests, but public routes use the stronger shared workflow.
 
-| Variable               | Value                                                                                               |
-| ---------------------- | --------------------------------------------------------------------------------------------------- |
-| `FOUNDRY_ENABLED`      | `false` by default; explicitly set `true` to allow model calls                                      |
-| `FOUNDRY_ENDPOINT`     | Azure OpenAI resource root, e.g. `https://RESOURCE.openai.azure.com`                                |
-| `FOUNDRY_DEPLOYMENT`   | Name of a deployed model that supports Responses, tools, and structured outputs                     |
-| `FOUNDRY_API_KEY`      | Resource key, server-only; never use a `NEXT_PUBLIC_` prefix                                        |
-| `FOUNDRY_HOURLY_LIMIT` | Default `30`, capped at `100` uncached narrations per process per hour; `0` disables new narrations |
+### Usage controls
 
-Use an **Azure OpenAI resource endpoint for a model deployed through Foundry**, not the Foundry portal URL. Resource API-key authentication is implemented; managed identity and Foundry project Entra authentication are not implemented. Store local values in ignored `.env.local`, and deployed values in App Service settings. The header says “Foundry configured” when configuration is present, not that a model call has succeeded.
+Production requires an existing **TLS Redis** store via `AI_REDIS_URL=rediss://…`. All instances and both providers/routes must share the same store. The app fails closed if it is missing or unavailable. `AI_USAGE_STORE=memory` is permitted only outside production for isolated local testing.
+
+Atomic Redis reservations enforce global per-minute/hour/day and persistent total narration allowances (defaults **4 / 30 / 60 / 100**). Each reservation permits at most two requests, each limited to 1,800 output tokens, 128 KiB input payload and a 25-second timeout. Potentially billed failures consume a reservation. No automatic provider retries occur. Shared locks prevent duplicate inference across instances; local concurrent requests share a promise. Other instances receive a truthful temporary fallback while work is pending. Validated results cache for one hour. Failures receive only a five-second cooldown (up to the 70-second lease if the store or process fails).
+
+Use Redis persistence and **no-eviction** for quota state. Never flush the store or delete `{second-look-ai}:budget` to recover from an outage; that resets the persistent allowance. Raising the total allowance is an explicit operator spending decision. These are application request limits, not a dollar-denominated billing cap; alerts alone are not spending controls. Shared global limits can be consumed by one visitor, so authenticated per-user allocation or a gateway may be appropriate for a wider launch.
+
+See `.env.example` for all settings. Legacy `FOUNDRY_ENABLED=true` still selects Foundry only when the new provider/enable settings are absent. The legacy hourly limit remains a fallback for `AI_HOURLY_LIMIT`. Production shared-store requirements apply to both. The UI says “configured”, not “live verified”.
+
+### Evaluation
+
+`npm run eval:ai` runs 180 mocked evaluations across three scenarios, three seeds, five timestamps, two audiences and both providers. It writes `artifacts/ai-evaluation.json`. Unit tests add negative claims, fallback, provider contracts, usage controls and caching. CI also runs the atomic scripts against a real Redis service. Read [AI evaluation and human review](docs/AI-EVALUATION.md) before enabling paid inference. `npm run eval:live` is a separate, authorization-gated two-recap check; it is never run by ordinary tests or CI.
 
 ## Azure deployment
 
@@ -136,11 +143,11 @@ Read [submission preparation](docs/SUBMISSION.md) for the pitch, demo flow, 90-s
 
 ## Known limits and next work
 
-- Configure Foundry and verify real model responses and narration quality before recording an AI demonstration.
+- Authorize a small live OpenAI evaluation, then review Fan/Analyst usefulness with a human football reviewer. Verify Foundry when access returns.
 - Deploy and verify the public Azure URL; test on actual mobile Safari and run an accessibility audit.
 - The feed simplifies football mechanics and only detects three pattern families; validate it with football domain review.
-- No audio, multilingual narratives, external provider, authentication, or persisted cross-device preferences.
-- The recap is currently deterministic even when Foundry is enabled. No claim of an AI-generated recap is made.
+- No audio, multilingual narratives, authentication, or persisted cross-device preferences.
+- AI editorial quality and latency remain unverified with live requests. Configure an existing shared Redis store before production inference.
 - Consider a measured substitution comparison detector and exportable broadcast insight JSON as follow-up refinements.
 
 Original application graphics are SVG/CSS. UI symbols use Lucide (ISC license); third-party library licenses remain applicable. No affiliation with fictional teams is implied, and no official league branding is reproduced.
