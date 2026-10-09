@@ -19,9 +19,9 @@ The public metadata origin defaults to `https://second-look.sybgm6dkhk.workers.d
 
 OpenNext 1.20.10 omits Next.js 16.4's `preview-props.json` from its manifest matcher. The build script makes one guarded change inside the disposable adapter installation to include the actual generated manifest. It does not change Next.js or invent preview keys. Remove this workaround once the adapter supports that manifest upstream. Both Node production and Workers runtime browser suites run in CI.
 
-## Publish after hosting approval
+## Publish on the existing Free plan
 
-The current Cloudflare account is already on Workers Standard. Publishing can contribute to its shared billable usage. Approval to publish must cover that hosting usage; a request to enable OpenAI spending is separate. A 100 ms CPU limit bounds work per invocation; it is not a monthly spending cap. No subscription upgrade, database, R2 bucket, Durable Object, image service or domain purchase is needed for the disabled-inference release.
+The owner specified the existing Workers Free plan only. Do not upgrade or create paid services. The API's `standard` usage-model setting is not sufficient evidence of a paid subscription; subscription inspection was unavailable to the CLI. The upload is approximately 1.3 MiB gzip, below the documented 3 MiB Free limit. Use the platform's Free CPU and daily-request limits; no paid CPU override is configured. If the Free limits prevent a working deployment, stop and report the constraint rather than upgrading. No database, R2 bucket, Durable Object, image service or domain purchase is needed for the disabled-inference release.
 
 After tests and CI pass, authenticate the intended account and run:
 
@@ -40,7 +40,7 @@ Before public inference, configure an existing persistent TLS Redis store with n
 
 The current global Redis client was tested in Node; its Cloudflare TCP/TLS behavior still needs verification with an approved store before enabling inference. If a Workers-native store is chosen later, it must preserve atomic reservations, deduplication, the persistent total allowance and fail-closed behavior. In-memory limits are prohibited in production.
 
-Cloudflare hosting approval does not authorize OpenAI API calls. The previous eight-request live test allowance is exhausted. Foundry remains available when Azure access returns.
+Cloudflare deployment does not authorize OpenAI API calls. The previous eight-request live test allowance is exhausted. Foundry remains available when Azure access returns.
 
 ## References
 

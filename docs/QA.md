@@ -5,7 +5,7 @@
 - All 30 browser journeys and three real API smoke checks pass under local workerd across desktop, iPhone-sized and Android-sized Chromium. Recaps in both modes remain offline and timestamp-safe.
 - Type checks and 110 local unit/evaluation tests pass; CI additionally exercises real Redis and both Node and Cloudflare browser runtimes.
 - OpenAI is selected but inference is disabled and all allowances are zero. No OpenAI key or shared Redis store has been installed in Cloudflare.
-- Cloudflare publishing is pending final hosting-cost approval for the existing Workers Standard account. No public deployment or additional inference has occurred for this change.
+- The owner specified free Workers only. No paid plan upgrade, CPU override or additional inference is authorized. Publishing is pending CI; the CLI usage-model setting did not establish the subscription tier.
 
 # OpenAI diagnostic recheck — October 9, 2026
 
