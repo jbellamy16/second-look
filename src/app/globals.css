@@ -185,10 +185,14 @@ option {
 }
 .demo-card button {
   display: flex;
+  align-items: center;
   gap: 8px;
   font-size: 11px;
   color: var(--muted);
-  padding: 17px 0 0;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 10px 8px;
+  border-radius: 6px;
 }
 .version {
   font-size: 11px;
@@ -231,6 +235,10 @@ option {
 }
 .help-button {
   color: #718795;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
 }
 .mobile-settings {
   display: none !important;
@@ -261,6 +269,7 @@ main {
   margin-top: 7px;
 }
 .catchup-button {
+  min-height: 44px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -488,6 +497,7 @@ main {
   height: 29px;
   flex-shrink: 0;
   border-radius: 5px;
+  padding: 10px;
 }
 .icon-button:hover {
   background: #263744;
@@ -570,6 +580,7 @@ main {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  padding: 10px;
 }
 .play-button .lucide-play {
   transform: translateX(1px);
@@ -692,7 +703,9 @@ main {
   gap: 6px;
   color: #8ec7f4;
   font-size: 11px;
-  padding: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 6px;
 }
 .stat-summary {
   display: grid;
@@ -775,12 +788,14 @@ main {
 }
 .detail-tabs {
   display: flex;
-  padding: 0 22px;
+  padding: 0 12px;
   border-bottom: 1px solid #24343e;
 }
 .detail-tabs button {
   color: #8da4b5;
-  padding: 13px 0;
+  flex: 1 1 auto;
+  white-space: nowrap;
+  padding: 12px 8px;
   position: relative;
 }
 .detail-tabs button.selected {
@@ -896,13 +911,14 @@ main {
   align-items: center;
   width: 100%;
   gap: 10px;
-  padding: 10px;
+  padding: 12px 16px;
   background: #1d3a52;
   border: 1px solid #3c6585;
   color: #d7edff;
   border-radius: 6px;
 }
 .sequence-button > span {
+  flex-shrink: 0;
   width: 24px;
   height: 24px;
   display: flex;
@@ -923,6 +939,9 @@ main {
   color: #8aa9bf;
   width: 100%;
   margin-top: 15px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 6px;
 }
 .empty-state {
   display: flex;
@@ -1008,7 +1027,7 @@ main {
   display: block;
   font-size: 11px;
   max-width: 170px;
-  color: #526e80;
+  color: var(--sl-muted);
   margin-top: 6px;
 }
 .evidence-list > button > svg {
@@ -1123,7 +1142,7 @@ footer > span:nth-child(2) {
   gap: 20px;
   text-align: left;
   width: 100%;
-  padding: 25px 6px;
+  padding: 24px 12px;
   border-top: 1px solid var(--border);
 }
 .wide-insight h3 {
@@ -1199,10 +1218,11 @@ footer > span:nth-child(2) {
   gap: 15px;
   width: 100%;
   border-top: 1px solid #22333f;
-  padding: 13px 0;
+  padding: 14px 10px;
   text-align: left;
 }
 .number {
+  flex-shrink: 0;
   width: 30px;
   height: 30px;
   border: 1px solid #39576b;
@@ -1268,7 +1288,8 @@ footer > span:nth-child(2) {
   background: #182c3c;
   border: 1px solid #37536b;
   border-radius: 6px;
-  padding: 11px 15px;
+  min-height: 44px;
+  padding: 12px 16px;
   color: #bedcf2;
   font-size: 11px;
 }
@@ -1356,14 +1377,14 @@ footer > span:nth-child(2) {
   position: absolute;
   top: 10px;
   bottom: 10px;
-  left: 5px;
+  left: 13px;
 }
 .recap-timeline > button {
   display: flex;
   align-items: center;
   gap: 14px;
   position: relative;
-  padding: 15px 0;
+  padding: 16px 8px;
   text-align: left;
   width: 100%;
 }
@@ -1429,7 +1450,8 @@ footer > span:nth-child(2) {
   background: #87c8ff;
   color: #0a2437;
   font-weight: 600;
-  padding: 13px;
+  min-height: 48px;
+  padding: 12px 18px;
   margin-top: 22px;
 }
 .settings-modes {
@@ -2015,7 +2037,7 @@ legend {
   }
   .sequence-button {
     font-size: 12px;
-    padding: 12px;
+    padding: 12px 16px;
   }
   .why-card p {
     font-size: 11px;
@@ -2080,7 +2102,7 @@ legend {
     font-size: 11px;
   }
   .wide-insight {
-    padding: 22px 0;
+    padding: 22px 12px;
     gap: 12px;
   }
   .wide-insight h3 {
@@ -2120,7 +2142,7 @@ legend {
   }
   .player-focus .secondary-button {
     font-size: 11px;
-    padding: 9px 11px;
+    padding: 12px 16px;
   }
   .comparison-label {
     font-size: 11px;
@@ -2167,7 +2189,7 @@ legend {
   text-align: left;
   width: 100%;
   border-top: 1px solid #213541;
-  padding: 11px 0;
+  padding: 12px 8px;
 }
 .event-feed-list time {
   font-size: 11px;
@@ -2231,9 +2253,9 @@ main {
   margin: 0;
 }
 .mode-switch button {
-  min-height: 38px;
+  min-height: 44px;
   font-size: 12px;
-  padding: 8px 13px;
+  padding: 10px 14px;
 }
 .icon-button,
 .help-button {
@@ -2264,7 +2286,7 @@ main {
 }
 .detail-tabs {
   justify-content: space-between;
-  gap: 8px;
+  gap: 4px;
 }
 .detail-tabs button {
   min-height: 44px;
@@ -2468,17 +2490,21 @@ footer {
 }
 @media (max-width: 600px) {
   .sidebar {
-    height: calc(70px + env(safe-area-inset-bottom));
+    height: calc(80px + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
   }
   .workspace {
-    padding-bottom: calc(82px + env(safe-area-inset-bottom));
+    padding-bottom: calc(92px + env(safe-area-inset-bottom));
   }
   .nav-item {
     min-width: 0;
+    padding: 8px 4px;
   }
   .nav-item > span {
     font-size: 10px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
   }
   .nav-item > svg {
     width: 20px;
@@ -2533,8 +2559,8 @@ footer {
   }
   .mode-switch button {
     font-size: 11px;
-    min-height: 40px;
-    padding: 7px 9px;
+    min-height: 44px;
+    padding: 10px 12px;
   }
   .panel-header h2 {
     font-size: 13px;
@@ -3050,6 +3076,7 @@ footer {
 .timeline-events button {
   width: 24px;
   height: 24px;
+  padding: 4px;
   top: -4px;
   display: grid;
   place-items: center;
@@ -3133,6 +3160,9 @@ footer {
   }
 }
 @media (max-width: 600px) {
+  .nav-item {
+    gap: 4px;
+  }
   .evidence-list > button {
     grid-template-columns: 34px auto minmax(0, 1fr) 16px;
     gap: 8px;
@@ -3153,6 +3183,11 @@ footer {
   vector-effect: non-scaling-stroke;
 }
 .asset-license-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 6px;
   color: var(--sl-blue-light);
   text-decoration: underline;
   text-underline-offset: 3px;
