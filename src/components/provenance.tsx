@@ -36,7 +36,7 @@ export function ProvenanceDetails({
           Through {clock(provenance.cutoff)}
           {provenance.cached ? " · Reused a validated response" : ""}.{" "}
           {provenance.provider !== "offline"
-            ? "AI selected and ordered verified wording."
+            ? "AI chose supporting observations; Second Look supplied required match context."
             : "Computed directly from recorded events."}
         </p>
         <h4>Detected observations</h4>

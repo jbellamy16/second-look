@@ -20,6 +20,8 @@ export type Provenance = {
   limitations: string[];
   facts: { id: string; text: string; evidenceIds: string[] }[];
   usage?: NarrationResult["usage"];
+  contextFactIds?: string[];
+  modelFactIds?: string[];
 };
 export function offlineProvenance(packet: EvidencePacket): Provenance {
   return {
@@ -54,7 +56,7 @@ export async function narratePacket(packet: EvidencePacket) {
         "AI is configured, but shared usage controls are unavailable. Showing the verified offline explanation.",
     };
   // Hash all evidence, preferences/ranking, mode, provider, model and prompt version. Never round time into the future.
-  const identity = { version: 1, provider, model: modelFor(provider), packet };
+  const identity = { version: 2, provider, model: modelFor(provider), packet };
   const key = createHash("sha256")
     .update(JSON.stringify(identity))
     .digest("hex");
@@ -78,9 +80,11 @@ export async function narratePacket(packet: EvidencePacket) {
         activity: result.activity,
         validation: result.validation,
         limitations: packet.limitations,
-        facts: packet.facts.filter((f) =>
-          result.selectedFactIds.includes(f.id),
+        facts: result.selectedFactIds.map((id) =>
+          packet.facts.find((f) => f.id === id)!,
         ),
+        contextFactIds: result.contextFactIds,
+        modelFactIds: result.modelFactIds,
         usage: result.usage,
       } satisfies Provenance,
     };

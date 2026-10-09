@@ -1,6 +1,8 @@
 import type { NarrationResult } from "./narration";
 /** Standard token-rate estimate, not an invoice. Unknown models/rates remain unknown. */
-export function estimateCost(result: NarrationResult): number | null {
+export function estimateCost(
+  result: Pick<NarrationResult, "provider" | "model" | "usage">,
+): number | null {
   if (
     result.provider !== "openai" ||
     !["gpt-5.4-mini", "gpt-5.4-mini-2026-03-17"].includes(result.model) ||

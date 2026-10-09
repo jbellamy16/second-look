@@ -84,10 +84,6 @@ for (const mode of ["fan", "analyst"] as const)
             provider: result.source,
             model: provenance.model!,
             usage: provenance.usage,
-            narrative: result.narrative!,
-            selectedFactIds: provenance.facts.map((f) => f.id),
-            activity: provenance.activity,
-            validation: provenance.validation,
           })
         : null;
     rows.push({

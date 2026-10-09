@@ -2,7 +2,7 @@
 
 ## Current status
 
-No Azure deployment or accepted live AI narration has been verified. An authorized OpenAI test reached the API, but both recaps fell back during validation; Foundry remains unverified live. On October 9, 2026, `az account show` required login. The owner chose setup instructions rather than cloud provisioning. Nothing in this repository provisions resources automatically.
+No Azure deployment has been verified. OpenAI Fan narration passed a local authorized live check; an Analyst context omission is fixed with offline captured-response verification, and the revised flow has not been rechecked live. Foundry remains unverified live. On October 9, 2026, the owner logged into Azure CLI but reported that the required access remains unavailable. Normal inference stays disabled. Nothing in this repository provisions resources automatically.
 
 ## 1. Prepare an existing App Service
 

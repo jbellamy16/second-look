@@ -2,11 +2,21 @@
 
 ## Status for this implementation
 
-An owner-authorized OpenAI test on October 9, 2026 completed **four real HTTP 200 Responses requests**, but both recaps fell back during application validation. Returned usage totaled **6,117 input tokens and 586 output tokens**, an estimated **$0.00722475** at the standard GPT-5.4 Mini rates; actual billing was not inspected. The failed Fan and Analyst workflows took approximately 5.37s and 4.13s. This confirms API access, not successful narration. No Foundry live calls, public deployment or paid infrastructure creation occurred.
+Two owner-authorized OpenAI evaluations on October 9, 2026 completed **eight real HTTP 200 Responses requests** in total. No Foundry live calls, public deployment or paid infrastructure creation occurred. Normal inference remains disabled.
 
-Follow-up work makes local credentials load correctly under Vitest, accepts nullable provider envelope fields, reports the exact failed validation stage, and retains only public selection IDs plus usage/status metadata for diagnostics. Another live run requires a new request allowance. Human semantic review remains pending. Mocked token counts and timings remain clearly separate from these real observations.
+| Run                | Requests | Fan result                           | Analyst result                         | Input / output tokens | Estimated cost |
+| ------------------ | -------- | ------------------------------------ | -------------------------------------- | --------------------- | -------------- |
+| Initial            | 4        | Fallback, 5.37s                      | Fallback, 4.13s                        | 6,117 / 586           | $0.00722475    |
+| Diagnostic recheck | 4        | **Accepted OpenAI narration**, 3.50s | Fallback: omitted required goal, 3.65s | 6,117 / 463           | $0.00667125    |
+| Total              | **8**    |                                      |                                        | **12,234 / 1,049**    | **$0.013896**  |
 
-The default repeatable suite covers 180 combinations: pressure/substitution/quiet × seeds 202632/43/71 × timestamps 0/1800/3300/3804/5400 × Fan/Analyst × OpenAI/Foundry. It compares score, evidence counts, timestamps, mandatory context and rendered claims with regenerated event data. Additional tests reject forged evidence/statistics, unknown facts, duplicate facts, arbitrary free-form prose, omitted score/abstention/goal context, wrong tools, incomplete responses, refusal and HTTP failures. Ordinary tests never require a provider key.
+These estimates use returned token usage and standard GPT-5.4 Mini rates; actual billing was not inspected. The initial report did not retain the cause of rejection. The diagnostic recheck retained public fact selections and showed that the Analyst selected valid comparisons but omitted the early goal. It did not invent a statistic.
+
+The server now supplies required score, latest goal, selected insight and abstention context, leaving AI to choose additional observations within the four-fact limit. Unknown IDs, duplicates and arbitrary prose still fail validation. A sanitized capture in `eval/fixtures/openai-2026-10-09.json` replays both real selections successfully under this contract, including a rewind rejection. **This is offline regression evidence: the revised prompt and Analyst composition have not been tested live.** All eight authorized requests are consumed; any further live run needs a new allowance.
+
+Assistant review of the accepted Fan recap found its 1–0 score, Arlo Hayes goal at 01:00, four high ball wins versus zero, and four shots versus zero consistent with the recorded pressure fixture at 63:24. The selection is useful context but remains templated; this small sample does not demonstrate improved editorial quality over the deterministic baseline. Human semantic review remains pending. Mocked token counts and timings are separate from these real observations.
+
+The default repeatable suite covers 180 combinations: pressure/substitution/quiet × seeds 202632/43/71 × timestamps 0/1800/3300/3804/5400 × Fan/Analyst × OpenAI/Foundry. It compares score, evidence counts, timestamps, mandatory context and rendered claims with regenerated event data. Additional tests reject forged evidence/statistics, unknown facts, duplicate facts, arbitrary free-form prose, wrong tools, incomplete responses, refusal and HTTP failures. Tests also ensure server-supplied score/abstention/goal context cannot be omitted. Ordinary tests never require a provider key.
 
 ```sh
 npm run check

@@ -1,3 +1,15 @@
+# OpenAI diagnostic recheck — October 9, 2026
+
+- Four additional owner-authorized requests returned HTTP 200. Fan narration passed live validation in 3.50s. Analyst returned verified facts but omitted the required goal and fell back in 3.65s.
+- This run used 6,117 input and 463 output tokens, estimated $0.00667125. Cumulative usage is eight requests, 12,234 input and 1,049 output tokens, estimated $0.013896. Actual billing was not inspected.
+- Required match context is now supplied by the server. AI selects additional observations. Both captured real selections pass offline replay; unknown facts and future facts remain rejected. The revised prompt and Analyst result have not been tested live.
+- Type checks, 110 local tests, the production build and all 30 production browser journeys pass, including 180 mocked evaluation cases. Real Redis is tested separately in CI.
+- Reviewed fresh desktop evidence and mobile recap screenshots; the existing layout remains intact.
+- Human semantic review and a measured editorial benefit remain pending; see [evaluation results](AI-EVALUATION.md).
+- The request allowance is exhausted. Normal inference remains disabled; no deployment or resources were created.
+
+The records below preserve earlier verification states.
+
 # OpenAI local evaluation follow-up — October 9, 2026
 
 - Fixed local evaluation configuration loading under Vitest; shell overrides still win and the local file cannot authorize spending.

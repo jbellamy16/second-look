@@ -1,0 +1,42 @@
+{
+  "kind": "captured live selections for offline regression replay",
+  "date": "2026-10-09",
+  "provider": "openai",
+  "model": "gpt-5.4-mini",
+  "scenario": "pressure",
+  "time": 3804,
+  "rows": [
+    {
+      "mode": "fan",
+      "selection": {
+        "factIds": [
+          "score",
+          "moment-pressure-202632-7",
+          "harbor-pressure-63",
+          "harbor-chances-63"
+        ]
+      },
+      "originalSource": "openai",
+      "originalFailureStage": null,
+      "requestLatencyMs": 3496,
+      "inputTokens": 3036,
+      "outputTokens": 173
+    },
+    {
+      "mode": "analyst",
+      "selection": {
+        "factIds": [
+          "score",
+          "harbor-pressure-63",
+          "harbor-chances-63",
+          "moment-pressure-202632-463"
+        ]
+      },
+      "originalSource": "offline",
+      "originalFailureStage": "story_validation",
+      "requestLatencyMs": 3648,
+      "inputTokens": 3081,
+      "outputTokens": 290
+    }
+  ]
+}
