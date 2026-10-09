@@ -112,7 +112,7 @@ export function Pitch({
             className={`event-point ${onSelect ? "event-marker" : ""} ${active ? "is-selected" : ""} event-${e.type}`}
             data-event-time={e.time}
             tabIndex={onSelect ? 0 : undefined}
-            role={onSelect ? "button" : undefined}
+            role={onSelect ? "button" : "img"}
             aria-label={`${clock(e.time)} ${e.type} by ${player(e.playerId).name}`}
             aria-pressed={onSelect ? active : undefined}
             onClick={() => onSelect?.(e)}
@@ -123,7 +123,6 @@ export function Pitch({
               }
             }}
           >
-            <title>{`${player(e.playerId).name} · ${e.type} · ${clock(e.time)}`}</title>
             <circle
               className="marker-hit"
               cx={p.x}
@@ -177,34 +176,6 @@ export function Pitch({
               >
                 {sequence ? index + 1 : player(e.playerId).number}
               </text>
-            )}
-            {active && !compact && (
-              <g
-                className="marker-tooltip"
-                pointerEvents="none"
-                transform={`translate(${Math.max(60, Math.min(725, p.x - 20))},${p.y > 160 ? p.y - 95 : p.y + 30})`}
-              >
-                <rect
-                  width="220"
-                  height="62"
-                  rx="8"
-                  fill="#071320"
-                  stroke="#f8fbff"
-                />
-                <text
-                  x="14"
-                  y="25"
-                  fill="#f8fbff"
-                  fontSize="15"
-                  fontWeight="600"
-                >
-                  {player(e.playerId).name}
-                </text>
-                <text x="14" y="46" fill="#a6b6cb" fontSize="12">
-                  {e.type.charAt(0).toUpperCase() + e.type.slice(1)} ·{" "}
-                  {clock(e.time)}
-                </text>
-              </g>
             )}
           </g>
         );

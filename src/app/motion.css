@@ -226,9 +226,6 @@ button:disabled {
     transform: scale(1);
   }
 }
-.marker-tooltip {
-  animation: content-in var(--motion-micro) var(--ease-out);
-}
 .event-path {
   fill: none;
   transition: opacity var(--motion-standard) var(--ease-out);
