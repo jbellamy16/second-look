@@ -47,6 +47,12 @@ async function response(
   const endpoint = new URL(process.env.FOUNDRY_ENDPOINT!);
   if (
     endpoint.protocol !== "https:" ||
+    endpoint.username !== "" ||
+    endpoint.password !== "" ||
+    endpoint.search !== "" ||
+    endpoint.hash !== "" ||
+    (endpoint.port !== "" && endpoint.port !== "443") ||
+    !["/", "/openai/v1", "/openai/v1/"].includes(endpoint.pathname) ||
     !/(\.openai\.azure\.com|\.services\.ai\.azure\.com)$/.test(
       endpoint.hostname,
     )
@@ -71,7 +77,11 @@ async function response(
   });
   if (!res.ok) throw new Error(`Foundry HTTP ${res.status}`);
   const data = await res.json();
-  if (!Array.isArray(data.output)) throw new Error("Invalid Foundry response");
+  if (
+    !Array.isArray(data.output) ||
+    (data.status && data.status !== "completed")
+  )
+    throw new Error("Invalid or incomplete Foundry response");
   return data;
 }
 export async function narrate(
@@ -119,15 +129,34 @@ export async function narrate(
     .strict()
     .parse(JSON.parse(calls[0].arguments ?? "{}"));
   const selected = events.filter((e) => insight.evidenceIds.includes(e.id));
+  const baseline = events.filter((e) => insight.baselineIds.includes(e.id));
   if (
     selected.length !== insight.evidenceIds.length ||
-    selected.some((e) => e.time > insight.end)
+    selected.length !== insight.current ||
+    baseline.length !== insight.previous ||
+    baseline.length !== insight.baselineIds.length ||
+    selected.some(
+      (e) =>
+        e.time <= insight.start ||
+        e.time > insight.end ||
+        e.team !== insight.team,
+    ) ||
+    baseline.some(
+      (e) =>
+        e.time <= insight.start - 900 ||
+        e.time > insight.start ||
+        e.team !== insight.team,
+    )
   )
     throw new Error("Evidence unavailable");
   const evidence = {
     ...insight,
     insightId: args.insightId,
     events: selected.map((e) => ({ ...e, player: player(e.playerId).name })),
+    baselineEvents: baseline.map((e) => ({
+      ...e,
+      player: player(e.playerId).name,
+    })),
     limitations: [
       "Synthetic event data; no continuous tracking",
       "Equal-duration comparison; correlation is not causation",

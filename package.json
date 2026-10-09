@@ -8,14 +8,16 @@
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
-    "start": "next start --hostname 0.0.0.0",
+    "start": "node .next/standalone/server.js",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "check": "npm run typecheck && npm test && npm run build",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "postbuild": "node scripts/prepare-standalone.mjs"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
     "lucide-react": "^0.577.0",
     "next": "16.4.0",
     "react": "19.3.0",
@@ -23,12 +25,14 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "prettier": "^3.9.9",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"

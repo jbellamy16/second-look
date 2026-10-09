@@ -73,3 +73,7 @@ Container build was supplied as deployment preparation; it must be tested in the
 - [Structured outputs](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/structured-outputs)
 - [Azure App Service GitHub Actions deployment](https://learn.microsoft.com/en-us/azure/app-service/deploy-github-actions)
 - [Next.js standalone output](https://nextjs.org/docs/app/api-reference/config/next-config-js/output)
+
+## Brand metadata before hosting
+
+Set `NEXT_PUBLIC_SITE_URL` to the chosen public HTTPS origin **at build time** so Open Graph and X image URLs resolve to the actual host. The variable is a public origin, not a secret. Keep inference keys server-side. Verify `/manifest.webmanifest`, `/favicon.ico`, `/apple-touch-icon.png`, `/opengraph-image.png`, and `/twitter-image.png` after deployment. The supplied OG is 1200×630 and X is 1200×675. The manifest does not imply offline caching.

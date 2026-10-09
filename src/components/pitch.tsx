@@ -1,6 +1,6 @@
 "use client";
 import { useId } from "react";
-import { MatchEvent, player, TEAMS, clock } from "@/lib/match";
+import { MatchEvent, player, clock } from "@/lib/match";
 export function Pitch({
   events,
   selected,
@@ -29,7 +29,7 @@ export function Pitch({
     <svg
       viewBox="0 0 1000 640"
       className={`pitch ${compact ? "compact" : ""}`}
-      role="img"
+      role={onSelect ? "group" : "img"}
       aria-label={
         sequence
           ? "Recorded football sequence"
@@ -43,12 +43,12 @@ export function Pitch({
           height="640"
           patternUnits="userSpaceOnUse"
         >
-          <rect width="150" height="640" fill="#163e2d" />
-          <rect width="75" height="640" fill="#1c4733" />
+          <rect width="150" height="640" fill="#0c1c2f" />
+          <rect width="75" height="640" fill="#10243a" />
         </pattern>
         <radialGradient id={`light-${id}`}>
-          <stop stopColor="#70a773" stopOpacity=".1" />
-          <stop offset="1" stopColor="#021910" stopOpacity=".32" />
+          <stop stopColor="#61a8ff" stopOpacity=".1" />
+          <stop offset="1" stopColor="#071320" stopOpacity=".32" />
         </radialGradient>
         <marker
           id={`arrow-${id}`}
@@ -59,7 +59,7 @@ export function Pitch({
           markerHeight="5"
           orient="auto-start-reverse"
         >
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#d6eddd" />
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#61a8ff" />
         </marker>
       </defs>
       <rect
@@ -78,15 +78,15 @@ export function Pitch({
         rx="9"
         fill={`url(#light-${id})`}
       />
-      <g fill="none" stroke="#a9c4ad" strokeOpacity=".6" strokeWidth="1.8">
+      <g fill="none" stroke="#a6b6cb" strokeOpacity=".6" strokeWidth="1.8">
         <rect x="50" y="45" width="900" height="550" />
         <path d="M500 45V595" />
         <circle cx="500" cy="320" r="76" />
-        <circle cx="500" cy="320" r="2" fill="#a9c4ad" />
+        <circle cx="500" cy="320" r="2" fill="#a6b6cb" />
         <path d="M50 170H190V470H50M950 170H810V470H950M50 250H103V390H50M950 250H897V390H950M50 285H35V355H50M950 285H965V355H950" />
         <path d="M190 262a76 76 0 0 1 0 116M810 262a76 76 0 0 0 0 116M50 58a13 13 0 0 0 13-13M937 45a13 13 0 0 0 13 13M50 582a13 13 0 0 1 13 13M937 595a13 13 0 0 1 13-13" />
-        <circle cx="145" cy="320" r="2" fill="#a9c4ad" />
-        <circle cx="855" cy="320" r="2" fill="#a9c4ad" />
+        <circle cx="145" cy="320" r="2" fill="#a6b6cb" />
+        <circle cx="855" cy="320" r="2" fill="#a6b6cb" />
       </g>
       {sequence &&
         filtered.map((e) => {
@@ -97,9 +97,17 @@ export function Pitch({
               <path
                 key={`line-${e.id}`}
                 d={`M${p.x} ${p.y}L${q.x} ${q.y}`}
-                stroke={e.type === "shot" ? "#f3cd83" : "#d4e8dd"}
+                stroke={e.type === "shot" ? "#f3ab44" : "#61a8ff"}
                 strokeWidth="2.7"
-                strokeDasharray={e.type === "shot" ? "6 5" : undefined}
+                strokeDasharray={
+                  e.type === "shot"
+                    ? "6 5"
+                    : e.type === "carry"
+                      ? "2 7"
+                      : e.type === "pass" && !e.success
+                        ? "8 6"
+                        : undefined
+                }
                 opacity=".85"
                 markerEnd={`url(#arrow-${id})`}
               />
@@ -125,28 +133,30 @@ export function Pitch({
             }}
           >
             <title>{`${player(e.playerId).name} · ${e.type} · ${clock(e.time)}`}</title>
+            <circle
+              className="marker-hit"
+              cx={p.x}
+              cy={p.y}
+              r="30"
+              fill="transparent"
+            />
             {active && (
               <circle
                 cx={p.x}
                 cy={p.y}
                 r="22"
                 fill="none"
-                stroke="#e6d78b"
+                stroke="#20d17a"
                 strokeWidth="2"
               />
             )}
             <circle
               cx={p.x}
               cy={p.y}
+              className="marker-dot"
               r={compact ? 12 : 14}
-              fill={
-                e.type === "recovery" ||
-                e.type === "interception" ||
-                e.type === "tackle"
-                  ? "#a1e9a4"
-                  : TEAMS[e.team].color
-              }
-              stroke="#09211b"
+              fill={active ? "#20d17a" : "#61a8ff"}
+              stroke="#071320"
               strokeWidth="3"
             />
             {!compact && (
@@ -154,7 +164,7 @@ export function Pitch({
                 x={p.x}
                 y={p.y + 4}
                 textAnchor="middle"
-                fill="#10251f"
+                fill="#071320"
                 fontSize="11"
                 fontWeight="800"
               >
@@ -163,25 +173,26 @@ export function Pitch({
             )}
             {active && !compact && (
               <g
+                pointerEvents="none"
                 transform={`translate(${Math.max(60, Math.min(725, p.x - 20))},${p.y > 160 ? p.y - 95 : p.y + 30})`}
               >
                 <rect
                   width="220"
                   height="62"
                   rx="8"
-                  fill="#09151c"
-                  stroke="#476152"
+                  fill="#071320"
+                  stroke="#20d17a"
                 />
                 <text
                   x="14"
                   y="25"
-                  fill="#f5f8fa"
+                  fill="#f8fbff"
                   fontSize="15"
                   fontWeight="600"
                 >
                   {player(e.playerId).name}
                 </text>
-                <text x="14" y="46" fill="#acbec8" fontSize="12">
+                <text x="14" y="46" fill="#a6b6cb" fontSize="12">
                   {e.type.charAt(0).toUpperCase() + e.type.slice(1)} ·{" "}
                   {clock(e.time)}
                 </text>
@@ -191,7 +202,7 @@ export function Pitch({
         );
       })}
       {!filtered.length && (
-        <text x="500" y="325" fill="#bed0c4" textAnchor="middle" fontSize="18">
+        <text x="500" y="325" fill="#a6b6cb" textAnchor="middle" fontSize="18">
           No events in this view
         </text>
       )}

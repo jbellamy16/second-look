@@ -101,3 +101,94 @@ it("validates Foundry references and rejects invented numerical claims", () => {
     ),
   ).toThrow();
 });
+
+for (const scenario of Object.keys(SCENARIOS) as Scenario[])
+  it(`${scenario}: actions stay connected, active and bounded across multiple seeds`, () => {
+    for (const seed of [SCENARIOS[scenario].seed, 42, 99, 2026]) {
+      const events = generateMatch(scenario, seed);
+      for (const [index, event] of events.entries()) {
+        const prior = events[index - 1];
+        for (const point of [event.position, event.end].filter(Boolean)) {
+          expect(point!.x).toBeGreaterThanOrEqual(0);
+          expect(point!.x).toBeLessThanOrEqual(100);
+          expect(point!.y).toBeGreaterThanOrEqual(0);
+          expect(point!.y).toBeLessThanOrEqual(100);
+        }
+        if (event.type !== "substitution")
+          expect(
+            activePlayers(events.slice(0, index + 1), event.team).map(
+              (p) => p.id,
+            ),
+          ).toContain(event.playerId);
+        if (event.type === "carry") {
+          expect(prior.type).toBe("pass");
+          expect(prior.success).toBe(true);
+          expect(event.position).toEqual(prior.end);
+          expect(event.playerId).toBe(prior.recipientId);
+          expect(
+            Math.hypot(
+              event.end!.x - event.position.x,
+              event.end!.y - event.position.y,
+            ),
+          ).toBeLessThanOrEqual(9);
+        }
+        if (event.type === "shot") {
+          expect(prior.type).toBe("carry");
+          expect(event.position).toEqual(prior.end);
+          expect(event.playerId).toBe(prior.playerId);
+          expect(event.end!.x).toBe(100);
+          expect(event.xg).toBeGreaterThanOrEqual(0.02);
+          expect(event.xg).toBeLessThanOrEqual(0.42);
+          if (event.outcome === "goal") {
+            expect(events[index + 1]?.type).toBe("goal");
+            expect(events[index + 1]?.time).toBe(event.time);
+          }
+        }
+        if (
+          event.type === "pass" &&
+          prior?.type === "pass" &&
+          prior.possessionId === event.possessionId
+        ) {
+          expect(prior.success).toBe(true);
+          expect(event.position).toEqual(prior.end);
+          expect(event.playerId).toBe(prior.recipientId);
+        }
+        if (event.type === "possession") {
+          const last = events
+            .slice(0, index)
+            .findLast((e) => e.type !== "substitution");
+          if (last?.type === "pass" && !last.success) {
+            expect(event.position.x).toBeCloseTo(100 - last.end!.x);
+            expect(event.position.y).toBeCloseTo(100 - last.end!.y);
+          }
+          if (last?.type === "foul") {
+            expect(event.team).not.toBe(last.team);
+            expect(event.position.x).toBeCloseTo(100 - last.position.x);
+            expect(event.position.y).toBeCloseTo(100 - last.position.y);
+            expect(events[index + 1]?.type).toBe("pass");
+          }
+          if (events[index + 1]?.type === "corner") {
+            expect(last?.type).toBe("shot");
+            expect(last?.outcome).toBe("saved");
+            expect(event.team).toBe(last?.team);
+            expect(events[index + 2]?.type).toBe("pass");
+          }
+          if (!last || last.type === "goal") {
+            expect(event.position).toEqual({ x: 50, y: 50 });
+            expect(events[index + 1]?.type).toBe("pass");
+          }
+        }
+      }
+    }
+  });
+
+it("recap does not list a scoring shot twice and has a full-time conclusion", () => {
+  const events = generateMatch("pressure");
+  const summary = recap(events, DURATION, "fan");
+  expect(
+    summary.moments.some(
+      (m) => m.event.type === "shot" && m.event.outcome === "goal",
+    ),
+  ).toBe(false);
+  expect(summary.watch).toContain("Full time");
+});

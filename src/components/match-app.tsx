@@ -154,7 +154,11 @@ export function MatchApp() {
     .filter((e) => !["possession", "substitution"].includes(e.type))
     .at(-1);
   const sequence = event
-    ? sequenceFor(visible, event)
+    ? visible.filter(
+        (e) =>
+          e.possessionId === event.possessionId &&
+          !["possession", "substitution"].includes(e.type),
+      )
     : latest
       ? sequenceFor(visible, latest)
       : [];
@@ -167,6 +171,12 @@ export function MatchApp() {
       : insight
         ? evidence
         : sequence;
+  const activePitchEvent = replay
+    ? visible.find((e) => e.id === replay.ids[replay.index])
+    : event;
+  const selectableEvents = (replay ? sequence : pitchEvents).filter(
+    (e) => !["goal", "foul", "substitution", "possession"].includes(e.type),
+  );
   const displayKey = `${scenario}-${time}-${prefs.mode}-${insight?.id}`;
   const currentNarrative =
     narrative?.key === displayKey ? narrative.value : null;
@@ -215,16 +225,27 @@ export function MatchApp() {
     if (time >= DURATION) setPlaying(false);
   }, [time]);
   useEffect(() => {
-    if (!replay) return;
-    const timer = setInterval(
+    if (
+      !replay ||
+      replay.index >= replay.ids.length - 1 ||
+      modal ||
+      section !== "match"
+    )
+      return;
+    const currentTime =
+      visible.find((e) => e.id === replay.ids[replay.index])?.time ?? 0;
+    const nextTime =
+      visible.find((e) => e.id === replay.ids[replay.index + 1])?.time ??
+      currentTime;
+    const timer = setTimeout(
       () =>
         setReplay((r) =>
-          r && r.index < r.ids.length - 1 ? { ...r, index: r.index + 1 } : null,
+          r && r.index < r.ids.length - 1 ? { ...r, index: r.index + 1 } : r,
         ),
-      950,
+      Math.max(0, ((nextTime - currentTime) * 1000) / 8),
     );
-    return () => clearInterval(timer);
-  }, [replay]);
+    return () => clearTimeout(timer);
+  }, [replay, modal, section, visible]);
   useEffect(() => {
     if (modal) dialogRef.current?.showModal();
     else dialogRef.current?.close();
@@ -234,6 +255,9 @@ export function MatchApp() {
     setNotice("");
     setLoading(false);
   }, [displayKey]);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [section]);
   function seek(t: number) {
     setTime(t);
     setSelectedEvent(null);
@@ -247,8 +271,23 @@ export function MatchApp() {
     setPlaying(false);
     setTab("visual");
     setSection("match");
+    requestAnimationFrame(() =>
+      document
+        .querySelector(".detail-panel")
+        ?.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches
+            ? "instant"
+            : "smooth",
+          block: "start",
+        }),
+    );
   }
   function selectEvent(e: MatchEvent) {
+    if (e.type === "substitution") {
+      setFocusedPlayer(e.playerId);
+      setSection("players");
+    }
     setSelectedEvent(e.id);
     setPlaying(false);
     setReplay(null);
@@ -260,7 +299,7 @@ export function MatchApp() {
     setSelectedKey(null);
   }
   function replayEvidence() {
-    const anchor = evidence.at(-1) ?? event ?? latest;
+    const anchor = event ?? evidence.at(-1) ?? latest;
     if (!anchor) return;
     // Include the rest of this possession only if already observed at the current timestamp.
     const ids = visible
@@ -273,14 +312,12 @@ export function MatchApp() {
     setPlaying(false);
     setSelectedEvent(ids.at(-1) ?? anchor.id);
     setReplay({ ids, index: 0 });
-    document
-      .querySelector(".pitch-panel")
-      ?.scrollIntoView({
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "instant"
-          : "smooth",
-        block: "center",
-      });
+    document.querySelector(".pitch-panel")?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+      block: "center",
+    });
   }
   async function explain() {
     if (!insight || loading) return;
@@ -332,19 +369,28 @@ export function MatchApp() {
     <div className="app-shell" inert={!ready} aria-busy={!ready}>
       <aside className="sidebar">
         <a href="/" className="brand" aria-label="Second Look home">
-          <img src="/icon.svg" alt="" />
-          <span>
-            Second
-            <span className="brand-second">
-              Look<span className="brand-dot">.</span>
-            </span>
-          </span>
+          <img
+            className="brand-wordmark"
+            src="/brand/second-look-horizontal-dark-1600.png"
+            width="1600"
+            height="316"
+            alt="Second Look"
+          />
+          <img
+            className="brand-symbol"
+            src="/brand/second-look-mark-dark.svg"
+            width="172"
+            height="172"
+            alt="Second Look"
+          />
         </a>
         <div className="nav-caption">THE MATCH, UNDERSTOOD</div>
         <nav aria-label="Main navigation">
           {nav.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
+              aria-label={label}
+              aria-current={section === id ? "page" : undefined}
               onClick={() => setSection(id)}
               className={`nav-item ${section === id ? "active" : ""}`}
             >
@@ -369,7 +415,11 @@ export function MatchApp() {
               About this demo <ArrowUpRight size={14} />
             </button>
           </div>
-          <button className="nav-item" onClick={() => setModal("settings")}>
+          <button
+            className="nav-item"
+            aria-label="Your experience"
+            onClick={() => setModal("settings")}
+          >
             <Settings2 size={18} />
             Your experience
           </button>
@@ -378,8 +428,17 @@ export function MatchApp() {
       </aside>
       <div className="workspace">
         <header className="topbar">
+          <a className="mobile-brand" href="/" aria-label="Second Look home">
+            <img
+              src="/brand/second-look-horizontal-dark-1600.png"
+              width="1600"
+              height="316"
+              alt="Second Look"
+            />
+          </a>
           <div className="breadcrumb">
-            Match centre <ChevronRight size={13} />
+            {nav.find((n) => n.id === section)?.label}{" "}
+            <ChevronRight size={13} />
             <span>Harbor vs Riverside</span>
           </div>
           <div className="topbar-right">
@@ -411,7 +470,7 @@ export function MatchApp() {
               </div>
               <h1>
                 {section === "match"
-                  ? "See the story behind the score."
+                  ? "The game behind the score."
                   : section === "insights"
                     ? "The moments that mean more."
                     : section === "stats"
@@ -483,34 +542,14 @@ export function MatchApp() {
             </div>
           </section>
           <div className="view-toolbar">
-            <div className="view-tabs">
-              {(
-                [
-                  "match",
-                  "insights",
-                  "stats",
-                  "lineups",
-                  "players",
-                ] as Section[]
-              ).map((s) => (
-                <button
-                  key={s}
-                  className={section === s ? "selected" : ""}
-                  onClick={() => setSection(s)}
-                >
-                  {s === "match"
-                    ? "Live match"
-                    : s === "stats"
-                      ? "Statistics"
-                      : s === "players"
-                        ? "Players"
-                        : s.charAt(0).toUpperCase() + s.slice(1)}
-                  {s === "match" && <span className="blue-dot" />}
-                </button>
-              ))}
+            <div className="view-context">
+              <span className="blue-dot" />
+              {nav.find((n) => n.id === section)?.label}
+              <span>Follow the evidence.</span>
             </div>
             <div className="mode-switch" aria-label="Viewing mode">
               <button
+                aria-pressed={prefs.mode === "fan"}
                 className={prefs.mode === "fan" ? "selected" : ""}
                 onClick={() => setPrefs({ ...prefs, mode: "fan" })}
               >
@@ -518,6 +557,7 @@ export function MatchApp() {
                 Fan mode
               </button>
               <button
+                aria-pressed={prefs.mode === "analyst"}
                 className={prefs.mode === "analyst" ? "selected" : ""}
                 onClick={() => setPrefs({ ...prefs, mode: "analyst" })}
               >
@@ -570,24 +610,81 @@ export function MatchApp() {
                   </div>
                   <Pitch
                     events={pitchEvents}
-                    selected={
-                      replay
-                        ? replay.ids[replay.index]
-                        : (selectedEvent ?? pitchEvents.at(-1)?.id)
-                    }
+                    selected={activePitchEvent?.id}
                     onSelect={selectEvent}
                     sequence={!!event || !!replay || !insight}
                   />
+                  <div className="event-inspector">
+                    <div>
+                      <span className="card-kicker">
+                        {replay
+                          ? replay.index === replay.ids.length - 1
+                            ? "REPLAY COMPLETE"
+                            : "REPLAYING RECORDED ACTIONS"
+                          : activePitchEvent
+                            ? "SELECTED ACTION"
+                            : "EXPLORE THE EVIDENCE"}
+                      </span>
+                      <p>
+                        {activePitchEvent
+                          ? `${clock(activePitchEvent.time)} · ${player(activePitchEvent.playerId).name} · ${activePitchEvent.type}${activePitchEvent.type === "pass" ? (activePitchEvent.success ? " completed" : " incomplete") : activePitchEvent.outcome ? ` · ${activePitchEvent.outcome}` : ""}`
+                          : "Select a marker or choose an event to see the sequence."}
+                      </p>
+                    </div>
+                    {selectableEvents.length > 0 && (
+                      <select
+                        aria-label="Recorded event"
+                        value={
+                          activePitchEvent?.id &&
+                          selectableEvents.some(
+                            (e) => e.id === activePitchEvent.id,
+                          )
+                            ? activePitchEvent.id
+                            : ""
+                        }
+                        onChange={(e) => {
+                          const chosen = visible.find(
+                            (v) => v.id === e.target.value,
+                          );
+                          if (chosen) selectEvent(chosen);
+                        }}
+                      >
+                        <option value="">Choose an event</option>
+                        {selectableEvents.map((e) => (
+                          <option key={e.id} value={e.id}>
+                            {clock(e.time)} · {e.type} ·{" "}
+                            {player(e.playerId).name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                  {(event || replay) && (
+                    <div className="replay-controls">
+                      <button className="text-button" onClick={replayEvidence}>
+                        <RotateCcw size={14} /> Replay this sequence
+                      </button>
+                      <button
+                        className="text-button"
+                        onClick={() => {
+                          setSelectedEvent(null);
+                          setReplay(null);
+                        }}
+                      >
+                        Back to the pattern <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  )}
                   <div className="pitch-bottomline">
                     <span>
                       <span className="legend-ring" />
                       {event || replay
-                        ? "Pass & shot sequence"
+                        ? "Recorded sequence"
                         : "Verified event locations"}
                     </span>
                     <span>
                       {replay
-                        ? `Event ${replay.index + 1} of ${replay.ids.length}`
+                        ? `Event ${replay.index + 1} of ${replay.ids.length} · 8×`
                         : insight && !event
                           ? `${clock(insight.start)} — ${clock(insight.end)}`
                           : "No continuous tracking"}
@@ -600,6 +697,7 @@ export function MatchApp() {
                       onClick={() => {
                         if (time === DURATION) seek(0);
                         setReplay(null);
+                        setSelectedEvent(null);
                         setPlaying(!playing);
                       }}
                     >
@@ -635,6 +733,7 @@ export function MatchApp() {
                         min="0"
                         max={DURATION}
                         value={time}
+                        aria-valuetext={clock(time)}
                         onChange={(e) => seek(Number(e.target.value))}
                         style={
                           {
@@ -646,7 +745,7 @@ export function MatchApp() {
                         <span>0′</span>
                         <span>15′</span>
                         <span>30′</span>
-                        <span>HT</span>
+                        <span>45′</span>
                         <span>60′</span>
                         <span>75′</span>
                         <span>90′</span>
@@ -691,6 +790,7 @@ export function MatchApp() {
                     {insights.length ? (
                       insights.slice(0, 3).map((i) => (
                         <button
+                          aria-pressed={insight?.id === i.id}
                           className={`insight-card ${insight?.id === i.id ? "selected" : ""}`}
                           key={i.id}
                           onClick={() => selectInsight(i)}
@@ -817,7 +917,8 @@ export function MatchApp() {
                     Second look
                   </h2>
                   <span className="verified-label">
-                    <Check size={12} /> Evidence linked
+                    <Check size={12} />{" "}
+                    {insight ? "Evidence linked" : "Awaiting evidence"}
                   </span>
                 </div>
                 {insight ? (
@@ -841,6 +942,7 @@ export function MatchApp() {
                       {(["visual", "evidence", "explanation"] as const).map(
                         (t) => (
                           <button
+                            aria-pressed={tab === t}
                             className={tab === t ? "selected" : ""}
                             key={t}
                             onClick={() => setTab(t)}
@@ -851,6 +953,17 @@ export function MatchApp() {
                           </button>
                         ),
                       )}
+                    </div>
+                    <div className="detail-footer primary-action">
+                      <button
+                        className="sequence-button"
+                        onClick={replayEvidence}
+                      >
+                        <span>
+                          <Play size={13} fill="currentColor" />
+                        </span>
+                        Show me the sequence <ArrowRight size={17} />
+                      </button>
                     </div>
                     <div className="detail-content">
                       {tab === "visual" ? (
@@ -945,6 +1058,12 @@ export function MatchApp() {
                           </p>
                         </>
                       )}
+                      <div className="watch-next insight-watch">
+                        <span>
+                          <Focus size={15} /> WHAT TO WATCH NEXT
+                        </span>
+                        <p>{currentNarrative?.watch ?? insight.watch}</p>
+                      </div>
                       {prefs.mode === "analyst" && (
                         <div className="analyst-note">
                           <strong>Measurement notes</strong>
@@ -952,23 +1071,14 @@ export function MatchApp() {
                             Coordinates normalized to the attacking team.
                             Windows: {clock(insight.start)}–{clock(insight.end)}{" "}
                             and {clock(insight.start - 900)}–
-                            {clock(insight.start)}. No tracking or causal
-                            inference.
+                            {clock(insight.start)}. Descriptive thresholds, not
+                            a statistical significance test. No tracking or
+                            causal inference.
                           </p>
                         </div>
                       )}
                     </div>
                     <div className="detail-footer">
-                      <button
-                        className="sequence-button"
-                        onClick={replayEvidence}
-                      >
-                        <span>
-                          <Play size={13} fill="currentColor" />
-                        </span>
-                        Show me the sequence
-                        <ArrowRight size={17} />
-                      </button>
                       <button
                         className="narrate-button"
                         disabled={loading}
@@ -998,7 +1108,10 @@ export function MatchApp() {
                     </p>
                     <button
                       className="secondary-button"
-                      onClick={() => setPlaying(true)}
+                      onClick={() => {
+                        if (time === DURATION) seek(0);
+                        setPlaying(true);
+                      }}
                     >
                       Keep the match moving <Play size={14} />
                     </button>
@@ -1176,6 +1289,16 @@ export function MatchApp() {
                     {player(focusedPlayer).role} ·{" "}
                     {TEAMS[player(focusedPlayer).team].name}
                   </p>
+                  <p className="player-status">
+                    {activePlayers(visible, player(focusedPlayer).team).some(
+                      (p) => p.id === focusedPlayer,
+                    )
+                      ? "On the pitch"
+                      : visible.some((e) => e.outgoingId === focusedPlayer)
+                        ? "Substituted off"
+                        : "Not yet on the pitch"}{" "}
+                    · {clock(time)}
+                  </p>
                   <div className="player-metrics">
                     {["pass", "shot", "recovery"].map((type) => (
                       <div key={type}>
@@ -1199,8 +1322,13 @@ export function MatchApp() {
                   </div>
                   <button
                     className="secondary-button"
+                    aria-pressed={prefs.player === focusedPlayer}
                     onClick={() =>
-                      setPrefs({ ...prefs, player: focusedPlayer })
+                      setPrefs({
+                        ...prefs,
+                        player:
+                          prefs.player === focusedPlayer ? "" : focusedPlayer,
+                      })
                     }
                   >
                     {prefs.player === focusedPlayer ? (
@@ -1256,10 +1384,27 @@ export function MatchApp() {
               Fictional clubs. Synthetic events. Evidence you can explore.
             </p>
             <button
+              className="secondary-button"
+              onClick={() => {
+                setScenario("pressure");
+                seek(60 * 60);
+                setSelectedKey(null);
+                setPrefs(defaultPrefs);
+                setTab("visual");
+                setSpeed(16);
+                setPlaying(true);
+                setSection("match");
+              }}
+            >
+              <Play size={14} /> Watch the build-up
+            </button>
+            <button
               className="text-button"
               onClick={() => {
-                seek(DEMO_TIME);
-                setPlaying(false);
+                changeScenario("pressure");
+                setPrefs(defaultPrefs);
+                setTab("visual");
+                setSpeed(8);
                 setSection("match");
               }}
             >
@@ -1268,9 +1413,13 @@ export function MatchApp() {
           </div>
         </main>
         <footer>
-          <span>
-            SECOND LOOK<span className="brand-dot">.</span>
-          </span>
+          <img
+            className="footer-brand"
+            src="/brand/second-look-horizontal-dark-1600.png"
+            width="1600"
+            height="316"
+            alt="Second Look"
+          />
           <span>A deeper understanding. One moment at a time.</span>
           <span>Built for the fans.</span>
         </footer>
@@ -1333,9 +1482,14 @@ export function MatchApp() {
                     key={m.event.id}
                     onClick={() => {
                       seek(m.event.time);
-                      setSelectedEvent(m.event.id);
                       setModal(null);
-                      setSection("match");
+                      if (m.event.type === "substitution") {
+                        setFocusedPlayer(m.event.playerId);
+                        setSection("players");
+                      } else {
+                        setSelectedEvent(m.event.id);
+                        setSection("match");
+                      }
                     }}
                   >
                     <span className="moment-dot" />
@@ -1371,7 +1525,7 @@ export function MatchApp() {
               onClick={() => {
                 setModal(null);
                 setSection("match");
-                setPlaying(true);
+                setPlaying(time < DURATION);
               }}
             >
               Back to the match <Play size={15} fill="currentColor" />

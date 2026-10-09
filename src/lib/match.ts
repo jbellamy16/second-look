@@ -2,6 +2,7 @@ export type TeamId = "harbor" | "riverside";
 export type Scenario = "pressure" | "substitution" | "quiet";
 export type EventType =
   | "pass"
+  | "carry"
   | "shot"
   | "goal"
   | "tackle"
@@ -106,8 +107,8 @@ export const SCENARIOS: Record<
 > = {
   pressure: {
     name: "The pressure builds",
-    description: "A patient opening becomes a sustained high press.",
-    seed: 202629,
+    description: "Harbor begin winning the ball higher up the pitch.",
+    seed: 202632,
   },
   substitution: {
     name: "A change in the game",
@@ -139,7 +140,8 @@ function seeded(seed: number) {
   };
 }
 // Feed boundary: coordinates are normalized to each team's attacking direction (left → right).
-// Every possession starts with a recorded turnover; passes stay within the active team.
+// Discrete possession sequences; no off-ball tracking is implied.
+// Failed passes transfer at their endpoint; goals restart at the centre spot.
 export function generateMatch(
   scenario: Scenario,
   seed = SCENARIOS[scenario].seed,
@@ -149,13 +151,17 @@ export function generateMatch(
   let time = 0,
     possessionId = 0,
     team: TeamId = "riverside",
-    substituted = false;
+    substituted = false,
+    cornerNext = false;
   const point = (x: number, y = 10 + random() * 80): Point => ({
     x: Math.max(1, Math.min(99, x)),
-    y,
+    y: Math.max(0, Math.min(100, y)),
   });
-  const choose = (t: TeamId, attacking = false) => {
-    let n = (attacking ? 6 : 2) + Math.floor(random() * (attacking ? 6 : 10));
+  const choose = (t: TeamId, x = 50) => {
+    // Defenders build from deep; midfielders and forwards receive higher up.
+    const first = x < 35 ? 1 : x > 65 ? 6 : 2;
+    const count = x < 35 ? 8 : x > 65 ? 6 : 10;
+    let n = first + Math.floor(random() * count);
     if (t === "harbor" && substituted && n === 11) n = 12;
     return `${t}-${n}`;
   };
@@ -180,7 +186,7 @@ export function generateMatch(
   while (time < DURATION - 75) {
     time += 9 + Math.floor(random() * 15);
     if (!substituted && time >= 55 * 60) {
-      const prior = team;
+      const prior: TeamId = team;
       team = "harbor";
       emit("substitution", "harbor-12", point(50, 0), {
         outgoingId: "harbor-11",
@@ -188,7 +194,14 @@ export function generateMatch(
       substituted = true;
       team = prior;
     }
-    team = other(team);
+    const preceding = events.findLast((e) => e.type !== "substitution");
+    const cornerRestart = cornerNext;
+    cornerNext = false;
+    team = cornerRestart
+      ? team
+      : preceding?.type === "foul"
+        ? other(preceding.team)
+        : other(team);
     possessionId++;
     const surge =
       team === "harbor"
@@ -201,25 +214,42 @@ export function generateMatch(
     let position = point(
       random() < 0.025 + surge * 0.66 ? 69 + random() * 12 : 15 + random() * 40,
     );
-    let carrier = choose(team);
+    if (preceding?.type === "pass" && !preceding.success && preceding.end)
+      position = point(100 - preceding.end.x, 100 - preceding.end.y);
+    if (!preceding || preceding.type === "goal") position = point(50, 50);
+    // A missed/saved attempt restarts deep, rather than inventing a high ball win.
+    if (preceding?.type === "shot") position = point(8, 50);
+    if (preceding?.type === "foul")
+      position = point(100 - preceding.position.x, 100 - preceding.position.y);
+    if (cornerRestart) position = point(99, 1);
+    let carrier = choose(team, position.x);
     emit("possession", carrier, position);
-    emit(
-      random() < 0.66 ? "recovery" : random() < 0.5 ? "interception" : "tackle",
-      carrier,
-      position,
-    );
+    if (cornerRestart) emit("corner", carrier, position);
+    if (preceding && !["goal", "shot", "foul"].includes(preceding.type))
+      emit(
+        random() < 0.66
+          ? "recovery"
+          : random() < 0.5
+            ? "interception"
+            : "tackle",
+        carrier,
+        position,
+      );
     const passes = 3 + Math.floor(random() * 5);
     for (let i = 0; i < passes; i++) {
       time += (scenario === "quiet" ? 9 : 5) + Math.floor(random() * 7);
-      let receiver = choose(team);
+      const end =
+        cornerRestart && i === 0
+          ? point(82 + random() * 10, 35 + random() * 30)
+          : point(
+              position.x + (random() - 0.2) * (scenario === "quiet" ? 11 : 22),
+              surge > 0.4 && random() < 0.65
+                ? 12 + random() * 24
+                : Math.max(8, Math.min(92, position.y + (random() - 0.5) * 45)),
+            );
+      let receiver = choose(team, end.x);
       if (receiver === carrier) receiver = team + "-6";
       if (receiver === carrier) receiver = team + "-8";
-      const end = point(
-        position.x + (random() - 0.25) * (scenario === "quiet" ? 9 : 15),
-        surge > 0.4 && random() < 0.65
-          ? 12 + random() * 24
-          : 10 + random() * 80,
-      );
       const success = random() < 0.88;
       emit("pass", carrier, position, { end, recipientId: receiver, success });
       position = end;
@@ -231,28 +261,50 @@ export function generateMatch(
     if (
       last?.type === "pass" &&
       last.success &&
-      random() < (scenario === "quiet" ? 0.035 : 0.12 + surge * 0.62)
+      position.x >= 64 &&
+      random() < (scenario === "quiet" ? 0.18 : 0.3 + surge * 0.4)
     ) {
-      time += 4;
-      position = point(78 + random() * 17, 30 + random() * 40);
-      const xg = Number((0.05 + random() * 0.28).toFixed(2));
+      // A short recorded carry connects the pass to the attempt without teleporting.
+      const shotPosition = point(
+        Math.min(95, position.x + 2 + random() * 7),
+        position.y,
+      );
+      time += 3;
+      emit("carry", carrier, position, { end: shotPosition, success: true });
+      position = shotPosition;
+      time += 2;
+      const distance = Math.hypot(
+        (100 - position.x) * 1.05,
+        (position.y - 50) * 0.68,
+      );
+      const xg = Number(
+        Math.max(0.02, Math.min(0.42, 0.5 * Math.exp(-distance / 16))).toFixed(
+          2,
+        ),
+      );
       const outcome =
         random() < xg ? "goal" : random() < 0.6 ? "saved" : "wide";
       emit("shot", carrier, position, {
-        end: point(100, outcome === "wide" ? 75 : 50),
+        end: {
+          x: 100,
+          y: outcome === "wide" ? (position.y < 50 ? 40 : 60) : 50,
+        },
         xg,
         outcome,
       });
       if (outcome === "goal") {
-        time += 1;
         emit("goal", carrier, point(99, 50));
-      } else if (outcome === "saved" && random() < 0.4) {
-        time += 12;
-        emit("corner", choose(team), point(99, 1));
+      } else if (outcome === "saved") {
+        cornerNext = random() < 0.3;
       }
     } else if (last?.success && random() < 0.08) {
       time += 3;
-      emit("foul", choose(other(team)), position, { team: other(team) });
+      emit(
+        "foul",
+        choose(other(team), 100 - position.x),
+        point(100 - position.x, 100 - position.y),
+        { team: other(team) },
+      );
     }
   }
   return events;
@@ -271,7 +323,9 @@ export function statistics(events: MatchEvent[]) {
         {
           goals: own.filter((e) => e.type === "goal").length,
           shots: shots.length,
-          onTarget: shots.filter((e) => e.outcome !== "wide").length,
+          onTarget: shots.filter(
+            (e) => e.outcome === "saved" || e.outcome === "goal",
+          ).length,
           xg: Number(shots.reduce((sum, e) => sum + (e.xg ?? 0), 0).toFixed(2)),
           passes: passes.length,
           completed: passes.filter((e) => e.success).length,
