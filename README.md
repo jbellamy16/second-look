@@ -10,7 +10,7 @@ Watching football and understanding how a match is changing are different things
 
 ## What works
 
-- A responsive match centre with original Harbor Athletic and Riverside FC identities. No club crests, player photos, or broadcast footage.
+- A responsive match centre with original Harbor Athletic and Riverside FC identities, alongside the supplied Second Look v1 brand system. No club crests, player photos, or broadcast footage.
 - Three deterministic seeded fixtures: increasing pressure, post-substitution changes, and a quiet match.
 - Play/pause, restart, seek, five playback speeds, scenario selection, and repeatable demo reset at 63:24.
 - An interactive SVG pitch: actual event positions, numbered possession sequences, pass/shot endpoints, and progressive sequence replay. No invented tracking.
@@ -41,7 +41,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-The browser suite runs in desktop Chromium and Chromium with iPhone-sized viewport/touch emulation. It is not a real Safari-device certification. CI runs the optimized production server. For a production preview locally, run `npm run build && npm start`.
+The browser suite runs in desktop Chromium, Chromium with iPhone-sized viewport/touch emulation, and a compact Android-sized Chromium viewport. It audits the five main screens and both dialogs with axe, checks overflow, and exercises touch and keyboard pitch selection. It is not a real Safari-device certification. CI runs the optimized production server. For a production preview locally, run `npm run build && npm start`.
 
 ## Architecture
 
@@ -74,13 +74,23 @@ One client playback timestamp is the source of truth. Every derived view uses th
 
 ## Synthetic data and explainability
 
-The seed controls a reproducible event stream. Fictional teams alternate possession, record a ball win, pass among active teammates, and sometimes create shots, goals, corners, or fouls. A substitution replaces an active player at the next possession boundary after 55 minutes. Scenario parameters alter probabilities, **not insight text or detection rules**. The pressure fixture uses seed 202629; the opening demo state has Harbor ahead 1–0 and evidence-supported pressure/chance observations.
+The seed controls a reproducible event stream. Fictional teams exchange discrete possessions, pass among active teammates, and sometimes create shots, goals, corners, or fouls. Failed passes transfer at the recorded endpoint; fouls return the ball to the fouled team; goals restart at the centre; corners retain the attacking team. Restarts are not counted as high ball wins. Role-aware recipients and short recorded carries connect passes to shot locations. Chance probabilities fall with distance from goal. A substitution replaces an active player at the next possession boundary after 55 minutes. Scenario parameters alter probabilities, **not insight text or detection rules**. The pressure fixture uses seed 202632; the opening demo state has Harbor ahead 1–0 and evidence-supported pressure/chance observations.
 
 Coordinates use 0–100 with each team's attack normalized left to right. The pitch mirrors Riverside when showing both teams. Only recorded events are drawn; lines represent recorded pass/shot endpoints. They do not claim continuous trajectories, ball speed, player speed, or off-ball positions. Possession IDs define sequence boundaries. The synthetic model simplifies stoppages and possession exchanges; it is not calibrated to a professional event-data distribution. Match time is a simplified 90-minute event clock without added time or a halftime break.
 
 `MatchEvent` is the future licensed-feed integration boundary. An adapter would need to normalize coordinates, player/team identity, clock semantics, outcomes, and possession IDs. No real data provider is currently integrated.
 
-Every insight contains category, team, headline, explanation, significance, what to watch, metric, current/baseline counts, both evidence ID sets, and window boundaries. Detectors require enough observations and a meaningful change; no patterns appear before two complete windows are available. The quiet fixture has no qualifying observation at the demo timestamp. xG is the generator’s shot probability, not a trained expected-goals model. Passing activity is not mislabeled possession percentage.
+Every insight contains category, team, headline, explanation, significance, what to watch, metric, current/baseline counts, both evidence ID sets, and window boundaries. Detectors use descriptive count thresholds, not statistical significance tests. They require enough observations and a meaningful change; no patterns appear before two complete windows are available. The quiet fixture has no qualifying observation at the demo timestamp. xG is the generator’s shot probability, not a trained expected-goals model. Passing activity is not mislabeled possession percentage.
+
+## Brand and Phase 2 refinements
+
+The supplied Second Look v1 kit is integrated without redrawing its mark. Navigation uses the supplied horizontal wordmark, with the symbol in the compact sidebar. Inter is self-hosted with `next/font/local`; runtime and builds do not request Google Fonts. Brand tokens, navy pitch surfaces, blue actions, green focused events, and original social assets are wired throughout the app. Guidelines and source tokens are preserved in `docs/brand/`.
+
+Metadata serves the supplied SVG/ICO favicons, Apple touch icon, Safari mask, 192/512 px icons, maskable icon, 1200×630 Open Graph image, and 1200×675 X image. Set **`NEXT_PUBLIC_SITE_URL` to the public HTTPS origin before a hosted build**. Local builds default to localhost. A manifest supports home-screen identity; no offline service-worker support is claimed. Real external social link previews still need a public deployment.
+
+The evidence inspector offers a readable event summary and a native event picker alongside touch/keyboard pitch markers. Replays follow recorded time gaps at 8× speed and hold the final frame. The selected evidence event determines the replay. On mobile, the insight detail follows the cards before the event feed. The original navigation, modes, stats, lineups, preferences, player maps, and Catch Me Up remain available.
+
+**Watch the build-up** restores the pressure fixture and starts at 60:00 at 16×. High-ball-win evidence qualifies shortly afterward; the default 63:24 view has Harbor ahead 1–0 with four high ball wins and four shots in the recent window, each versus zero in the previous window. **Reset demo** restores that view, Fan mode, all categories, neutral preferences, and 8× playback. Catch Me Up avoids duplicating scoring shots as separate highlights and ends with a full-time message when appropriate.
 
 ## Microsoft Foundry: actual integration vs offline behavior
 

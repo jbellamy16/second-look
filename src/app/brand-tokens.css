@@ -1,0 +1,16 @@
+/* Second Look brand tokens - import after Tailwind's base layer */
+:root {
+  --sl-midnight: #071320;
+  --sl-navy: #0c1c2f;
+  --sl-surface: #17283d;
+  --sl-blue: #347cff;
+  --sl-blue-light: #61a8ff;
+  --sl-green: #20d17a;
+  --sl-text: #f8fbff;
+  --sl-muted: #a6b6cb;
+  --sl-warning: #f3ab44;
+  --sl-danger: #ff6275;
+  --sl-radius-card: 16px;
+  --sl-radius-control: 10px;
+  --sl-border: rgba(166, 182, 203, 0.18);
+}

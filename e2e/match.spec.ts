@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 test("playback, evidence, modes, recap, and rewind stay synchronized", async ({
   page,
 }) => {
@@ -113,4 +114,190 @@ test("explanation provenance, category preferences, and arbitrary seeking are tr
   await timeline.press("Home");
   await expect(page.getByTestId("clock")).toContainText("00:00");
   await expect(page.getByTestId("score")).toHaveText("0:0");
+});
+
+test("selected evidence drives replay, which retains its final frame", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto("/");
+  await page.getByRole("button", { name: /^Evidence \(/ }).click();
+  const first = page.locator(".evidence-list button").first();
+  const selectedTime = await first.locator("time").innerText();
+  await first.click();
+  await expect(page.locator(".event-inspector p")).toContainText(selectedTime);
+  await page.getByRole("button", { name: "Show me the sequence" }).click();
+  await expect(page.locator(".event-inspector p")).toContainText(selectedTime);
+  await page.clock.runFor(15000);
+  await expect(
+    page.getByText("REPLAY COMPLETE", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Sequence replay" }),
+  ).toBeVisible();
+  await expect(page.getByTestId("clock")).toContainText("63:24");
+  await page.getByRole("button", { name: "Back to the pattern" }).click();
+  await expect(
+    page.getByRole("heading", { name: "The pattern in play" }),
+  ).toBeVisible();
+  await page
+    .getByLabel("Recorded event", { exact: true })
+    .selectOption({ index: 1 });
+  await expect(page.locator(".event-inspector p")).toContainText(selectedTime);
+});
+
+test("the demo shows a pattern emerging and reset clears custom filters", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto("/");
+  await page.getByRole("button", { name: "Watch the build-up" }).click();
+  await expect(page.getByText("Let the game tell its story.")).toBeVisible();
+  await page.clock.runFor(6000);
+  await expect(
+    page.getByRole("heading", { name: "Harbor are winning it higher" }),
+  ).toHaveCount(2);
+  await page.getByRole("button", { name: "Pause match", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Your experience", exact: true })
+    .click();
+  for (const name of ["Pressure", "Chances", "Rhythm"])
+    await page.getByRole("checkbox", { name }).uncheck();
+  await page.getByRole("button", { name: "Save my experience" }).click();
+  await page.getByRole("button", { name: "Reset demo" }).click();
+  await expect(page.getByTestId("clock")).toContainText("63:24");
+  await expect(
+    page.getByRole("heading", { name: "Harbor are winning it higher" }),
+  ).toHaveCount(2);
+  await expect(
+    page.getByRole("button", { name: "Fan mode", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+});
+
+test("every major screen fits the viewport and captures review evidence", async ({
+  page,
+}, testInfo) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/");
+  for (const [label, file] of [
+    ["Match centre", "match"],
+    ["Insights", "insights"],
+    ["Match stats", "stats"],
+    ["Lineups", "lineups"],
+    ["Player focus", "player"],
+  ]) {
+    await page
+      .getByRole("navigation")
+      .getByRole("button", { name: label, exact: true })
+      .click();
+    await expect(
+      page
+        .getByRole("navigation")
+        .getByRole("button", { name: label, exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.mouse.move(0, 0);
+    const accessibility = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    expect(accessibility.violations).toEqual([]);
+    await page.screenshot({
+      path: `artifacts/${testInfo.project.name}-${file}.png`,
+      fullPage: true,
+    });
+  }
+  for (const [label, file] of [
+    ["Your experience", "preferences"],
+    ["Catch me up", "recap"],
+  ]) {
+    await page.getByRole("button", { name: label, exact: true }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    expect(
+      await page
+        .getByRole("dialog")
+        .evaluate((el) => el.scrollWidth <= el.clientWidth),
+    ).toBe(true);
+    await page.screenshot({
+      path: `artifacts/${testInfo.project.name}-${file}.png`,
+    });
+    const dialogAudit = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    expect(dialogAudit.violations).toEqual([]);
+    await page.keyboard.press("Escape");
+  }
+  expect(errors).toEqual([]);
+});
+
+test("metadata, home-screen icons and social previews reference real files", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/");
+  await expect(page).toHaveTitle("Second Look | Football beyond the score");
+  await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute(
+    "content",
+    "1200",
+  );
+  await expect(
+    page.locator('meta[property="og:image:height"]'),
+  ).toHaveAttribute("content", "630");
+  await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+    "content",
+    "summary_large_image",
+  );
+  for (const selector of [
+    'link[rel="apple-touch-icon"]',
+    'link[rel="manifest"]',
+    'meta[property="og:image"]',
+    'meta[name="twitter:image"]',
+  ]) {
+    const el = page.locator(selector).first();
+    const url = await el.getAttribute(
+      selector.startsWith("meta") ? "content" : "href",
+    );
+    expect(url).toBeTruthy();
+    const asset = await request.get(new URL(url!, "http://localhost").pathname);
+    expect(asset.ok()).toBe(true);
+  }
+  const manifest = await (await request.get("/manifest.webmanifest")).json();
+  for (const icon of manifest.icons)
+    expect((await request.get(icon.src)).ok()).toBe(true);
+  expect(
+    await page
+      .locator("img:visible")
+      .evaluateAll((images) =>
+        images.every(
+          (image) =>
+            (image as HTMLImageElement).complete &&
+            (image as HTMLImageElement).naturalWidth > 0,
+        ),
+      ),
+  ).toBe(true);
+});
+
+test("pitch markers support touch-sized selection and keyboard inspection", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const markers = page.locator(".pitch-panel .event-marker");
+  await markers.last().click();
+  await expect(
+    page.getByText("SELECTED ACTION", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Event sequence" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Back to the pattern" }).click();
+  const label = await markers.first().getAttribute("aria-label");
+  await markers.first().focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".event-inspector p")).toContainText(
+    label!.split(" ")[0],
+  );
 });

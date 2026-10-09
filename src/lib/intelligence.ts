@@ -1,5 +1,6 @@
 import {
   eventsAt,
+  DURATION,
   MatchEvent,
   player,
   statistics,
@@ -58,7 +59,7 @@ export function detectInsights(all: MatchEvent[], time: number): Insight[] {
         explanation,
         why,
         watch,
-        analyst: `${evidence.length} ${metric.toLowerCase()} in the current 15-minute window; ${baseline.length} in the preceding 15 minutes. Equal-duration comparison. Event data describes actions, not off-ball positioning.`,
+        analyst: `${evidence.length} ${metric.toLowerCase()} in the current 15-minute window; ${baseline.length} in the preceding 15 minutes. Equal-duration comparison; a descriptive threshold, not a statistical significance test. Event data describes actions, not off-ball positioning.`,
         start,
         end: time,
         evidenceIds: evidence.map((e) => e.id),
@@ -96,7 +97,7 @@ export function detectInsights(all: MatchEvent[], time: number): Insight[] {
         "chances",
         shots,
         oldShots,
-        `${name} are finding more chances`,
+        `${name} are taking more shots`,
         `${name} have taken ${shots.length} shots in the last 15 minutes, compared with ${oldShots.length} in the previous 15.`,
         "More attempts suggest growing attacking activity. Shot frequency alone does not establish chance quality.",
         `Watch the quality of ${name}'s next chance, not just the number of shots.`,
@@ -139,7 +140,7 @@ export function recap(events: MatchEvent[], time: number, mode: Mode) {
       .filter(
         (e) =>
           ["goal", "substitution"].includes(e.type) ||
-          (e.type === "shot" && (e.xg ?? 0) >= 0.28),
+          (e.type === "shot" && e.outcome !== "goal" && (e.xg ?? 0) >= 0.2),
       )
       .slice(-6)
       .map((e) => ({
@@ -152,7 +153,9 @@ export function recap(events: MatchEvent[], time: number, mode: Mode) {
               : `Chance · ${player(e.playerId).name}`,
       })),
     watch:
-      insights[0]?.watch ??
-      "Watch for the first sustained change in ball wins or shot frequency.",
+      time >= DURATION
+        ? "Full time. Revisit a key moment to see how the match unfolded."
+        : (insights[0]?.watch ??
+          "Watch for the first sustained change in ball wins or shot frequency."),
   };
 }

@@ -34,10 +34,10 @@ Foundry currently interprets a rule-selected pattern. To strengthen the Foundry 
 ## Repeatable demo setup
 
 1. Use a production build at a 1440×1000 or larger desktop viewport. Test mobile separately.
-2. Select **The pressure builds**, then **Reset demo**. Switch to Fan mode. Clear any custom category filters.
-3. At 63:24 Harbor leads 1–0. The generator seed is 202629. High ball wins and shots are detected from the event prefix.
-4. To show an insight emerging rather than already present, seek to 50:00 and play at 32×. Rehearse when the threshold is crossed; the same seed will reproduce the same sequence.
-5. Select the high-ball-win insight. Compare current and previous windows. Inspect Evidence, then **Show me the sequence**.
+2. Select **Reset demo**. This restores the pressure fixture, Fan mode, neutral preferences, all categories, and the default playback speed.
+3. At 63:24 Harbor leads 1–0. The generator seed is 202632. High ball wins and shots are detected from the event prefix.
+4. Select **Watch the build-up** to start at 60:00 at 16×. The pressure observation appears at about 60:40, followed by the shots observation around 61:20. Both are calculated from events, not scripted insight text.
+5. Select the high-ball-win insight. Compare current and previous windows. Inspect Evidence, select a recovery, then **Show me the sequence**. The replay follows that possession at 8× recorded timing and holds the final frame.
 6. Switch to Analyst mode for event IDs, measurement notes, and equal-duration comparisons.
 7. With real Foundry configured, select **Explain with Microsoft Foundry** and wait for the explicitly labeled response. Rehearse request latency; successful exact-input requests are cached.
 8. Open **Catch me up**. The recap includes score, significant observed events, the leading current pattern, and what to watch. It is deterministic.
