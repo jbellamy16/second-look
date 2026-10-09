@@ -12,7 +12,6 @@ import {
   Clock3,
   Crosshair,
   Focus,
-  Goal,
   LayoutGrid,
   ListVideo,
   Pause,
@@ -20,11 +19,19 @@ import {
   RotateCcw,
   Settings2,
   Shield,
-  Sparkles,
+  Tactics,
+  Shot,
+  Recovery,
+  Momentum,
+  MatchEvents,
+  Competition,
+  EventIcon,
+  type IconSize,
   TrendingUp,
   Users,
   X,
-} from "lucide-react";
+} from "./icons";
+import { Crest, PlayerIdentity } from "./team-identity";
 import {
   activePlayers,
   clock,
@@ -68,26 +75,21 @@ const defaultPrefs: Prefs = {
   player: "",
   categories: ["pressure", "chances", "rhythm"],
 };
-function Crest({ team, small = false }: { team: TeamId; small?: boolean }) {
-  return (
-    <span
-      className={`crest ${team} ${small ? "small" : ""}`}
-      aria-hidden="true"
-    >
-      <Shield size={small ? 26 : 42} strokeWidth={1.3} />
-      <span>{team === "harbor" ? "H" : "R"}</span>
-    </span>
-  );
-}
-function InsightIcon({ category }: { category: Category }) {
+function InsightIcon({
+  category,
+  size = 24,
+}: {
+  category: Category;
+  size?: IconSize;
+}) {
   return (
     <span className={`insight-icon ${category}`}>
       {category === "pressure" ? (
-        <TrendingUp size={21} />
+        <Recovery size={size} />
       ) : category === "chances" ? (
-        <ArrowUpRight size={22} />
+        <Shot size={size} />
       ) : (
-        <Activity size={21} />
+        <Momentum size={size} />
       )}
     </span>
   );
@@ -443,7 +445,7 @@ export function MatchApp() {
   }
   const nav = [
     { id: "match", label: "Match centre", icon: LayoutGrid },
-    { id: "insights", label: "Insights", icon: Sparkles },
+    { id: "insights", label: "Insights", icon: Tactics },
     { id: "stats", label: "Match stats", icon: BarChart3 },
     { id: "lineups", label: "Lineups", icon: Users },
     { id: "players", label: "Player focus", icon: Focus },
@@ -477,7 +479,7 @@ export function MatchApp() {
               onClick={() => setSection(id)}
               className={`nav-item ${section === id ? "active" : ""}`}
             >
-              <Icon size={18} />
+              <Icon size={20} />
               <span>{label}</span>
               {id === "insights" && insights.length > 0 && (
                 <b>{insights.length}</b>
@@ -495,7 +497,7 @@ export function MatchApp() {
               <br />A different perspective.
             </p>
             <button onClick={() => setModal("about")}>
-              About this demo <ArrowUpRight size={14} />
+              About this demo <ArrowUpRight size={16} />
             </button>
           </div>
           <button
@@ -503,7 +505,7 @@ export function MatchApp() {
             aria-label="Your experience"
             onClick={() => setModal("settings")}
           >
-            <Settings2 size={18} />
+            <Settings2 size={20} />
             Your experience
           </button>
           <span className="version">SECOND LOOK / 2026</span>
@@ -521,7 +523,7 @@ export function MatchApp() {
           </a>
           <div className="breadcrumb">
             {nav.find((n) => n.id === section)?.label}{" "}
-            <ChevronRight size={13} />
+            <ChevronRight size={16} />
             <span>Harbor vs Riverside</span>
           </div>
           <div className="topbar-right">
@@ -536,14 +538,14 @@ export function MatchApp() {
               aria-label="Your experience"
               onClick={() => setModal("settings")}
             >
-              <Settings2 size={18} />
+              <Settings2 size={20} />
             </button>
             <button
               className="help-button"
               onClick={() => setModal("about")}
               aria-label="About Second Look"
             >
-              <CircleHelp size={18} />
+              <CircleHelp size={20} />
             </button>
           </div>
         </header>
@@ -573,14 +575,14 @@ export function MatchApp() {
                 setModal("recap");
               }}
             >
-              <ListVideo size={18} />
+              <ListVideo size={20} />
               Catch me up <ArrowRight size={16} />
             </button>
           </div>
           <section className="scoreboard" aria-label="Match scoreboard">
             <div className="competition">
               <span className="competition-icon">
-                <Goal size={23} />
+                <Competition size={24} />
               </span>
               <div>
                 <strong>Second Look Invitational</strong>
@@ -638,7 +640,7 @@ export function MatchApp() {
                 className={prefs.mode === "fan" ? "selected" : ""}
                 onClick={() => setPrefs({ ...prefs, mode: "fan" })}
               >
-                <Users size={14} />
+                <Users size={16} />
                 Fan mode
               </button>
               <button
@@ -646,7 +648,7 @@ export function MatchApp() {
                 className={prefs.mode === "analyst" ? "selected" : ""}
                 onClick={() => setPrefs({ ...prefs, mode: "analyst" })}
               >
-                <BarChart3 size={14} />
+                <BarChart3 size={16} />
                 Analyst mode
               </button>
             </div>
@@ -684,12 +686,12 @@ export function MatchApp() {
                   </div>
                   <div className="pitch-topline">
                     <span>
-                      <i className="team-dot harbor" />
+                      <i className="team-marker harbor" aria-hidden="true" />
                       {TEAMS.harbor.short}
                     </span>
                     <span>Harbor → · ← Riverside</span>
                     <span>
-                      <i className="team-dot riverside" />
+                      <i className="team-marker riverside" aria-hidden="true" />
                       {TEAMS.riverside.short}
                     </span>
                   </div>
@@ -747,7 +749,7 @@ export function MatchApp() {
                   {(event || replay) && (
                     <div className="replay-controls">
                       <button className="text-button" onClick={replayEvidence}>
-                        <RotateCcw size={14} /> Replay this sequence
+                        <RotateCcw size={16} /> Replay this sequence
                       </button>
                       <button
                         className="text-button"
@@ -756,7 +758,7 @@ export function MatchApp() {
                           setReplay(null);
                         }}
                       >
-                        Back to the pattern <ArrowRight size={14} />
+                        Back to the pattern <ArrowRight size={16} />
                       </button>
                     </div>
                   )}
@@ -786,11 +788,7 @@ export function MatchApp() {
                         setPlaying(!playing);
                       }}
                     >
-                      {playing ? (
-                        <Pause size={19} fill="currentColor" />
-                      ) : (
-                        <Play size={19} fill="currentColor" />
-                      )}
+                      {playing ? <Pause size={20} /> : <Play size={20} />}
                     </button>
                     <div className="timeline">
                       <div className="timeline-events">
@@ -809,7 +807,9 @@ export function MatchApp() {
                               className={
                                 e.type === "goal" ? "goal-tick" : "sub-tick"
                               }
-                            />
+                            >
+                              <EventIcon type={e.type} size={16} />
+                            </button>
                           ))}
                       </div>
                       <input
@@ -863,7 +863,7 @@ export function MatchApp() {
                 <section className="panel insights-strip">
                   <div className="panel-header">
                     <h2>
-                      <Sparkles size={16} />
+                      <Tactics size={16} />
                       What’s changing
                     </h2>
                     <span className="subtle-label">
@@ -916,7 +916,7 @@ export function MatchApp() {
                       className="text-button"
                       onClick={() => setSection("stats")}
                     >
-                      Explore stats <ArrowRight size={14} />
+                      Explore stats <ArrowRight size={16} />
                     </button>
                   </div>
                   <div className="stat-summary">
@@ -953,12 +953,12 @@ export function MatchApp() {
                   <details>
                     <summary>
                       <span>
-                        <Activity size={14} />
+                        <MatchEvents size={16} />
                         Recent match events
                       </span>
                       <span>
                         {latest ? clock(latest.time) : "00:00"}{" "}
-                        <ChevronDown size={14} />
+                        <ChevronDown size={16} />
                       </span>
                     </summary>
                     <div className="event-feed-list">
@@ -969,7 +969,9 @@ export function MatchApp() {
                         .map((e) => (
                           <button key={e.id} onClick={() => selectEvent(e)}>
                             <time>{clock(e.time)}</time>
-                            <Crest small team={e.team} />
+                            <span className={`event-glyph ${e.team}`}>
+                              <EventIcon type={e.type} />
+                            </span>
                             <div>
                               <strong>
                                 {e.type.charAt(0).toUpperCase() +
@@ -977,13 +979,13 @@ export function MatchApp() {
                                 {e.outcome ? ` · ${e.outcome}` : ""}
                               </strong>
                               <span>
-                                {player(e.playerId).name}
+                                {TEAMS[e.team].code} · {player(e.playerId).name}
                                 {e.recipientId
                                   ? ` → ${player(e.recipientId).name}`
                                   : ""}
                               </span>
                             </div>
-                            <Play size={13} />
+                            <Play size={16} />
                           </button>
                         ))}
                       {visible.length === 0 && (
@@ -998,11 +1000,11 @@ export function MatchApp() {
               <aside className="panel detail-panel">
                 <div className="panel-header">
                   <h2>
-                    <Sparkles size={16} />
+                    <Tactics size={16} />
                     Second look
                   </h2>
                   <span className="verified-label">
-                    <Check size={12} />{" "}
+                    <Check size={16} />{" "}
                     {insight ? "Evidence linked" : "Awaiting evidence"}
                   </span>
                 </div>
@@ -1018,7 +1020,7 @@ export function MatchApp() {
                           : insight.explanation}
                       </p>
                       <div className="insight-meta">
-                        <Clock3 size={13} />
+                        <Clock3 size={16} />
                         Last 15 minutes<span>·</span>
                         {TEAMS[insight.team].short}
                       </div>
@@ -1045,9 +1047,9 @@ export function MatchApp() {
                         onClick={replayEvidence}
                       >
                         <span>
-                          <Play size={13} fill="currentColor" />
+                          <Play size={16} />
                         </span>
-                        Show me the sequence <ArrowRight size={17} />
+                        Show me the sequence <ArrowRight size={20} />
                       </button>
                     </div>
                     <div className="detail-content">
@@ -1063,7 +1065,7 @@ export function MatchApp() {
                               <small>NOW</small>
                             </strong>
                             <div className="comparison-change">
-                              <TrendingUp size={18} />
+                              <TrendingUp size={20} />
                               <span>+{insight.current - insight.previous}</span>
                             </div>
                             <strong className="previous">
@@ -1082,12 +1084,15 @@ export function MatchApp() {
                             </div>
                           </div>
                           <div className="pitch-key">
-                            <i />
+                            <InsightIcon
+                              category={insight.category}
+                              size={16}
+                            />
                             {insight.metric} · event locations
                           </div>
                           <div className="why-card">
                             <span>
-                              <Sparkles size={14} />
+                              <Tactics size={16} />
                               WHY IT MATTERS
                             </span>
                             <p>{insight.why}</p>
@@ -1107,6 +1112,9 @@ export function MatchApp() {
                               }
                             >
                               <time>{clock(e.time)}</time>
+                              <span className={`event-glyph ${e.team}`}>
+                                <EventIcon type={e.type} />
+                              </span>
                               <div>
                                 <strong>{player(e.playerId).name}</strong>
                                 <span>
@@ -1117,7 +1125,7 @@ export function MatchApp() {
                                   <small>{e.id}</small>
                                 )}
                               </div>
-                              <Play size={13} />
+                              <Play size={16} />
                             </button>
                           ))}
                         </div>
@@ -1145,7 +1153,7 @@ export function MatchApp() {
                       )}
                       <div className="watch-next insight-watch">
                         <span>
-                          <Focus size={15} /> WHAT TO WATCH NEXT
+                          <Focus size={16} /> WHAT TO WATCH NEXT
                         </span>
                         <p>{currentNarrative?.watch ?? insight.watch}</p>
                       </div>
@@ -1178,7 +1186,7 @@ export function MatchApp() {
                         disabled={loading}
                         onClick={explain}
                       >
-                        <Sparkles size={14} />
+                        <Tactics size={16} />
                         {loading
                           ? "Retrieving verified evidence…"
                           : provider !== "offline"
@@ -1194,7 +1202,7 @@ export function MatchApp() {
                   </>
                 ) : (
                   <div className="detail-empty">
-                    <Crosshair size={36} />
+                    <Crosshair size={32} />
                     <h3>A little patience. A better insight.</h3>
                     <p>
                       We’re looking for meaningful changes in the event stream.
@@ -1207,7 +1215,7 @@ export function MatchApp() {
                         setPlaying(true);
                       }}
                     >
-                      Keep the match moving <Play size={14} />
+                      Keep the match moving <Play size={16} />
                     </button>
                   </div>
                 )}
@@ -1373,11 +1381,7 @@ export function MatchApp() {
               </div>
               <div className="player-focus">
                 <div>
-                  <div
-                    className={`player-monogram ${player(focusedPlayer).team}`}
-                  >
-                    {player(focusedPlayer).number}
-                  </div>
+                  <PlayerIdentity player={player(focusedPlayer)} />
                   <h2>{player(focusedPlayer).name}</h2>
                   <p>
                     {player(focusedPlayer).role} ·{" "}
@@ -1394,8 +1398,9 @@ export function MatchApp() {
                     · {clock(time)}
                   </p>
                   <div className="player-metrics">
-                    {["pass", "shot", "recovery"].map((type) => (
+                    {(["pass", "shot", "recovery"] as const).map((type) => (
                       <div key={type}>
+                        <EventIcon type={type} size={20} />
                         <strong>
                           {
                             visible.filter(
@@ -1426,9 +1431,9 @@ export function MatchApp() {
                     }
                   >
                     {prefs.player === focusedPlayer ? (
-                      <Check size={15} />
+                      <Check size={16} />
                     ) : (
-                      <Focus size={15} />
+                      <Focus size={16} />
                     )}{" "}
                     {prefs.player === focusedPlayer
                       ? "Following this player"
@@ -1471,10 +1476,10 @@ export function MatchApp() {
                   </option>
                 ))}
               </select>
-              <ChevronDown size={14} />
+              <ChevronDown size={16} />
             </label>
             <p>
-              <Shield size={13} />
+              <Shield size={16} />
               Fictional clubs. Synthetic events. Evidence you can explore.
             </p>
             <button
@@ -1491,7 +1496,7 @@ export function MatchApp() {
                 setSection("match");
               }}
             >
-              <Play size={14} /> Watch the build-up
+              <Play size={16} /> Watch the build-up
             </button>
             <button
               className="text-button"
@@ -1504,7 +1509,7 @@ export function MatchApp() {
                 setSection("match");
               }}
             >
-              Reset demo <RotateCcw size={13} />
+              Reset demo <RotateCcw size={16} />
             </button>
           </div>
         </main>
@@ -1555,7 +1560,7 @@ export function MatchApp() {
           <>
             <div className="recap-heading">
               <span className="recap-icon">
-                <ListVideo size={28} />
+                <ListVideo size={32} />
               </span>
               <h2>Here’s what you missed.</h2>
               <p>
@@ -1585,7 +1590,7 @@ export function MatchApp() {
                 disabled={recapLoading || loading}
                 onClick={narrateRecap}
               >
-                <Sparkles size={14} />{" "}
+                <Tactics size={16} />{" "}
                 {recapLoading
                   ? "Choosing the important developments…"
                   : provider !== "offline"
@@ -1662,7 +1667,7 @@ export function MatchApp() {
                 setPlaying(time < DURATION);
               }}
             >
-              Back to the match <Play size={15} fill="currentColor" />
+              Back to the match <Play size={16} />
             </button>
           </>
         ) : modal === "settings" ? (
@@ -1685,7 +1690,7 @@ export function MatchApp() {
                         : "Window comparisons, event evidence, and limitations."}
                     </p>
                   </div>
-                  {prefs.mode === m && <Check size={18} />}
+                  {prefs.mode === m && <Check size={20} />}
                 </button>
               ))}
             </div>
@@ -1793,6 +1798,18 @@ export function MatchApp() {
                 : "Currently in offline demo mode. Narratives and recaps are deterministic, not AI-generated."}{" "}
               Clubs and players are fictional. No broadcast footage, licensed
               football data, or continuous player tracking is used.
+            </p>
+            <p className="limitations">
+              Interface icons by Lucide. Club marks and football glyphs created
+              for Second Look.{" "}
+              <a
+                className="asset-license-link"
+                href="/icon-licenses.txt"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Icon licenses
+              </a>
             </p>
           </>
         )}

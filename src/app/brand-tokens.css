@@ -14,3 +14,10 @@
   --sl-radius-control: 10px;
   --sl-border: rgba(166, 182, 203, 0.18);
 }
+
+/* Team identity is independent of action/status color. */
+:root {
+  --sl-harbor: #72c6ff;
+  --sl-riverside: #ff7a83;
+  --sl-icon-gap: 8px;
+}
