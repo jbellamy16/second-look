@@ -1,3 +1,15 @@
+# OpenAI local evaluation follow-up — October 9, 2026
+
+- Fixed local evaluation configuration loading under Vitest; shell overrides still win and the local file cannot authorize spending.
+- Added `npm run ai:check`, which reports presence only and sends no network requests.
+- Four owner-authorized OpenAI requests returned HTTP 200. Both recaps fell back during application validation, so accepted live narration remains unverified.
+- Recorded 6,117 input tokens and 586 output tokens; estimated standard-rate cost $0.00722475. Actual billing was not inspected.
+- Hardened nullable response-envelope handling and added safe validation-stage diagnostics and completed tool activity. Exact cause of the first rejections was not retained by the original report; a repeat needs a fresh request allowance.
+- Type checks, 107 local tests, production build and 30 production browser journeys pass. CI additionally checks real Redis.
+- Normal inference remains disabled; credentials stay in ignored `.env.local`. No deployment occurred.
+
+The implementation and Phase 2 records below describe their earlier verification state.
+
 # Multi-provider AI verification — October 9, 2026
 
 - Type checks, all existing tests and the production build pass.
