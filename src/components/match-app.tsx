@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
+  ArrowLeft,
   ArrowRight,
   ArrowUpRight,
   BarChart3,
@@ -720,7 +721,15 @@ export function MatchApp() {
                       <i className="team-marker harbor" aria-hidden="true" />
                       {TEAMS.harbor.short}
                     </span>
-                    <span>Harbor → · ← Riverside</span>
+                    <span
+                      className="pitch-directions"
+                      role="img"
+                      aria-label="Harbor attack right; Riverside attack left"
+                    >
+                      Harbor <ArrowRight size={16} />
+                      <span aria-hidden="true">·</span>
+                      <ArrowLeft size={16} /> Riverside
+                    </span>
                     <span>
                       <i className="team-marker riverside" aria-hidden="true" />
                       {TEAMS.riverside.short}
@@ -1019,9 +1028,16 @@ export function MatchApp() {
                               </strong>
                               <span>
                                 {TEAMS[e.team].code} · {player(e.playerId).name}
-                                {e.recipientId
-                                  ? ` → ${player(e.recipientId).name}`
-                                  : ""}
+                                {e.recipientId && (
+                                  <>
+                                    {" "}
+                                    <span className="event-recipient">
+                                      <ArrowRight size={16} />
+                                      <span className="sr-only">to </span>
+                                      {player(e.recipientId).name}
+                                    </span>
+                                  </>
+                                )}
                               </span>
                             </div>
                             <Play size={16} />

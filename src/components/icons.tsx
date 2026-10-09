@@ -1,5 +1,6 @@
 import {
   Activity as LucideActivity,
+  ArrowLeft as LucideArrowLeft,
   ArrowRight as LucideArrowRight,
   ArrowUpRight as LucideArrowUpRight,
   ChartNoAxesColumnIncreasing,
@@ -60,6 +61,7 @@ function systemIcon(Glyph: LucideIcon) {
   };
 }
 export const Activity = systemIcon(LucideActivity);
+export const ArrowLeft = systemIcon(LucideArrowLeft);
 export const ArrowRight = systemIcon(LucideArrowRight);
 export const ArrowUpRight = systemIcon(LucideArrowUpRight);
 export const BarChart3 = systemIcon(ChartNoAxesColumnIncreasing);

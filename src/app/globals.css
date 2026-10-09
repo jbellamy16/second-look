@@ -2995,6 +2995,15 @@ footer {
 .pitch-topline > span {
   gap: 8px;
 }
+.pitch-topline > .pitch-directions {
+  gap: 4px;
+}
+.event-recipient {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  vertical-align: middle;
+}
 .team-marker {
   width: 8px;
   height: 8px;
