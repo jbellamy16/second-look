@@ -39,7 +39,7 @@ export function offlineProvenance(packet: EvidencePacket): Provenance {
 }
 const pending = new Map<
   string,
-  Promise<Awaited<ReturnType<typeof controlledNarration>>>
+  Promise<{ result: NarrationResult; cached: boolean }>
 >();
 export async function narratePacket(packet: EvidencePacket) {
   const provider = configuredProvider();

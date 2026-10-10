@@ -75,6 +75,7 @@ const responseSchema = z.object({
 export async function providerResponse(
   provider: Provider,
   body: Record<string, unknown>,
+  signal?: AbortSignal,
 ) {
   const payload = JSON.stringify({
     ...body,
@@ -100,7 +101,9 @@ export async function providerResponse(
           : { "api-key": process.env.FOUNDRY_API_KEY! }),
       },
       body: payload,
-      signal: AbortSignal.timeout(25000),
+      signal: signal
+        ? AbortSignal.any([signal, AbortSignal.timeout(18000)])
+        : AbortSignal.timeout(25000),
     },
   );
   if (!res.ok) throw new Error("Provider unavailable");
