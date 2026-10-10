@@ -4033,3 +4033,59 @@ main {
     margin-bottom: 0;
   }
 }
+
+/* Story intelligence inherits the existing card, disclosure and motion system. */
+.director-story {
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.director-story > h2 {
+  margin: 0.6rem 0;
+  font-size: 1.15rem;
+}
+.director-story p {
+  line-height: 1.6;
+}
+.director-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin: 0.8rem 0;
+}
+.director-story .provenance {
+  margin-top: 0.75rem;
+}
+.director-story ul {
+  padding-left: 1.25rem;
+  overflow-wrap: anywhere;
+}
+.broadcast-frame {
+  margin: 1rem 0;
+  padding: 1.2rem;
+  background: #101b28;
+  color: #f1f5f9;
+  border-left: 4px solid #5ce0bc;
+  border-radius: 8px;
+}
+.broadcast-frame svg {
+  display: block;
+  max-width: 280px;
+  width: 100%;
+  margin: 1rem auto;
+  color: #5ce0bc;
+}
+.broadcast-frame small {
+  color: #d5e2ed;
+}
+.director-disclosure {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+}
+.director-disclosure summary {
+  padding: 0.6rem 0;
+  cursor: pointer;
+  font-weight: 600;
+}
+.broadcast-frame .eyebrow {
+  color: #a9f0db;
+}

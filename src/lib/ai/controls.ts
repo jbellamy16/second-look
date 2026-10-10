@@ -1,7 +1,6 @@
 import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 import { createClient } from "@redis/client";
-import type { NarrationResult } from "./narration";
 export function usageStoreReady() {
   return (
     !!process.env.AI_REDIS_URL ||
@@ -105,10 +104,7 @@ async function evalScript(script: string, keys: string[], args: string[]) {
     clearTimeout(timer);
   }
 }
-const localCache = new Map<
-  string,
-  { expires: number; value?: NarrationResult }
->();
+const localCache = new Map<string, { expires: number; value?: unknown }>();
 const localWindows = [60, 3600, 86400, 0].map((seconds) => ({
   seconds,
   start: Date.now(),
@@ -135,9 +131,9 @@ function localClaim(key: string): [string, string?] {
   localCache.set(key, { expires: now + 70000 });
   return ["acquired"];
 }
-export async function controlledNarration(
+export async function controlledNarration<T>(
   identity: unknown,
-  generate: () => Promise<NarrationResult>,
+  generate: () => Promise<T>,
 ) {
   if (!usageStoreReady()) throw new Error("Shared usage controls unavailable");
   const key = createHash("sha256")
@@ -156,7 +152,7 @@ export async function controlledNarration(
       : localClaim(key)
   ) as string[];
   if (status === "cached")
-    return { result: JSON.parse(cached) as NarrationResult, cached: true };
+    return { result: JSON.parse(cached) as T, cached: true };
   if (status !== "acquired")
     throw new Error(
       status === "busy"

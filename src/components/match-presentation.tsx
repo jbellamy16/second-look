@@ -552,7 +552,9 @@ export function InsightDetails({
   explanation,
   children,
   empty,
+  story,
 }: {
+  story?: ReactNode;
   match: MatchData;
   insight?: Insight;
   insights: Insight[];
@@ -573,6 +575,7 @@ export function InsightDetails({
     : [];
   return (
     <aside className="panel detail-panel" aria-label="Match intelligence">
+      {story}
       {insight ? (
         <>
           <div className="selected-observation">

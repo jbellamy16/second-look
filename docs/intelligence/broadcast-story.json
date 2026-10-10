@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "pressure:recovery-shot:harbor:pressure-202632-506",
+  "matchId": "pressure",
+  "cutoff": 4200,
+  "timestamp": 4116,
+  "headline": "Harbor: recovery to shot",
+  "explanation": "Harbor recorded a shot after winning the ball in the same possession.",
+  "category": "recovery-shot",
+  "claimIds": [
+    "pressure:recovery-shot:harbor:pressure-202632-506"
+  ],
+  "statistics": [
+    {
+      "label": "Recovery to shot",
+      "value": 27,
+      "unit": "recorded seconds"
+    }
+  ],
+  "evidenceEventIds": [
+    "pressure-202632-501",
+    "pressure-202632-502",
+    "pressure-202632-503",
+    "pressure-202632-504",
+    "pressure-202632-505",
+    "pressure-202632-506"
+  ],
+  "coordinates": [
+    {
+      "eventId": "pressure-202632-501",
+      "x": 78.26777472160757,
+      "y": 67.21160786226392,
+      "type": "recovery"
+    },
+    {
+      "eventId": "pressure-202632-502",
+      "x": 78.26777472160757,
+      "y": 67.21160786226392,
+      "type": "pass"
+    },
+    {
+      "eventId": "pressure-202632-503",
+      "x": 82.28512776773422,
+      "y": 19.17555185034871,
+      "type": "pass"
+    },
+    {
+      "eventId": "pressure-202632-504",
+      "x": 90.89872050918638,
+      "y": 19.95485587231815,
+      "type": "pass"
+    },
+    {
+      "eventId": "pressure-202632-505",
+      "x": 99,
+      "y": 8,
+      "type": "carry"
+    },
+    {
+      "eventId": "pressure-202632-506",
+      "x": 95,
+      "y": 8,
+      "type": "shot"
+    }
+  ],
+  "audience": "fan",
+  "visualization": "sequence",
+  "presentation": {
+    "earliest": 4200,
+    "expires": 4380,
+    "durationSeconds": 8
+  },
+  "limitations": [
+    "Synthetic match, players and event-model xG. No continuous tracking.",
+    "Recorded actions only; no off-ball positions, intentions, formations or physical attacking direction.",
+    "Relationships and equal-window comparisons are descriptive, not causal or statistically significant.",
+    "Coordinates are normalized to the team performing the action; increasing x is toward its attacking goal.",
+    "Possessions are generated synthetic sequences, not observed tracking."
+  ],
+  "provider": "offline",
+  "validation": "verified",
+  "evidenceQuality": "recorded-events",
+  "source": {
+    "provider": "synthetic",
+    "revision": "202632-demo",
+    "attribution": "Between the Lines · reproducible synthetic data"
+  },
+  "promptVersion": "director-1.0.0"
+}

@@ -18,6 +18,10 @@ export async function GET() {
   return json({
     mode: usageStoreReady() ? configured : "offline",
     configured,
+    proactive:
+      process.env.AI_PROACTIVE_ENABLED === "true" &&
+      configured !== "offline" &&
+      usageStoreReady(),
     usageControls: usageStoreReady(),
   });
 }

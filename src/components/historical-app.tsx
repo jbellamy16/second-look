@@ -1,5 +1,6 @@
 "use client";
 import { ModalHeader } from "./modal-header";
+import { DirectorStory } from "./director-story";
 import type { Provenance } from "@/lib/ai/service";
 import type { Narrative } from "@/lib/foundry";
 import type { Mode } from "@/lib/intelligence";
@@ -307,17 +308,20 @@ function HistoricalReplay({
     const controller = new AbortController();
     request.current = controller;
     try {
-      const res = await fetch("/api/historical/narrate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        signal: controller.signal,
-        body: JSON.stringify({
-          matchId: match.id,
-          time,
-          mode,
-          ...(!recap && insight ? { insightId: insight.id } : {}),
-        }),
-      });
+      const res = await fetch(
+        recap ? "/api/director" : "/api/historical/narrate",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            matchId: match.id,
+            time,
+            mode,
+            ...(!recap && insight ? { insightId: insight.id } : {}),
+          }),
+        },
+      );
       if (!res.ok) throw new Error("Narration unavailable");
       const result = await res.json();
       if (!controller.signal.aborted) {
@@ -526,6 +530,17 @@ function HistoricalReplay({
           />
         </div>
         <InsightDetails
+          story={
+            <DirectorStory
+              key={match.id}
+              match={match}
+              time={time}
+              mode={mode}
+              preferences={prefs}
+              active={sourceActive && !recapOpen && section === "match"}
+              playing={playing}
+            />
+          }
           match={match}
           insight={insight}
           insights={insights}
@@ -618,6 +633,8 @@ function HistoricalReplay({
         ref={dialog}
         className="modal recap-modal"
         aria-label="Catch me up"
+        aria-hidden={!recapOpen}
+        inert={!recapOpen}
         onCancel={() => {
           invalidate();
           setRecapOpen(false);

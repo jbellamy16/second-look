@@ -96,3 +96,7 @@ Source: [official Microsoft hackathon rules](https://github.com/microsoft/inside
 **Technology statement:** Next.js, React, TypeScript, interactive SVG, deterministic event analysis, optional server-side Microsoft Foundry / OpenAI Responses adapters, and shared Redis controls for public AI usage. Live Foundry validation and Azure deployment are separate readiness steps; this rebrand does not verify or claim them.
 
 Use [the video title graphic](../public/brand/video-title.png), [current application screenshots](brand/REVIEW.md), and [brand guidelines](brand/README.md) for the recording and profile. The repository remains `jbellamy16/second-look`. Update Innovation Studio manually; no account changes or submission were made.
+
+## AI Intelligence 2.0 update
+
+The Match Director adds bounded investigation over canonical events, model-directed player/window queries, verified editorial plans, audience-specific Catch Me Up, connected pitch evidence and a versioned broadcast story. See the [architecture and reproducible synthetic demonstration](intelligence/README.md). Screenshots and the example package are explicitly offline computation. New OpenAI/Foundry live inference and quality improvements are not claimed; the authorized evaluation gate remains pending. No deployment or paid inference was activated.

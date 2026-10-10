@@ -1,4 +1,5 @@
 "use client";
+import { DirectorStory } from "./director-story";
 import { buildEvidence } from "@/lib/ai/evidence";
 import type { Provenance } from "@/lib/ai/service";
 import type { Narrative } from "@/lib/foundry";
@@ -91,6 +92,7 @@ export function MatchApp({
   const [recapLoading, setRecapLoading] = useState(false);
   const [focusedPlayer, setFocusedPlayer] = useState("harbor-9");
   const requestVersion = useRef(0);
+  const narrationRequest = useRef<AbortController | null>(null);
   const visiblePage = usePageVisibility();
   const canonicalMatch = useMemo(
     () => new SyntheticMatchSource().read(scenario, { profile }),
@@ -243,6 +245,7 @@ export function MatchApp({
   }, [modal]);
   useEffect(() => {
     requestVersion.current++;
+    narrationRequest.current?.abort();
     setNotice("");
     setLoading(false);
     setRecapLoading(false);
@@ -340,9 +343,13 @@ export function MatchApp({
     setRecapLoading(true);
     setRecapNotice("");
     const version = ++requestVersion.current;
+    narrationRequest.current?.abort();
+    const controller = new AbortController();
+    narrationRequest.current = controller;
     try {
-      const res = await fetch("/api/recap", {
+      const res = await fetch("/api/director", {
         method: "POST",
+        signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           scenario,
@@ -360,7 +367,7 @@ export function MatchApp({
       if (!res.ok) throw new Error("Request failed");
       const data = await res.json();
       if (version !== requestVersion.current) return;
-      if (["openai", "foundry"].includes(data.source) && data.narrative)
+      if (data.narrative)
         setRecapNarrative({
           key: recapKey,
           value: data.narrative,
@@ -387,9 +394,13 @@ export function MatchApp({
     setLoading(true);
     setNotice("");
     const version = ++requestVersion.current;
+    narrationRequest.current?.abort();
+    const controller = new AbortController();
+    narrationRequest.current = controller;
     try {
       const res = await fetch("/api/insights", {
         method: "POST",
+        signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           scenario,
@@ -779,6 +790,21 @@ export function MatchApp({
             />
           </div>
           <InsightDetails
+            story={
+              <DirectorStory
+                key={canonicalMatch.id}
+                match={canonicalMatch}
+                time={time}
+                mode={prefs.mode}
+                preferences={{
+                  team: prefs.team,
+                  player: prefs.player,
+                  categories: prefs.categories,
+                }}
+                active={active && !modal && section === "match"}
+                playing={playing}
+              />
+            }
             match={canonicalMatch}
             insight={insight}
             insights={insights}

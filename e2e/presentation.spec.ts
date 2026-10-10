@@ -46,12 +46,21 @@ test("both sources share the layout and evidence flow at the same viewport", asy
     await page.evaluate(() => window.scrollTo(0, 0));
     geometry[source] = await shell(page)
       .locator(".fixture-selector,.scoreboard,.playback,.pitch-panel")
-      .evaluateAll((els) =>
-        els.flatMap((el) => {
+      .evaluateAll((els) => {
+        // Recorded goal/assist credits legitimately give scoreboards different heights.
+        // Compare the shared layout below that content, rather than forcing equal scoresheets.
+        const scoreHeight = els
+          .find((el) => el.classList.contains("scoreboard"))!
+          .getBoundingClientRect().height;
+        return els.flatMap((el) => {
           const b = el.getBoundingClientRect();
-          return [b.x, b.y, b.width];
-        }),
-      );
+          // Source labels can wrap on narrow screens; the pitch must align with its grid.
+          const y = el.matches(".pitch-panel")
+            ? b.y - el.closest(".match-grid")!.getBoundingClientRect().top
+            : b.y - (el.matches(".playback") ? scoreHeight : 0);
+          return [b.x, y, b.width];
+        });
+      });
     await expect(
       shell(page).locator(
         ".page-heading,.engine-badge,.match-source-bar,.historical-picker",

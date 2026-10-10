@@ -1,5 +1,9 @@
 # AI evaluation and release gate
 
+## AI Intelligence 2.0
+
+The new Match Director has a separate [architecture, safety contract, 200-case evaluation and live-review protocol](intelligence/README.md). Its OpenAI and Foundry workflows have **not been run live**. Scripted tests establish contract behavior only; editorial improvement remains unknown. `npm run eval:director:live` requires new explicit approval for at most six requests and a $0.70 allowance. The older live results below do not validate the new workflow.
+
 ## Status for this implementation
 
 Two owner-authorized OpenAI evaluations on October 9, 2026 completed **eight real HTTP 200 Responses requests** in total. No Foundry live calls, public deployment or paid infrastructure creation occurred. Normal inference remains disabled.
