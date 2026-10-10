@@ -1,4 +1,4 @@
-name: Verify Second Look
+name: Verify Between the Lines
 on:
   push:
     branches: [main, "feat/**", "codex/**"]

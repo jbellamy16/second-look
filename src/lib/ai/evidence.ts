@@ -171,7 +171,7 @@ export function buildEvidence(
     if (latestGoal && !moments.some((m) => m.event.id === latestGoal.id))
       moments.unshift({
         event: latestGoal,
-        label: `Goal · ${player(latestGoal.playerId).name}`,
+        label: `Goal by ${player(latestGoal.playerId).name}`,
       });
     for (const { event, label } of moments)
       facts.push({
@@ -181,8 +181,8 @@ export function buildEvidence(
           event.type === "goal" ? 9 : event.type === "substitution" ? 6 : 5,
         text:
           mode === "fan"
-            ? `${clock(event.time)} · ${label} for ${TEAMS[event.team].short}.`
-            : `${clock(event.time)} · ${TEAMS[event.team].short}: ${label}${event.type === "shot" ? `; synthetic chance probability ${(event.xg ?? 0).toFixed(2)}` : ""}.`,
+            ? `${label} (${TEAMS[event.team].short}) at ${clock(event.time)}.`
+            : `At ${clock(event.time)}, ${TEAMS[event.team].short}: ${label}${event.type === "shot" ? `; synthetic chance probability ${(event.xg ?? 0).toFixed(2)}` : ""}.`,
         evidenceIds: [event.id],
         why:
           event.type === "substitution"

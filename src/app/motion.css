@@ -30,14 +30,14 @@ button:disabled {
 }
 @media (hover: hover) {
   :is(.icon-button, .text-button, .narrate-button, .help-button):hover {
-    background-color: #61a8ff12;
+    background-color: var(--sl-hover);
   }
   :is(.insight-card, .player-row, .evidence-list button):hover {
-    border-color: #61a8ff80;
-    background-color: #61a8ff0a;
+    border-color: var(--sl-muted);
+    background-color: var(--sl-hover);
   }
   :is(.primary-button, .sequence-button):hover {
-    background-color: var(--sl-blue-light);
+    background-color: var(--sl-primary-hover);
   }
 }
 :focus-visible {
@@ -56,8 +56,8 @@ button:disabled {
   pointer-events: none;
   z-index: -1;
   border-radius: var(--sl-radius-control);
-  background: #347cff18;
-  box-shadow: inset 0 0 0 1px #347cff45;
+  background: var(--sl-selected);
+  box-shadow: none;
   transition: transform var(--motion-standard) var(--ease-out);
 }
 .main-navigation .nav-item.active {
@@ -68,17 +68,17 @@ button:disabled {
   content: none;
 }
 .main-navigation .selection-indicator::before {
-  content: "";
+  content: none;
   position: absolute;
   left: 0;
   top: 12px;
   bottom: 12px;
   width: 3px;
   border-radius: 3px;
-  background: var(--sl-blue);
+  background: var(--sl-selected);
 }
 .mode-switch .selection-indicator {
-  background: var(--sl-blue);
+  background: var(--sl-selected);
 }
 .mode-switch button.selected {
   background: transparent;
@@ -87,7 +87,7 @@ button:disabled {
   background: none;
   box-shadow: none;
   border-radius: 0;
-  border-bottom: 2px solid var(--sl-blue-light);
+  border-bottom: 2px solid var(--sl-green);
 }
 .detail-tabs button.selected::after {
   content: none;
@@ -164,7 +164,7 @@ button:disabled {
   transform: none;
 }
 .modal::backdrop {
-  background: #030a11cb;
+  background: #080a0ccb;
   opacity: 0;
   backdrop-filter: none;
   transition:
@@ -247,13 +247,6 @@ button:disabled {
     opacity: 0.85;
   }
 }
-.event-recovery.is-selected .selection-ring,
-.event-interception.is-selected .selection-ring {
-  stroke: var(--sl-green);
-}
-.event-shot.is-selected .selection-ring {
-  stroke: var(--sl-warning);
-}
 .goal-moment {
   animation: goal-in var(--motion-visual) var(--ease-out);
 }
@@ -282,7 +275,7 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--sl-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -299,7 +292,7 @@ button:disabled {
   gap: 6px;
   padding: 4px 20px 14px;
   color: var(--sl-muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .replay-controls {
   flex-wrap: wrap;

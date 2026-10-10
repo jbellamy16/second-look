@@ -22,7 +22,7 @@ export function ProvenanceDetails({
   );
   return (
     <details className="provenance">
-      <summary>How Second Look knows</summary>
+      <summary>How Between the Lines knows</summary>
       <div
         className="provenance-content"
         tabIndex={0}
@@ -30,13 +30,13 @@ export function ProvenanceDetails({
       >
         <strong>
           {providerLabel(provenance.provider)}
-          {provenance.model ? ` · ${provenance.model}` : ""}
+          {provenance.model ? ` (${provenance.model})` : ""}
         </strong>
         <p>
           Through {clock(provenance.cutoff)}
-          {provenance.cached ? " · Reused a validated response" : ""}.{" "}
+          {provenance.cached ? ". Reused a validated response" : ""}.{" "}
           {provenance.provider !== "offline"
-            ? "AI chose supporting observations; Second Look supplied required match context."
+            ? "AI chose supporting observations; Between the Lines supplied required match context."
             : "Computed directly from recorded events."}
         </p>
         <h4>Detected observations</h4>
@@ -45,6 +45,13 @@ export function ProvenanceDetails({
         ))}
         {!!insights.length && (
           <>
+            <h4>Measurement notes</h4>
+            <p>
+              Equal-duration windows and descriptive thresholds, not a
+              statistical significance test. Coordinates are normalized to the
+              attacking team. Recorded actions do not show off-ball positioning
+              or establish cause and effect.
+            </p>
             <h4>Statistical comparisons</h4>
             {insights.map((i) => (
               <p key={i.id}>
@@ -55,7 +62,7 @@ export function ProvenanceDetails({
             ))}
           </>
         )}
-        <h4>Supporting events · {evidence.length}</h4>
+        <h4>Supporting events ({evidence.length})</h4>
         <ul
           className="provenance-events"
           tabIndex={0}
@@ -63,7 +70,7 @@ export function ProvenanceDetails({
         >
           {evidence.map((e) => (
             <li key={e.id}>
-              {clock(e.time)} · {player(e.playerId).name} · {e.type}{" "}
+              {clock(e.time)} {e.type} by {player(e.playerId).name}{" "}
               <small>{e.id}</small>
             </li>
           ))}

@@ -147,10 +147,10 @@ export function recap(events: MatchEvent[], time: number, mode: Mode) {
         event: e,
         label:
           e.type === "goal"
-            ? `Goal · ${player(e.playerId).name}`
+            ? `Goal by ${player(e.playerId).name}`
             : e.type === "substitution"
               ? `${player(e.playerId).name} comes on`
-              : `Chance · ${player(e.playerId).name}`,
+              : `Chance for ${player(e.playerId).name}`,
       })),
     watch:
       time >= DURATION

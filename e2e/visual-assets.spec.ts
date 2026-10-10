@@ -40,6 +40,14 @@ test("Riverside keeps its identity when an event is selected", async ({
   page,
 }) => {
   await page.goto("/");
+  const clear = page.getByRole("button", {
+    name: "Clear selection",
+    exact: true,
+  });
+  await expect(clear).toHaveCount(0);
+  await expect(page.locator(".pitch-caption")).toContainText(
+    "Numbers identify players",
+  );
   await page.getByText("Recent match events", { exact: true }).click();
   const awayEvent = page
     .locator(".event-feed-list button")
@@ -56,6 +64,17 @@ test("Riverside keeps its identity when an event is selected", async ({
   await expect(page.locator(".event-inspector")).toContainText(
     "SELECTED ACTION",
   );
+  await expect(page.locator(".pitch-caption")).toContainText(
+    "Numbers show event order",
+  );
+  await clear.click();
+  await expect(clear).toHaveCount(0);
+  await expect(page.locator('.pitch-panel [aria-pressed="true"]')).toHaveCount(
+    0,
+  );
+  await expect(
+    page.getByRole("heading", { name: "Where it happened" }),
+  ).toBeVisible();
   await page
     .getByRole("navigation")
     .getByRole("button", { name: "Player focus", exact: true })

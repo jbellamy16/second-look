@@ -1,6 +1,6 @@
 # Cloudflare deployment
 
-Second Look runs on Cloudflare Workers through OpenNext, retaining the existing Next.js application and Azure standalone deployment. OpenAI is the selected provider. Paid inference is disabled, all narration quotas are zero, and no provider key or Redis secret is uploaded with the application.
+Between the Lines runs on Cloudflare Workers through OpenNext, retaining the existing Next.js application and Azure standalone deployment. OpenAI is the selected provider. Paid inference is disabled, all narration quotas are zero, and no provider key or Redis secret is uploaded with the application.
 
 ## Build and verify
 

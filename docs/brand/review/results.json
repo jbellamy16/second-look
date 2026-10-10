@@ -1,0 +1,122 @@
+[
+  {
+    "name": "desktop-1920",
+    "width": 1920,
+    "height": 1080,
+    "colorScheme": "dark",
+    "overflow": false,
+    "visibleLogos": 1,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "desktop-1920",
+    "width": 1920,
+    "height": 1080,
+    "colorScheme": "light",
+    "overflow": false,
+    "visibleLogos": 1,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "desktop-1440",
+    "width": 1440,
+    "height": 1100,
+    "colorScheme": "dark",
+    "overflow": false,
+    "visibleLogos": 1,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "desktop-1440",
+    "width": 1440,
+    "height": 1100,
+    "colorScheme": "light",
+    "overflow": false,
+    "visibleLogos": 1,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "tablet",
+    "width": 834,
+    "height": 1112,
+    "colorScheme": "dark",
+    "overflow": false,
+    "visibleLogos": 1,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "tablet",
+    "width": 834,
+    "height": 1112,
+    "colorScheme": "light",
+    "overflow": false,
+    "visibleLogos": 1,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "iphone",
+    "width": 390,
+    "height": 844,
+    "colorScheme": "dark",
+    "overflow": false,
+    "visibleLogos": 1,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "iphone",
+    "width": 390,
+    "height": 844,
+    "colorScheme": "light",
+    "overflow": false,
+    "visibleLogos": 1,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "android",
+    "width": 360,
+    "height": 800,
+    "colorScheme": "dark",
+    "overflow": false,
+    "visibleLogos": 1,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "android",
+    "width": 360,
+    "height": 800,
+    "colorScheme": "light",
+    "overflow": false,
+    "visibleLogos": 1,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "mobile-320",
+    "width": 320,
+    "height": 740,
+    "colorScheme": "dark",
+    "overflow": false,
+    "visibleLogos": 1,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "mobile-320",
+    "width": 320,
+    "height": 740,
+    "colorScheme": "light",
+    "overflow": false,
+    "visibleLogos": 1,
+    "errors": [],
+    "violations": []
+  }
+]

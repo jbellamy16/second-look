@@ -11,21 +11,21 @@ import {
   ChevronRight,
   CircleHelp,
   Clock3,
-  Crosshair,
-  Focus,
-  LayoutGrid,
+  FootballPitch,
+  Formation,
+  PlayerShirt,
+  Watch,
   ListVideo,
   Pause,
   Play,
   RotateCcw,
   Settings2,
-  Shield,
+  Stadium,
   Tactics,
   Shot,
-  Recovery,
-  Momentum,
+  HighBallWins,
+  Pass,
   MatchEvents,
-  Competition,
   EventIcon,
   type IconSize,
   TrendingUp,
@@ -33,6 +33,7 @@ import {
   X,
 } from "./icons";
 import { Crest, PlayerIdentity } from "./team-identity";
+import { BrandImage, useAppearance, type Appearance } from "./appearance";
 import {
   activePlayers,
   clock,
@@ -88,16 +89,17 @@ function InsightIcon({
   return (
     <span className={`insight-icon ${category}`}>
       {category === "pressure" ? (
-        <Recovery size={size} />
+        <HighBallWins size={size} />
       ) : category === "chances" ? (
         <Shot size={size} />
       ) : (
-        <Momentum size={size} />
+        <Pass size={size} />
       )}
     </span>
   );
 }
 export function MatchApp() {
+  const [appearance, setAppearance] = useAppearance();
   const [scenario, setScenario] = useState<Scenario>("pressure");
   const [time, setTime] = useState(DEMO_TIME),
     [playing, setPlaying] = useState(false),
@@ -446,7 +448,7 @@ export function MatchApp() {
       setNotice(
         data.notice ??
           (data.source === "offline"
-            ? "Offline demo · explanation comes from verified event rules."
+            ? "Offline demo. This explanation comes from verified event rules."
             : ""),
       );
       setTab("explanation");
@@ -460,32 +462,19 @@ export function MatchApp() {
     }
   }
   const nav = [
-    { id: "match", label: "Match centre", icon: LayoutGrid },
+    { id: "match", label: "Match centre", icon: FootballPitch },
     { id: "insights", label: "Insights", icon: Tactics },
     { id: "stats", label: "Match stats", icon: BarChart3 },
-    { id: "lineups", label: "Lineups", icon: Users },
-    { id: "players", label: "Player focus", icon: Focus },
+    { id: "lineups", label: "Lineups", icon: Formation },
+    { id: "players", label: "Player focus", icon: PlayerShirt },
   ] as const;
   return (
     <div className="app-shell" inert={!ready} aria-busy={!ready}>
       <aside className="sidebar">
-        <a href="/" className="brand" aria-label="Second Look home">
-          <img
-            className="brand-wordmark"
-            src="/brand/second-look-horizontal-dark-1600.png"
-            width="1600"
-            height="316"
-            alt="Second Look"
-          />
-          <img
-            className="brand-symbol"
-            src="/brand/second-look-mark-dark.svg"
-            width="172"
-            height="172"
-            alt="Second Look"
-          />
+        <a href="/" className="brand" aria-label="Between the Lines home">
+          <BrandImage className="brand-wordmark" />
+          <BrandImage className="brand-symbol" symbol />
         </a>
-        <div className="nav-caption">THE MATCH, UNDERSTOOD</div>
         <SelectionGroup
           className="main-navigation"
           label="Main navigation"
@@ -509,38 +498,24 @@ export function MatchApp() {
           ))}
         </SelectionGroup>
         <div className="sidebar-bottom">
-          <div className="demo-card">
-            <span className="tiny-label">
-              <span className="status-dot" /> SYNTHETIC MATCH
-            </span>
-            <p>
-              Real patterns.
-              <br />A different perspective.
-            </p>
-            <button onClick={() => setModal("about")}>
-              About this demo <ArrowUpRight size={16} />
-            </button>
-          </div>
           <button
             className="nav-item"
-            aria-label="Your experience"
+            aria-label="Settings"
             onClick={() => setModal("settings")}
           >
             <Settings2 size={20} />
-            Your experience
+            Settings
           </button>
-          <span className="version">SECOND LOOK / 2026</span>
         </div>
       </aside>
       <div className="workspace">
         <header className="topbar">
-          <a className="mobile-brand" href="/" aria-label="Second Look home">
-            <img
-              src="/brand/second-look-horizontal-dark-1600.png"
-              width="1600"
-              height="316"
-              alt="Second Look"
-            />
+          <a
+            className="mobile-brand"
+            href="/"
+            aria-label="Between the Lines home"
+          >
+            <BrandImage />
           </a>
           <div className="breadcrumb">
             {nav.find((n) => n.id === section)?.label}{" "}
@@ -549,14 +524,13 @@ export function MatchApp() {
           </div>
           <div className="topbar-right">
             <span className="engine-badge">
-              <span className="status-dot" />
               {provider !== "offline"
                 ? `${providerLabel(provider)} configured`
                 : "Offline intelligence demo"}
             </span>
             <button
               className="icon-button mobile-settings"
-              aria-label="Your experience"
+              aria-label="Settings"
               onClick={() => setModal("settings")}
             >
               <Settings2 size={20} />
@@ -564,7 +538,7 @@ export function MatchApp() {
             <button
               className="help-button"
               onClick={() => setModal("about")}
-              aria-label="About Second Look"
+              aria-label="About Between the Lines"
             >
               <CircleHelp size={20} />
             </button>
@@ -573,41 +547,32 @@ export function MatchApp() {
         <main>
           <div className="page-heading">
             <div>
-              <div className="eyebrow">
-                A NEW PERSPECTIVE ON THE BEAUTIFUL GAME
-              </div>
+              {section === "match" && (
+                <div className="eyebrow">The story right now</div>
+              )}
               <h1>
                 {section === "match"
-                  ? "The game behind the score."
-                  : section === "insights"
-                    ? "The moments that mean more."
-                    : section === "stats"
-                      ? "Every number has a source."
-                      : section === "lineups"
-                        ? "Meet the two sides."
-                        : "A closer look at the individual."}
+                  ? (insight?.headline ?? "Waiting for a pattern")
+                  : nav.find((n) => n.id === section)?.label}
               </h1>
-              <p>You saw the game. Here’s what you missed.</p>
+              {section !== "match" && (
+                <p>
+                  {section === "insights"
+                    ? "What’s changing, and the evidence behind it."
+                    : section === "stats"
+                      ? "Compare both sides through the current match time."
+                      : section === "lineups"
+                        ? "The players on the pitch. Select anyone for a closer look."
+                        : "Explore a player’s contribution, action by action."}
+                </p>
+              )}
             </div>
-            <button
-              className="catchup-button"
-              onClick={() => {
-                setPlaying(false);
-                setModal("recap");
-              }}
-            >
-              <ListVideo size={20} />
-              Catch me up <ArrowRight size={16} />
-            </button>
           </div>
           <section className="scoreboard" aria-label="Match scoreboard">
             <div className="competition">
-              <span className="competition-icon">
-                <Competition size={24} />
-              </span>
               <div>
-                <strong>Second Look Invitational</strong>
-                <span>Matchday 12 · Synthetic fixture</span>
+                <strong>Between the Lines Invitational</strong>
+                <span>Matchday 12, synthetic fixture</span>
               </div>
             </div>
             <div className="score-match">
@@ -625,12 +590,14 @@ export function MatchApp() {
                   aria-atomic="true"
                 >
                   <Metric value={stats.harbor.goals} important />
-                  <span>:</span>
+                  <span className="score-separator">:</span>
                   <Metric value={stats.riverside.goals} important />
                 </strong>
                 <span className="match-clock" data-testid="clock">
-                  {clock(time)} <i />{" "}
-                  {time === DURATION ? "FT" : time < 2700 ? "1ST" : "2ND"}
+                  <time>{clock(time)}</time>
+                  <span>
+                    {time === DURATION ? "FT" : time < 2700 ? "1ST" : "2ND"}
+                  </span>
                 </span>
               </div>
               <div className="team-name">
@@ -650,15 +617,23 @@ export function MatchApp() {
                     ? "FULL TIME"
                     : "PAUSED"}
               </span>
-              <span>Harbor Park</span>
+              <span className="stadium-label">
+                <Stadium size={16} />
+                Harbor Park
+              </span>
             </div>
           </section>
           <div className="view-toolbar">
-            <div className="view-context">
-              <span className="blue-dot" />
-              {nav.find((n) => n.id === section)?.label}
-              <span>Follow the evidence.</span>
-            </div>
+            <button
+              className="catchup-button"
+              onClick={() => {
+                setPlaying(false);
+                setModal("recap");
+              }}
+            >
+              <ListVideo size={20} />
+              Catch me up <ArrowRight size={16} />
+            </button>
             <SelectionGroup
               className="mode-switch"
               label="Viewing mode"
@@ -691,48 +666,48 @@ export function MatchApp() {
                 <section className="panel pitch-panel">
                   <div className="panel-header">
                     <h2>
-                      <span className="blue-dot" />
                       {replay
                         ? "Sequence replay"
                         : event
                           ? "Event sequence"
                           : insight
-                            ? "The pattern in play"
+                            ? "Where it happened"
                             : "Live event view"}
                     </h2>
-                    <span className="subtle-label">
-                      {insight && !event
-                        ? insight.metric.toUpperCase()
-                        : "RECORDED EVENT POSITIONS"}
-                    </span>
-                    <button
-                      className="icon-button"
-                      aria-label="Clear event selection"
-                      onClick={() => {
-                        setSelectedEvent(null);
-                        setReplay(null);
-                      }}
-                    >
-                      <Focus size={16} />
-                    </button>
+                    {(event || replay) && (
+                      <button
+                        className="text-button clear-selection"
+                        onClick={() => {
+                          setPlaying(false);
+                          setSelectedEvent(null);
+                          setReplay(null);
+                        }}
+                      >
+                        <X size={16} /> Clear selection
+                      </button>
+                    )}
                   </div>
+                  <p className="pitch-caption">
+                    {replay || playing || event || !insight
+                      ? "Recorded actions, not live positions. Numbers show event order."
+                      : "Recorded actions, not live positions. Numbers identify players."}
+                  </p>
                   <div className="pitch-topline">
-                    <span>
+                    <span
+                      role="img"
+                      aria-label={`${TEAMS.harbor.short}: blue circles, attacking right`}
+                    >
                       <i className="team-marker harbor" aria-hidden="true" />
                       {TEAMS.harbor.short}
+                      <ArrowRight size={16} />
                     </span>
                     <span
-                      className="pitch-directions"
                       role="img"
-                      aria-label="Harbor attack right; Riverside attack left"
+                      aria-label={`${TEAMS.riverside.short}: red squares, attacking left`}
                     >
-                      Harbor <ArrowRight size={16} />
-                      <span aria-hidden="true">·</span>
-                      <ArrowLeft size={16} /> Riverside
-                    </span>
-                    <span>
-                      <i className="team-marker riverside" aria-hidden="true" />
+                      <ArrowLeft size={16} />
                       {TEAMS.riverside.short}
+                      <i className="team-marker riverside" aria-hidden="true" />
                     </span>
                   </div>
                   {replay && replayEvents.length ? (
@@ -758,7 +733,7 @@ export function MatchApp() {
                           </span>
                           <p>
                             {activePitchEvent
-                              ? `${clock(activePitchEvent.time)} · ${player(activePitchEvent.playerId).name} · ${activePitchEvent.type}${activePitchEvent.type === "pass" ? (activePitchEvent.success ? " completed" : " incomplete") : activePitchEvent.outcome ? ` · ${activePitchEvent.outcome}` : ""}`
+                              ? `${clock(activePitchEvent.time)} ${player(activePitchEvent.playerId).name}: ${activePitchEvent.type}${activePitchEvent.type === "pass" ? (activePitchEvent.success ? " completed" : " incomplete") : activePitchEvent.outcome ? ` (${activePitchEvent.outcome})` : ""}`
                               : "Select a marker or choose an event to see the sequence."}
                           </p>
                         </div>
@@ -783,7 +758,7 @@ export function MatchApp() {
                             <option value="">Choose an event</option>
                             {selectableEvents.map((e) => (
                               <option key={e.id} value={e.id}>
-                                {clock(e.time)} · {e.type} ·{" "}
+                                {clock(e.time)} {e.type} by{" "}
                                 {player(e.playerId).name}
                               </option>
                             ))}
@@ -846,7 +821,7 @@ export function MatchApp() {
                           .map((e) => (
                             <button
                               key={e.id}
-                              title={`${clock(e.time)} · ${e.type}`}
+                              title={`${clock(e.time)} ${e.type}`}
                               aria-label={`Seek to ${clock(e.time)} ${e.type}`}
                               style={{ left: `${(e.time / DURATION) * 100}%` }}
                               onClick={() => seek(e.time)}
@@ -929,7 +904,7 @@ export function MatchApp() {
                           <InsightIcon category={i.category} />
                           <div>
                             <span className="card-kicker">
-                              {TEAMS[i.team].short} · Last 15 minutes
+                              {TEAMS[i.team].short} in the last 15 minutes
                             </span>
                             <h3>{i.headline}</h3>
                             <p>
@@ -947,7 +922,7 @@ export function MatchApp() {
                           <strong>Let the game tell its story.</strong>
                           <p>
                             {prefs.categories.length === 0
-                              ? "Choose an insight category in Your experience."
+                              ? "Choose an insight category in Settings."
                               : "No strong change yet. We only surface patterns when the evidence is there."}
                           </p>
                         </div>
@@ -1024,10 +999,10 @@ export function MatchApp() {
                               <strong>
                                 {e.type.charAt(0).toUpperCase() +
                                   e.type.slice(1)}
-                                {e.outcome ? ` · ${e.outcome}` : ""}
+                                {e.outcome ? ` (${e.outcome})` : ""}
                               </strong>
                               <span>
-                                {TEAMS[e.team].code} · {player(e.playerId).name}
+                                {player(e.playerId).name} ({TEAMS[e.team].code})
                                 {e.recipientId && (
                                   <>
                                     {" "}
@@ -1054,10 +1029,7 @@ export function MatchApp() {
               </div>
               <aside className="panel detail-panel">
                 <div className="panel-header">
-                  <h2>
-                    <Tactics size={16} />
-                    Second look
-                  </h2>
+                  <h2>The evidence</h2>
                   <span className="verified-label">
                     <Check size={16} />{" "}
                     {insight ? "Evidence linked" : "Awaiting evidence"}
@@ -1069,18 +1041,16 @@ export function MatchApp() {
                       className="detail-intro"
                       change={`${insight.team}-${insight.category}-${prefs.mode}`}
                     >
-                      <InsightIcon category={insight.category} />
-                      <span className="eyebrow">THE STORY RIGHT NOW</span>
-                      <h2>{insight.headline}</h2>
-                      <p>
-                        {prefs.mode === "analyst"
-                          ? insight.analyst
-                          : insight.explanation}
+                      <p className="evidence-summary">
+                        {insight.current}{" "}
+                        {insight.category === "pressure"
+                          ? "ball wins in the attacking third"
+                          : insight.metric.toLowerCase()}
+                        , previously {insight.previous}.
                       </p>
                       <div className="insight-meta">
                         <Clock3 size={16} />
-                        Last 15 minutes<span>·</span>
-                        {TEAMS[insight.team].short}
+                        Last 15 minutes vs previous 15
                       </div>
                     </Reveal>
                     <SelectionGroup
@@ -1120,10 +1090,6 @@ export function MatchApp() {
                     >
                       {tab === "visual" ? (
                         <>
-                          <div className="comparison-label">
-                            <span>{insight.metric}</span>
-                            <span>Last 15 min vs previous 15</span>
-                          </div>
                           <div className="comparison-numbers">
                             <strong>
                               <Metric value={insight.current} />
@@ -1153,7 +1119,7 @@ export function MatchApp() {
                               category={insight.category}
                               size={16}
                             />
-                            {insight.metric} · event locations
+                            Event locations for {insight.metric.toLowerCase()}
                           </div>
                           <div className="why-card">
                             <span>
@@ -1184,7 +1150,7 @@ export function MatchApp() {
                               <div className="evidence-copy">
                                 <strong>{player(e.playerId).name}</strong>
                                 <span>
-                                  {e.type} · x {e.position.x.toFixed(0)}, y{" "}
+                                  {e.type} at x {e.position.x.toFixed(0)}, y{" "}
                                   {e.position.y.toFixed(0)}
                                 </span>
                                 {prefs.mode === "analyst" && (
@@ -1199,8 +1165,8 @@ export function MatchApp() {
                         <>
                           <span className="source-label">
                             {currentNarrative
-                              ? `${providerLabel(narrative!.provenance.provider).toUpperCase()} · VERIFIED STORY`
-                              : "DETERMINISTIC · VERIFIED EXPLANATION"}
+                              ? `Verified story from ${providerLabel(narrative!.provenance.provider)}`
+                              : "Verified explanation from recorded events"}
                           </span>
                           <p className="explanation-text">
                             {currentNarrative?.explanation ??
@@ -1219,7 +1185,7 @@ export function MatchApp() {
                       )}
                       <div className="watch-next insight-watch">
                         <span>
-                          <Focus size={16} /> WHAT TO WATCH NEXT
+                          <Watch size={16} /> WHAT TO WATCH NEXT
                         </span>
                         <p>{currentNarrative?.watch ?? insight.watch}</p>
                       </div>
@@ -1232,19 +1198,6 @@ export function MatchApp() {
                         events={visible}
                         insights={[insight]}
                       />
-                      {prefs.mode === "analyst" && (
-                        <div className="analyst-note">
-                          <strong>Measurement notes</strong>
-                          <p>
-                            Coordinates normalized to the attacking team.
-                            Windows: {clock(insight.start)}–{clock(insight.end)}{" "}
-                            and {clock(insight.start - 900)}–
-                            {clock(insight.start)}. Descriptive thresholds, not
-                            a statistical significance test. No tracking or
-                            causal inference.
-                          </p>
-                        </div>
-                      )}
                     </Reveal>
                     <div className="detail-footer">
                       <button
@@ -1268,7 +1221,7 @@ export function MatchApp() {
                   </>
                 ) : (
                   <div className="detail-empty">
-                    <Crosshair size={32} />
+                    <BrandImage className="empty-brand" symbol />
                     <h3>A little patience. A better insight.</h3>
                     <p>
                       We’re looking for meaningful changes in the event stream.
@@ -1306,7 +1259,7 @@ export function MatchApp() {
                       <h3>{i.headline}</h3>
                       <p>{prefs.mode === "fan" ? i.explanation : i.analyst}</p>
                       <span>
-                        {i.evidenceIds.length} supporting events ·{" "}
+                        {i.evidenceIds.length} supporting events from{" "}
                         {clock(i.start)}–{clock(i.end)}
                       </span>
                     </div>
@@ -1447,7 +1400,7 @@ export function MatchApp() {
                 >
                   {PLAYERS.map((p) => (
                     <option value={p.id} key={p.id}>
-                      {p.name} · {TEAMS[p.team].short}
+                      {p.name} ({TEAMS[p.team].short})
                     </option>
                   ))}
                 </select>
@@ -1457,7 +1410,7 @@ export function MatchApp() {
                   <PlayerIdentity player={player(focusedPlayer)} />
                   <h2>{player(focusedPlayer).name}</h2>
                   <p>
-                    {player(focusedPlayer).role} ·{" "}
+                    {player(focusedPlayer).role} for{" "}
                     {TEAMS[player(focusedPlayer).team].name}
                   </p>
                   <p className="player-status">
@@ -1468,7 +1421,7 @@ export function MatchApp() {
                       : visible.some((e) => e.outgoingId === focusedPlayer)
                         ? "Substituted off"
                         : "Not yet on the pitch"}{" "}
-                    · {clock(time)}
+                    at {clock(time)}
                   </p>
                   <div className="player-metrics">
                     {(["pass", "shot", "recovery"] as const).map((type) => (
@@ -1506,7 +1459,7 @@ export function MatchApp() {
                     {prefs.player === focusedPlayer ? (
                       <Check size={16} />
                     ) : (
-                      <Focus size={16} />
+                      <PlayerShirt size={16} />
                     )}{" "}
                     {prefs.player === focusedPlayer
                       ? "Following this player"
@@ -1535,68 +1488,58 @@ export function MatchApp() {
               </Reveal>
             </section>
           )}
-          <div className="bottom-row">
-            <label className="scenario-picker">
-              <span>DEMO SCENARIO</span>
-              <select
-                aria-label="Demo scenario"
-                value={scenario}
-                onChange={(e) => changeScenario(e.target.value as Scenario)}
+          <details className="demo-controls">
+            <summary>
+              Demo controls <ChevronDown size={16} />
+            </summary>
+            <div className="bottom-row">
+              <label className="scenario-picker">
+                <span>DEMO SCENARIO</span>
+                <select
+                  aria-label="Demo scenario"
+                  value={scenario}
+                  onChange={(e) => changeScenario(e.target.value as Scenario)}
+                >
+                  {(Object.keys(SCENARIOS) as Scenario[]).map((s) => (
+                    <option value={s} key={s}>
+                      {SCENARIOS[s].name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={16} />
+              </label>
+              <button
+                className="secondary-button"
+                onClick={() => {
+                  setScenario("pressure");
+                  seek(60 * 60);
+                  setSelectedKey(null);
+                  setPrefs(defaultPrefs);
+                  setSeenEvidenceIds([]);
+                  setTab("visual");
+                  setSpeed(16);
+                  setPlaying(true);
+                  setSection("match");
+                }}
               >
-                {(Object.keys(SCENARIOS) as Scenario[]).map((s) => (
-                  <option value={s} key={s}>
-                    {SCENARIOS[s].name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={16} />
-            </label>
-            <p>
-              <Shield size={16} />
-              Fictional clubs. Synthetic events. Evidence you can explore.
-            </p>
-            <button
-              className="secondary-button"
-              onClick={() => {
-                setScenario("pressure");
-                seek(60 * 60);
-                setSelectedKey(null);
-                setPrefs(defaultPrefs);
-                setSeenEvidenceIds([]);
-                setTab("visual");
-                setSpeed(16);
-                setPlaying(true);
-                setSection("match");
-              }}
-            >
-              <Play size={16} /> Watch the build-up
-            </button>
-            <button
-              className="text-button"
-              onClick={() => {
-                changeScenario("pressure");
-                setPrefs(defaultPrefs);
-                setSeenEvidenceIds([]);
-                setTab("visual");
-                setSpeed(8);
-                setSection("match");
-              }}
-            >
-              Reset demo <RotateCcw size={16} />
-            </button>
-          </div>
+                <Play size={16} /> Watch the build-up
+              </button>
+              <button
+                className="text-button"
+                onClick={() => {
+                  changeScenario("pressure");
+                  setPrefs(defaultPrefs);
+                  setSeenEvidenceIds([]);
+                  setTab("visual");
+                  setSpeed(8);
+                  setSection("match");
+                }}
+              >
+                Reset demo <RotateCcw size={16} />
+              </button>
+            </div>
+          </details>
         </main>
-        <footer>
-          <img
-            className="footer-brand"
-            src="/brand/second-look-horizontal-dark-1600.png"
-            width="1600"
-            height="316"
-            alt="Second Look"
-          />
-          <span>A deeper understanding. One moment at a time.</span>
-          <span>Built for the fans.</span>
-        </footer>
       </div>
       <dialog
         ref={dialogRef}
@@ -1605,7 +1548,7 @@ export function MatchApp() {
             ? "Catch me up"
             : dialogContent === "settings"
               ? "Your experience"
-              : "About Second Look"
+              : "About Between the Lines"
         }
         className={`modal ${dialogContent === "recap" ? "recap-modal" : ""}`}
         onKeyDown={(e) => {
@@ -1648,7 +1591,7 @@ export function MatchApp() {
               ? "MAKE IT YOUR MATCH"
               : dialogContent === "recap"
                 ? "BACK IN THE GAME"
-                : "BEHIND SECOND LOOK"}
+                : "BEHIND BETWEEN THE LINES"}
           </span>
           <button
             className="icon-button"
@@ -1661,15 +1604,12 @@ export function MatchApp() {
         {dialogContent === "recap" ? (
           <>
             <div className="recap-heading">
-              <span className="recap-icon">
-                <ListVideo size={32} />
-              </span>
               <h2>Here’s what you missed.</h2>
               <p>
-                Through {clock(time)} ·{" "}
                 {prefs.mode === "fan"
                   ? "The fan’s perspective"
-                  : "The analyst’s perspective"}
+                  : "The analyst’s perspective"}{" "}
+                through {clock(time)}
               </p>
             </div>
             <div className="recap-score">
@@ -1708,8 +1648,8 @@ export function MatchApp() {
               )}
               {currentRecap && (
                 <p className="source-label">
-                  {providerLabel(currentRecap.provenance.provider)} · VERIFIED
-                  STORY
+                  Verified story from{" "}
+                  {providerLabel(currentRecap.provenance.provider)}
                 </p>
               )}
             </div>
@@ -1734,9 +1674,7 @@ export function MatchApp() {
                     <time>{clock(m.event.time)}</time>
                     <div>
                       <strong>{m.label}</strong>
-                      <span>
-                        {TEAMS[m.event.team].name} · Inspect this moment
-                      </span>
+                      <span>{TEAMS[m.event.team].name}</span>
                     </div>
                     <ChevronRight size={16} />
                   </button>
@@ -1750,7 +1688,7 @@ export function MatchApp() {
             </div>
             <div className="watch-next">
               <span>
-                <Focus size={16} />
+                <Watch size={16} />
                 WHAT TO WATCH NEXT
               </span>
               <p>{currentRecap?.value.watch ?? summary.watch}</p>
@@ -1761,7 +1699,7 @@ export function MatchApp() {
               insights={insights}
             />
             <p className="limitations">
-              Event-derived recap · no events beyond {clock(time)} included.
+              Event-derived recap. No events beyond {clock(time)} included.
             </p>
             <button
               className="primary-button"
@@ -1778,6 +1716,20 @@ export function MatchApp() {
           <>
             <h2>Your match. Your perspective.</h2>
             <p className="muted">Preferences are saved on this device.</p>
+            <label className="setting-label appearance-setting">
+              Appearance
+              <select
+                aria-label="Appearance"
+                value={appearance}
+                onChange={(event) =>
+                  setAppearance(event.target.value as Appearance)
+                }
+              >
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
             <div className="settings-modes">
               {(["fan", "analyst"] as Mode[]).map((m) => (
                 <button
@@ -1806,7 +1758,7 @@ export function MatchApp() {
                   setPrefs({ ...prefs, team: e.target.value as Prefs["team"] })
                 }
               >
-                <option value="all">Both sides · neutral</option>
+                <option value="all">Both sides (neutral)</option>
                 {(Object.keys(TEAMS) as TeamId[]).map((t) => (
                   <option value={t} key={t}>
                     {TEAMS[t].name}
@@ -1855,18 +1807,20 @@ export function MatchApp() {
             <button className="primary-button" onClick={() => setModal(null)}>
               Save my experience <Check size={16} />
             </button>
+            <button
+              className="text-button about-settings"
+              onClick={() => setModal("about")}
+            >
+              About Between the Lines <ArrowUpRight size={16} />
+            </button>
           </>
         ) : (
           <>
-            <h2>
-              You saw the game.
-              <br />
-              Here’s what you missed.
-            </h2>
+            <h2 className="brand-headline">More than the score.</h2>
             <p className="recap-summary">
-              Second Look turns football events into stories you can inspect.
-              Follow a pattern, see the evidence on the pitch, and understand
-              why it might matter.
+              Football insights that go deeper. Between the Lines turns football
+              events into stories you can inspect. Follow a pattern, see the
+              evidence on the pitch, and understand why it might matter.
             </p>
             <div className="about-stages">
               {[
@@ -1904,8 +1858,8 @@ export function MatchApp() {
               football data, or continuous player tracking is used.
             </p>
             <p className="limitations">
-              Interface icons by Lucide. Club marks and football glyphs created
-              for Second Look.{" "}
+              Icons by Tabler and Lucide. Club marks and additional football
+              diagrams created for Between the Lines.{" "}
               <a
                 className="asset-license-link"
                 href="/icon-licenses.txt"

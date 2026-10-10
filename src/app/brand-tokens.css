@@ -1,18 +1,30 @@
-/* Second Look brand tokens - import after Tailwind's base layer */
+/* Between the Lines brand tokens - import after Tailwind's base layer */
 :root {
-  --sl-midnight: #071320;
-  --sl-navy: #0c1c2f;
-  --sl-surface: #17283d;
-  --sl-blue: #347cff;
-  --sl-blue-light: #61a8ff;
-  --sl-green: #20d17a;
-  --sl-text: #f8fbff;
-  --sl-muted: #a6b6cb;
+  color-scheme: dark;
+  --sl-dark-logo-display: block;
+  --sl-light-logo-display: none;
+  --sl-primary-hover: #ffffff;
+  --sl-control-border: #ffffff55;
+  --sl-success-text: #86d9a4;
+  --sl-pitch-line: #ffffff;
+  --sl-pitch-line-opacity: 0.8;
+  --sl-midnight: #0b0f14;
+  --sl-navy: #111923;
+  --sl-surface: #1d2936;
+  --sl-blue: #22c55e;
+  --sl-blue-light: #4ade80;
+  --sl-green: #22c55e;
+  --sl-text: #f8fafc;
+  --sl-muted: #bac5d3;
   --sl-warning: #f3ab44;
   --sl-danger: #ff6275;
-  --sl-radius-card: 16px;
-  --sl-radius-control: 10px;
-  --sl-border: rgba(166, 182, 203, 0.18);
+  --sl-radius-card: 12px;
+  --sl-radius-control: 8px;
+  --sl-selected: #21352c;
+  --sl-hover: #ffffff08;
+  --sl-pitch: #204b35;
+  --sl-pitch-surround: #183d2a;
+  --sl-border: rgba(215, 220, 223, 0.13);
 }
 
 /* Team identity is independent of action/status color. */
@@ -20,4 +32,80 @@
   --sl-harbor: #72c6ff;
   --sl-riverside: #ff7a83;
   --sl-icon-gap: 8px;
+}
+
+/* System appearance also works before JavaScript, or with it disabled. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --sl-midnight: #f8fafc;
+    --sl-navy: #ffffff;
+    --sl-surface: #e9eef3;
+    --sl-pitch: #347548;
+    --sl-pitch-surround: #2d663e;
+    --sl-text: #0b0f14;
+    --sl-muted: #475569;
+    --sl-blue: #15803d;
+    --sl-blue-light: #15803d;
+    --sl-green: #15803d;
+    --sl-warning: #895700;
+    --sl-danger: #b52c43;
+    --sl-selected: #e1eee5;
+    --sl-hover: #18202408;
+    --sl-border: #252d322b;
+    --sl-control-border: #252d324d;
+    --sl-success-text: #15803d;
+    --sl-harbor: #17689a;
+    --sl-riverside: #b93148;
+    --sl-primary-hover: #166534;
+    --sl-dark-logo-display: none;
+    --sl-light-logo-display: block;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --sl-midnight: #f8fafc;
+  --sl-navy: #ffffff;
+  --sl-surface: #e9eef3;
+  --sl-pitch: #347548;
+  --sl-pitch-surround: #2d663e;
+  --sl-text: #0b0f14;
+  --sl-muted: #475569;
+  --sl-blue: #15803d;
+  --sl-blue-light: #15803d;
+  --sl-green: #15803d;
+  --sl-warning: #895700;
+  --sl-danger: #b52c43;
+  --sl-selected: #e1eee5;
+  --sl-hover: #18202408;
+  --sl-border: #252d322b;
+  --sl-control-border: #252d324d;
+  --sl-success-text: #15803d;
+  --sl-harbor: #17689a;
+  --sl-riverside: #b93148;
+  --sl-primary-hover: #166534;
+  --sl-dark-logo-display: none;
+  --sl-light-logo-display: block;
+}
+
+/* Legacy --sl names remain compatible with the existing football UI. */
+:root {
+  --btl-action: #22c55e;
+  --btl-action-ink: #0b0f14;
+  --btl-action-hover: #4ade80;
+  --btl-focus: var(--sl-blue-light);
+  --btl-slate: #334155;
+  --btl-mist: #cbd5e1;
+}
+:root[data-theme="light"] {
+  --btl-action: #15803d;
+  --btl-action-ink: #ffffff;
+  --btl-action-hover: #166534;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --btl-action: #15803d;
+    --btl-action-ink: #ffffff;
+    --btl-action-hover: #166534;
+  }
 }

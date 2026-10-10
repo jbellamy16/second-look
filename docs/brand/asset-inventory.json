@@ -1,0 +1,408 @@
+[
+  {
+    "file": "public/brand/btl-horizontal-dark.svg",
+    "width": 376,
+    "height": 112,
+    "role": "horizontal; dark ink/surface variant; outlined type",
+    "bytes": 7408
+  },
+  {
+    "file": "public/brand/btl-horizontal-dark.png",
+    "width": 1504,
+    "height": 448,
+    "role": "horizontal; transparent high-resolution PNG",
+    "bytes": 33207
+  },
+  {
+    "file": "public/brand/btl-stacked-dark.svg",
+    "width": 320,
+    "height": 330,
+    "role": "stacked; dark ink/surface variant; outlined type",
+    "bytes": 7424
+  },
+  {
+    "file": "public/brand/btl-stacked-dark.png",
+    "width": 1280,
+    "height": 1320,
+    "role": "stacked; transparent high-resolution PNG",
+    "bytes": 45304
+  },
+  {
+    "file": "public/brand/btl-mark-dark.svg",
+    "width": 96,
+    "height": 96,
+    "role": "mark; dark ink/surface variant; outlined type",
+    "bytes": 464
+  },
+  {
+    "file": "public/brand/btl-mark-dark.png",
+    "width": 384,
+    "height": 384,
+    "role": "mark; transparent high-resolution PNG",
+    "bytes": 10022
+  },
+  {
+    "file": "public/brand/btl-compact-dark.svg",
+    "width": 224,
+    "height": 96,
+    "role": "compact; dark ink/surface variant; outlined type",
+    "bytes": 1687
+  },
+  {
+    "file": "public/brand/btl-compact-dark.png",
+    "width": 896,
+    "height": 384,
+    "role": "compact; transparent high-resolution PNG",
+    "bytes": 15686
+  },
+  {
+    "file": "public/brand/btl-horizontal-light.svg",
+    "width": 376,
+    "height": 112,
+    "role": "horizontal; light ink/surface variant; outlined type",
+    "bytes": 7408
+  },
+  {
+    "file": "public/brand/btl-horizontal-light.png",
+    "width": 1504,
+    "height": 448,
+    "role": "horizontal; transparent high-resolution PNG",
+    "bytes": 33371
+  },
+  {
+    "file": "public/brand/btl-stacked-light.svg",
+    "width": 320,
+    "height": 330,
+    "role": "stacked; light ink/surface variant; outlined type",
+    "bytes": 7424
+  },
+  {
+    "file": "public/brand/btl-stacked-light.png",
+    "width": 1280,
+    "height": 1320,
+    "role": "stacked; transparent high-resolution PNG",
+    "bytes": 45393
+  },
+  {
+    "file": "public/brand/btl-mark-light.svg",
+    "width": 96,
+    "height": 96,
+    "role": "mark; light ink/surface variant; outlined type",
+    "bytes": 464
+  },
+  {
+    "file": "public/brand/btl-mark-light.png",
+    "width": 384,
+    "height": 384,
+    "role": "mark; transparent high-resolution PNG",
+    "bytes": 10069
+  },
+  {
+    "file": "public/brand/btl-compact-light.svg",
+    "width": 224,
+    "height": 96,
+    "role": "compact; light ink/surface variant; outlined type",
+    "bytes": 1687
+  },
+  {
+    "file": "public/brand/btl-compact-light.png",
+    "width": 896,
+    "height": 384,
+    "role": "compact; transparent high-resolution PNG",
+    "bytes": 15761
+  },
+  {
+    "file": "public/brand/btl-horizontal-white.svg",
+    "width": 376,
+    "height": 112,
+    "role": "horizontal; white ink/surface variant; outlined type",
+    "bytes": 7408
+  },
+  {
+    "file": "public/brand/btl-horizontal-white.png",
+    "width": 1504,
+    "height": 448,
+    "role": "horizontal; transparent high-resolution PNG",
+    "bytes": 26908
+  },
+  {
+    "file": "public/brand/btl-stacked-white.svg",
+    "width": 320,
+    "height": 330,
+    "role": "stacked; white ink/surface variant; outlined type",
+    "bytes": 7424
+  },
+  {
+    "file": "public/brand/btl-stacked-white.png",
+    "width": 1280,
+    "height": 1320,
+    "role": "stacked; transparent high-resolution PNG",
+    "bytes": 37110
+  },
+  {
+    "file": "public/brand/btl-mark-white.svg",
+    "width": 96,
+    "height": 96,
+    "role": "mark; white ink/surface variant; outlined type",
+    "bytes": 464
+  },
+  {
+    "file": "public/brand/btl-mark-white.png",
+    "width": 384,
+    "height": 384,
+    "role": "mark; transparent high-resolution PNG",
+    "bytes": 7675
+  },
+  {
+    "file": "public/brand/btl-compact-white.svg",
+    "width": 224,
+    "height": 96,
+    "role": "compact; white ink/surface variant; outlined type",
+    "bytes": 1687
+  },
+  {
+    "file": "public/brand/btl-compact-white.png",
+    "width": 896,
+    "height": 384,
+    "role": "compact; transparent high-resolution PNG",
+    "bytes": 12259
+  },
+  {
+    "file": "public/brand/btl-horizontal-black.svg",
+    "width": 376,
+    "height": 112,
+    "role": "horizontal; black ink/surface variant; outlined type",
+    "bytes": 7408
+  },
+  {
+    "file": "public/brand/btl-horizontal-black.png",
+    "width": 1504,
+    "height": 448,
+    "role": "horizontal; transparent high-resolution PNG",
+    "bytes": 27289
+  },
+  {
+    "file": "public/brand/btl-stacked-black.svg",
+    "width": 320,
+    "height": 330,
+    "role": "stacked; black ink/surface variant; outlined type",
+    "bytes": 7424
+  },
+  {
+    "file": "public/brand/btl-stacked-black.png",
+    "width": 1280,
+    "height": 1320,
+    "role": "stacked; transparent high-resolution PNG",
+    "bytes": 36506
+  },
+  {
+    "file": "public/brand/btl-mark-black.svg",
+    "width": 96,
+    "height": 96,
+    "role": "mark; black ink/surface variant; outlined type",
+    "bytes": 464
+  },
+  {
+    "file": "public/brand/btl-mark-black.png",
+    "width": 384,
+    "height": 384,
+    "role": "mark; transparent high-resolution PNG",
+    "bytes": 7528
+  },
+  {
+    "file": "public/brand/btl-compact-black.svg",
+    "width": 224,
+    "height": 96,
+    "role": "compact; black ink/surface variant; outlined type",
+    "bytes": 1687
+  },
+  {
+    "file": "public/brand/btl-compact-black.png",
+    "width": 896,
+    "height": 384,
+    "role": "compact; transparent high-resolution PNG",
+    "bytes": 12019
+  },
+  {
+    "file": "public/icon.svg",
+    "width": 512,
+    "height": 512,
+    "role": "App icon",
+    "bytes": 505
+  },
+  {
+    "file": "public/favicon.svg",
+    "width": 512,
+    "height": 512,
+    "role": "Simplified small-size symbol",
+    "bytes": 505
+  },
+  {
+    "file": "public/safari-pinned-tab.svg",
+    "width": 96,
+    "height": 96,
+    "role": "Monochrome browser mask",
+    "bytes": 391
+  },
+  {
+    "file": "public/favicon-16x16.png",
+    "width": 16,
+    "height": 16,
+    "role": "Favicon",
+    "bytes": 425
+  },
+  {
+    "file": "public/favicon-32x32.png",
+    "width": 32,
+    "height": 32,
+    "role": "Favicon",
+    "bytes": 849
+  },
+  {
+    "file": "public/favicon-48x48.png",
+    "width": 48,
+    "height": 48,
+    "role": "Favicon",
+    "bytes": 1251
+  },
+  {
+    "file": "public/icon-64.png",
+    "width": 64,
+    "height": 64,
+    "role": "Application icon",
+    "bytes": 1665
+  },
+  {
+    "file": "public/icon-192.png",
+    "width": 192,
+    "height": 192,
+    "role": "Application icon",
+    "bytes": 5504
+  },
+  {
+    "file": "public/icon-256.png",
+    "width": 256,
+    "height": 256,
+    "role": "Application icon",
+    "bytes": 7558
+  },
+  {
+    "file": "public/icon-512.png",
+    "width": 512,
+    "height": 512,
+    "role": "Application icon",
+    "bytes": 18041
+  },
+  {
+    "file": "public/icon-1024.png",
+    "width": 1024,
+    "height": 1024,
+    "role": "Application icon",
+    "bytes": 42544
+  },
+  {
+    "file": "public/apple-touch-icon.png",
+    "width": 180,
+    "height": 180,
+    "role": "Apple touch icon",
+    "bytes": 5414
+  },
+  {
+    "file": "public/icon-maskable-512.png",
+    "width": 512,
+    "height": 512,
+    "role": "Maskable; all foreground inside 80% safe circle",
+    "bytes": 9270
+  },
+  {
+    "file": "public/favicon.ico",
+    "width": 48,
+    "height": 48,
+    "role": "Multi-resolution ICO: 16, 32, 48",
+    "bytes": 2579
+  },
+  {
+    "file": "public/brand/opengraph-image.svg",
+    "width": 1200,
+    "height": 630,
+    "role": "Original broadcast composition; outlined text",
+    "bytes": 39675
+  },
+  {
+    "file": "public/opengraph-image.png",
+    "width": 1200,
+    "height": 630,
+    "role": "Social / presentation export",
+    "bytes": 48278
+  },
+  {
+    "file": "public/brand/twitter-image.svg",
+    "width": 1200,
+    "height": 675,
+    "role": "Original broadcast composition; outlined text",
+    "bytes": 39675
+  },
+  {
+    "file": "public/twitter-image.png",
+    "width": 1200,
+    "height": 675,
+    "role": "Social / presentation export",
+    "bytes": 48815
+  },
+  {
+    "file": "public/brand/social-square.svg",
+    "width": 1080,
+    "height": 1080,
+    "role": "Original broadcast composition; outlined text",
+    "bytes": 36496
+  },
+  {
+    "file": "public/brand/social-square.png",
+    "width": 1080,
+    "height": 1080,
+    "role": "Social / presentation export",
+    "bytes": 51277
+  },
+  {
+    "file": "public/brand/social-story.svg",
+    "width": 1080,
+    "height": 1920,
+    "role": "Original broadcast composition; outlined text",
+    "bytes": 39751
+  },
+  {
+    "file": "public/brand/social-story.png",
+    "width": 1080,
+    "height": 1920,
+    "role": "Social / presentation export",
+    "bytes": 65266
+  },
+  {
+    "file": "public/brand/video-title.svg",
+    "width": 1920,
+    "height": 1080,
+    "role": "Original broadcast composition; outlined text",
+    "bytes": 39679
+  },
+  {
+    "file": "public/brand/video-title.png",
+    "width": 1920,
+    "height": 1080,
+    "role": "Social / presentation export",
+    "bytes": 83816
+  },
+  {
+    "file": "docs/brand/identity-preview.svg",
+    "width": 1280,
+    "height": 1080,
+    "role": "Identity overview",
+    "bytes": 121402
+  },
+  {
+    "file": "docs/brand/identity-preview.png",
+    "width": 1280,
+    "height": 1080,
+    "role": "Identity overview preview",
+    "bytes": 81109
+  }
+]

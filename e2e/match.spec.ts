@@ -18,6 +18,8 @@ test("playback, evidence, modes, recap, and rewind stay synchronized", async ({
     page.getByRole("heading", { name: "Sequence replay" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Analyst mode", exact: true }).click();
+  await expect(page.getByText("Measurement notes")).not.toBeVisible();
+  await page.locator(".detail-panel .provenance summary").click();
   await expect(page.getByText("Measurement notes")).toBeVisible();
   await page.getByRole("button", { name: /Catch me up/ }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
@@ -40,6 +42,9 @@ test("scenarios, navigation, player preferences and mobile layout work", async (
   page,
 }, testInfo) => {
   await page.goto("/");
+  await expect(page.getByLabel("Demo scenario")).not.toBeVisible();
+  await page.locator(".demo-controls > summary").focus();
+  await page.keyboard.press("Enter");
   await page.getByLabel("Demo scenario").selectOption("quiet");
   await expect(page.getByText("Let the game tell its story.")).toBeVisible();
   await page.getByLabel("Demo scenario").selectOption("substitution");
@@ -91,21 +96,21 @@ test("explanation provenance, category preferences, and arbitrary seeking are tr
   await page.goto("/");
   await page.getByRole("button", { name: "Explore the explanation" }).click();
   await expect(
-    page.getByText("DETERMINISTIC · VERIFIED EXPLANATION"),
+    page.getByText("Verified explanation from recorded events"),
   ).toBeVisible();
   await expect(page.getByRole("status")).toContainText("Offline demo");
   await page
-    .getByRole("button", { name: "Your experience", exact: true })
+    .getByRole("button", { name: "Settings", exact: true })
     .click();
   for (const name of ["Pressure", "Chances", "Rhythm"])
     await page.getByRole("checkbox", { name }).uncheck();
   await page.getByRole("button", { name: "Save my experience" }).click();
   await expect(
-    page.getByText("Choose an insight category in Your experience."),
+    page.getByText("Choose an insight category in Settings."),
   ).toBeVisible();
   await page.reload();
   await expect(
-    page.getByText("Choose an insight category in Your experience."),
+    page.getByText("Choose an insight category in Settings."),
   ).toBeVisible();
   const timeline = page.getByRole("slider", { name: "Match timeline" });
   await timeline.focus();
@@ -138,7 +143,7 @@ test("selected evidence drives replay, which retains its final frame", async ({
   await expect(page.getByTestId("clock")).toContainText("63:24");
   await page.getByRole("button", { name: "Back to the pattern" }).click();
   await expect(
-    page.getByRole("heading", { name: "The pattern in play" }),
+    page.getByRole("heading", { name: "Where it happened" }),
   ).toBeVisible();
   await page
     .getByLabel("Recorded event", { exact: true })
@@ -151,6 +156,7 @@ test("the demo shows a pattern emerging and reset clears custom filters", async 
 }) => {
   await page.clock.install();
   await page.goto("/");
+  await page.locator(".demo-controls > summary").click();
   await page.getByRole("button", { name: "Watch the build-up" }).click();
   await expect(page.getByText("Let the game tell its story.")).toBeVisible();
   await page.clock.runFor(6000);
@@ -159,7 +165,7 @@ test("the demo shows a pattern emerging and reset clears custom filters", async 
   ).toHaveCount(2);
   await page.getByRole("button", { name: "Pause match", exact: true }).click();
   await page
-    .getByRole("button", { name: "Your experience", exact: true })
+    .getByRole("button", { name: "Settings", exact: true })
     .click();
   for (const name of ["Pressure", "Chances", "Rhythm"])
     await page.getByRole("checkbox", { name }).uncheck();
@@ -212,7 +218,7 @@ test("every major screen fits the viewport and captures review evidence", async 
     });
   }
   for (const [label, file] of [
-    ["Your experience", "preferences"],
+    ["Settings", "preferences"],
     ["Catch me up", "recap"],
   ]) {
     await page.getByRole("button", { name: label, exact: true }).click();
@@ -247,7 +253,7 @@ test("metadata, home-screen icons and social previews reference real files", asy
   request,
 }) => {
   await page.goto("/");
-  await expect(page).toHaveTitle("Second Look | Football beyond the score");
+  await expect(page).toHaveTitle("Between the Lines | More than the score.");
   await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute(
     "content",
     "1200",
@@ -380,14 +386,14 @@ test("OpenAI UI requests narration only on demand and clears stale results on re
     .getByRole("button", { name: "Explain with OpenAI", exact: true })
     .click();
   await expect(
-    page.getByText("OPENAI · VERIFIED STORY", { exact: true }),
+    page.getByText("Verified story from OpenAI", { exact: true }),
   ).toBeVisible();
   expect(calls).toBe(1);
   await page.getByRole("button", { name: "Play match", exact: true }).click();
   await expect(page.getByTestId("clock")).not.toContainText("63:24");
   expect(calls).toBe(1);
   await expect(
-    page.getByText("OPENAI · VERIFIED STORY", { exact: true }),
+    page.getByText("Verified story from OpenAI", { exact: true }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Restart match" }).click();
   await expect(page.getByTestId("clock")).toContainText("00:00");

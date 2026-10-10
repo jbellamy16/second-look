@@ -1,16 +1,18 @@
-# Second Look
+# Between the Lines
 
-**You saw the game. Here’s what you missed.**
+**More than the score.** Football insights that go deeper.
 
-Second Look is a second-screen football intelligence experience. It turns synthetic match events into a small number of explainable stories, then lets viewers inspect the actions behind each claim. Built for an individual entry in Microsoft’s 2026 Inside the Game Developer Hackathon.
+Previously called Second Look. The product is now Between the Lines; the repository remains `jbellamy16/second-look`.
+
+Between the Lines is a second-screen football intelligence experience. It turns synthetic match events into a small number of explainable stories, then lets viewers inspect the actions behind each claim. Built for an individual entry in Microsoft’s 2026 Inside the Game Developer Hackathon.
 
 ## The problem
 
-Watching football and understanding how a match is changing are different things. A wall of statistics does little to bridge that gap. Second Look connects an observation, its supporting events, a tactical visualization, and a cautious explanation in one interaction.
+Watching football and understanding how a match is changing are different things. A wall of statistics does little to bridge that gap. Between the Lines connects an observation, its supporting events, a tactical visualization, and a cautious explanation in one interaction.
 
 ## What works
 
-- A responsive match centre with original Harbor Athletic and Riverside FC identities, alongside the supplied Second Look v1 brand system. No club crests, player photos, or broadcast footage.
+- A responsive match centre with original Harbor Athletic and Riverside FC identities, alongside the original Between the Lines identity. No club crests, player photos, or broadcast footage.
 - Three deterministic seeded fixtures: increasing pressure, post-substitution changes, and a quiet match.
 - Play/pause, restart, seek, five playback speeds, scenario selection, and repeatable demo reset at 63:24.
 - An interactive SVG pitch: actual event positions, numbered possession sequences, pass/shot endpoints, and progressive sequence replay. No invented tracking.
@@ -19,7 +21,7 @@ Watching football and understanding how a match is changing are different things
 - Fan mode, analyst mode, timestamp-safe Catch Me Up, lineups, and player action maps.
 - Device-local team, player, mode, and insight category preferences that filter and reorder observations.
 - Server-side OpenAI (GPT-5.4 Mini) and Microsoft Foundry Responses API adapters with shared forced evidence retrieval, structured selection, validation, and honest provider attribution. **Both are mock-tested. OpenAI Fan narration passed an authorized live check. An Analyst context omission is fixed and verified by replaying the captured selection; the revised flow still needs live verification. Foundry remains unverified live.**
-- Optional AI Catch Me Up, contextual insight narration, and expandable “How Second Look knows” evidence.
+- Optional AI Catch Me Up, contextual insight narration, and expandable “How Between the Lines knows” evidence.
 - Shared Redis quotas, cache, and deduplication; inference remains off by default.
 - Explicit offline demonstration mode; request failures or invalid model output fall back to computed explanations without claiming AI generation.
 
@@ -87,7 +89,7 @@ Every insight contains category, team, headline, explanation, significance, what
 
 ## Brand and Phase 2 refinements
 
-The supplied Second Look v1 kit is integrated without redrawing its mark. Navigation uses the supplied horizontal wordmark, with the symbol in the compact sidebar. Inter is self-hosted with `next/font/local`; runtime and builds do not request Google Fonts. Brand tokens, navy pitch surfaces, blue actions, green focused events, and original social assets are wired throughout the app. Guidelines and source tokens are preserved in `docs/brand/`.
+The original Between the Lines identity pairs pitch geometry with a single tactical route. Navigation uses outlined SVG lockups and an optically simplified symbol at small sizes. Inter and Barlow Condensed are self-hosted with `next/font/local`. Midnight surfaces, restrained green actions, light/dark appearance, and original broadcast-style social assets are integrated throughout the app. See [brand guidelines](docs/brand/README.md), [asset inventory](docs/brand/asset-inventory.json), and [review evidence](docs/brand/REVIEW.md). Rebuild exports with `npm run brand:build`.
 
 Metadata serves the supplied SVG/ICO favicons, Apple touch icon, Safari mask, 192/512 px icons, maskable icon, 1200×630 Open Graph image, and 1200×675 X image. Set **`NEXT_PUBLIC_SITE_URL` to the public HTTPS origin before a hosted build**. Local builds default to localhost. A manifest supports home-screen identity; no offline service-worker support is claimed. Real external social link previews still need a public deployment.
 
