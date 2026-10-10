@@ -53,9 +53,13 @@ export type EvidencePacket = {
   time: number;
   mode: Mode;
   facts: Fact[];
-  events: MatchEvent[];
+  events: (Pick<MatchEvent, "id" | "time" | "playerId" | "team"> & {
+    type: string;
+  })[];
   comparisons: Insight[];
-  ranking: ReturnType<typeof rankInsights>;
+  ranking: (Omit<ReturnType<typeof rankInsights>[number], "insight"> & {
+    insight: Pick<Insight, "id">;
+  })[];
   limitations: string[];
   fullTime: boolean;
 };

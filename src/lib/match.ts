@@ -11,7 +11,14 @@ export type EventType =
   | "possession"
   | "corner"
   | "foul"
-  | "substitution";
+  | "substitution"
+  | "duel"
+  | "restart"
+  | "offside"
+  | "touch"
+  | "interruption"
+  | "save"
+  | "other";
 export type Point = { x: number; y: number };
 export type Player = {
   id: string;
@@ -33,7 +40,7 @@ export type MatchEvent = {
   outcome?: "saved" | "wide" | "goal";
   xg?: number;
   outgoingId?: string;
-  possessionId: number;
+  possessionId: number | null;
 };
 export const TEAMS = {
   harbor: {
@@ -359,6 +366,7 @@ export function statistics(events: MatchEvent[]) {
   >;
 }
 export function sequenceFor(events: MatchEvent[], event: MatchEvent) {
+  if (event.possessionId === null) return [event];
   return events.filter(
     (e) =>
       e.possessionId === event.possessionId &&

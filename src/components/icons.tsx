@@ -238,6 +238,13 @@ export const EVENT_ICONS = {
   corner: Corner,
   foul: Foul,
   possession: Possession,
+  duel: Tackle,
+  restart: Pass,
+  offside: Foul,
+  touch: Possession,
+  interruption: Foul,
+  save: Recovery,
+  other: Possession,
 } satisfies Record<EventType, (props: IconProps) => ReactNode>;
 export function EventIcon({ type, ...props }: IconProps & { type: EventType }) {
   const Glyph = EVENT_ICONS[type];

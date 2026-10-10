@@ -157,3 +157,16 @@ Read [submission preparation](docs/SUBMISSION.md) for the pitch, demo flow, 90-s
 - Consider a measured substitution comparison detector and exportable broadcast insight JSON as follow-up refinements.
 
 Original application graphics are SVG/CSS. UI symbols use Lucide (ISC license); third-party library licenses remain applicable. No affiliation with fictional teams is implied, and no official league branding is reproduced.
+
+## Historical match mode (Phase 6)
+
+Synthetic remains the default. **Real Match** offers three licensed Wyscout event
+replays from the Premier League 2017–18 season, with spoiler-safe playback,
+recorded-action pitch views, evidence-backed observations and Catch Me Up.
+
+- [Data source, license, normalization and limitations](docs/HISTORICAL-DATA.md)
+- [OpenAI / Foundry setup, request allowance and evaluation](docs/PHASE-6-AI.md)
+- [Third-party attribution](data/historical/LICENSE.md)
+
+No paid AI request is needed for offline replay. Historical inference is optional
+and uses the existing server-only, bounded and validated provider adapters.

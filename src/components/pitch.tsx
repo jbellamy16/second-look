@@ -14,11 +14,20 @@ export function Pitch({
   onSelect,
   compact = false,
   sequence = false,
+  includeAllActions = false,
   playback,
+  identities,
+  formatTime = clock,
 }: {
+  identities?: {
+    teams: Record<"harbor" | "riverside", { short: string; color: string }>;
+    player: (id: string) => { name: string; number: number | null };
+  };
+  formatTime?: (time: number) => string;
   events: MatchEvent[];
   selected?: string;
   onSelect?: (event: MatchEvent) => void;
+  includeAllActions?: boolean;
   compact?: boolean;
   sequence?: boolean;
   playback?: {
@@ -28,11 +37,15 @@ export function Pitch({
     running: boolean;
   };
 }) {
+  const teams = identities?.teams ?? TEAMS;
+  const lookupPlayer = identities?.player ?? player;
   const id = useId().replace(/:/g, "");
   const point = pitchPoint;
   const activeEvent = events.find((event) => event.id === selected);
   const filtered = events.filter(
-    (e) => !["possession", "substitution", "foul", "goal"].includes(e.type),
+    (e) =>
+      includeAllActions ||
+      !["possession", "substitution", "foul", "goal"].includes(e.type),
   );
   return (
     <svg
@@ -133,7 +146,7 @@ export function Pitch({
                 key={`line-${e.id}`}
                 className={`event-path ${e.id === selected ? "active-path" : ""} ${e.type}`}
                 d={`M${p.x} ${p.y}L${q.x} ${q.y}`}
-                stroke={TEAMS[e.team].color}
+                stroke={teams[e.team].color}
                 strokeWidth="3"
                 strokeDasharray={
                   e.type === "shot"
@@ -160,7 +173,7 @@ export function Pitch({
             data-event-time={e.time}
             tabIndex={onSelect ? 0 : undefined}
             role={onSelect ? "button" : "img"}
-            aria-label={`${clock(e.time)} ${e.type} by ${player(e.playerId).name}`}
+            aria-label={`${formatTime(e.time)} ${e.type} by ${lookupPlayer(e.playerId).name}`}
             aria-pressed={onSelect ? active : undefined}
             onClick={() => onSelect?.(e)}
             onKeyDown={(ev) => {
@@ -194,7 +207,7 @@ export function Pitch({
                 cy={p.y}
                 className="marker-dot"
                 r={compact ? 15 : 18}
-                fill={TEAMS[e.team].color}
+                fill={teams[e.team].color}
                 stroke="#071320"
                 strokeWidth="3"
               />
@@ -206,7 +219,7 @@ export function Pitch({
                 height={compact ? 30 : 36}
                 rx="6"
                 className="marker-square"
-                fill={TEAMS[e.team].color}
+                fill={teams[e.team].color}
                 stroke="#071320"
                 strokeWidth="3"
               />
@@ -221,7 +234,9 @@ export function Pitch({
                 dominantBaseline="central"
                 fontWeight="650"
               >
-                {sequence ? index + 1 : player(e.playerId).number}
+                {sequence
+                  ? index + 1
+                  : (lookupPlayer(e.playerId).number ?? "·")}
               </text>
             )}
           </g>
@@ -243,7 +258,7 @@ export function Pitch({
             height="44"
             rx="8"
             fill="#071320"
-            stroke={TEAMS[activeEvent.team].color}
+            stroke={teams[activeEvent.team].color}
           />
           <text
             x="500"
@@ -253,7 +268,7 @@ export function Pitch({
             fontSize="18"
             fontWeight="650"
           >
-            GOAL FOR {TEAMS[activeEvent.team].short.toUpperCase()}
+            GOAL FOR {teams[activeEvent.team].short.toUpperCase()}
           </text>
         </g>
       )}

@@ -29,7 +29,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ai-evaluation
-          path: artifacts/ai-evaluation.json
+          path: |
+            artifacts/ai-evaluation.json
+            artifacts/historical-evaluation.json
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

@@ -26,6 +26,7 @@ const files = [
   "open-next.config.ts",
   "wrangler.jsonc",
   "src",
+  "data/historical",
   "public",
   "scripts/prepare-standalone.mjs",
 ];
@@ -36,7 +37,9 @@ const env = {
   CI: "1",
   NEXT_TELEMETRY_DISABLED: "1",
   AI_ENABLED: "false",
-  // Public metadata is the only application setting accepted at build time.
+  // Only public metadata and the non-secret historical feature flag cross the build boundary.
+  HISTORICAL_MATCHES_ENABLED:
+    process.env.HISTORICAL_MATCHES_ENABLED === "false" ? "false" : "true",
   NEXT_PUBLIC_SITE_URL: siteUrl.origin,
 };
 try {
