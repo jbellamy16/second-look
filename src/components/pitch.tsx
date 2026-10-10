@@ -47,6 +47,30 @@ export function Pitch({
       }
     >
       <defs>
+        <pattern
+          id={`grass-${id}`}
+          x="50"
+          y="45"
+          width="180"
+          height="550"
+          patternUnits="userSpaceOnUse"
+        >
+          <rect width="90" height="550" fill="#fff" fillOpacity=".055" />
+        </pattern>
+        <pattern
+          id={`net-${id}`}
+          width="5"
+          height="5"
+          patternUnits="userSpaceOnUse"
+        >
+          <path
+            d="M5 0H0V5"
+            fill="none"
+            stroke="#fff"
+            strokeOpacity=".35"
+            strokeWidth=".6"
+          />
+        </pattern>
         <marker
           id={`arrow-${id}`}
           viewBox="0 0 10 10"
@@ -59,22 +83,45 @@ export function Pitch({
           <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
         </marker>
       </defs>
-      <rect x="12" y="12" width="976" height="616" rx="9" fill="#0a1929" />
+      <rect
+        x="12"
+        y="12"
+        width="976"
+        height="616"
+        rx="9"
+        fill="var(--sl-pitch-surround)"
+      />
+      <g aria-hidden="true" pointerEvents="none">
+        <rect x="50" y="45" width="900" height="550" fill="var(--sl-pitch)" />
+        <rect
+          x="50"
+          y="45"
+          width="900"
+          height="550"
+          fill={`url(#grass-${id})`}
+        />
+        {!compact && (
+          <g fill={`url(#net-${id})`}>
+            <rect x="35" y="285" width="15" height="70" />
+            <rect x="950" y="285" width="15" height="70" />
+          </g>
+        )}
+      </g>
       <g
         className="pitch-field"
         fill="none"
-        stroke="#a6b6cb"
-        strokeOpacity=".5"
+        stroke="var(--sl-pitch-line)"
+        strokeOpacity="var(--sl-pitch-line-opacity)"
         strokeWidth="1"
       >
         <rect x="50" y="45" width="900" height="550" />
         <path d="M500 45V595" />
         <circle cx="500" cy="320" r="76" />
-        <circle cx="500" cy="320" r="2" fill="#a6b6cb" />
+        <circle cx="500" cy="320" r="2" fill="var(--sl-pitch-line)" />
         <path d="M50 170H190V470H50M950 170H810V470H950M50 250H103V390H50M950 250H897V390H950M50 285H35V355H50M950 285H965V355H950" />
         <path d="M190 262a76 76 0 0 1 0 116M810 262a76 76 0 0 0 0 116M50 58a13 13 0 0 0 13-13M937 45a13 13 0 0 0 13 13M50 582a13 13 0 0 1 13 13M937 595a13 13 0 0 1 13-13" />
-        <circle cx="145" cy="320" r="2" fill="#a6b6cb" />
-        <circle cx="855" cy="320" r="2" fill="#a6b6cb" />
+        <circle cx="145" cy="320" r="2" fill="var(--sl-pitch-line)" />
+        <circle cx="855" cy="320" r="2" fill="var(--sl-pitch-line)" />
       </g>
       {sequence &&
         filtered.map((e) => {
@@ -137,7 +184,7 @@ export function Pitch({
                 cy={p.y}
                 r="27"
                 fill="none"
-                stroke="#f8fbff"
+                stroke="var(--sl-pitch-line)"
                 strokeWidth="2"
               />
             )}
@@ -206,12 +253,18 @@ export function Pitch({
             fontSize="18"
             fontWeight="650"
           >
-            RECORDED GOAL · {TEAMS[activeEvent.team].short.toUpperCase()}
+            GOAL FOR {TEAMS[activeEvent.team].short.toUpperCase()}
           </text>
         </g>
       )}
       {!filtered.length && (
-        <text x="500" y="325" fill="#a6b6cb" textAnchor="middle" fontSize="18">
+        <text
+          x="500"
+          y="325"
+          fill="var(--sl-pitch-line)"
+          textAnchor="middle"
+          fontSize="18"
+        >
           No events in this view
         </text>
       )}

@@ -1,0 +1,95 @@
+import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+
+test("appearance follows the system, persists overrides, and resumes system changes", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page
+    .getByRole("button", { name: "Your experience", exact: true })
+    .click();
+  await expect(page.getByLabel("Appearance", { exact: true })).toHaveValue(
+    "system",
+  );
+  await page.getByLabel("Appearance", { exact: true }).selectOption("light");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page
+    .getByRole("button", { name: "Your experience", exact: true })
+    .click();
+  await expect(page.getByLabel("Appearance", { exact: true })).toHaveValue(
+    "light",
+  );
+  await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.getByLabel("Appearance", { exact: true }).selectOption("system");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(
+    page.locator('meta[name="theme-color"]').first(),
+  ).toHaveAttribute("content", "#111416");
+  expect(errors).toEqual([]);
+});
+
+test("appearance remains usable when browser storage is unavailable", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Storage.prototype.getItem = () => {
+      throw new Error("Storage disabled");
+    };
+    Storage.prototype.setItem = () => {
+      throw new Error("Storage disabled");
+    };
+  });
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page
+    .getByRole("button", { name: "Your experience", exact: true })
+    .click();
+  await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+});
+
+test("dark screens retain accessible contrast and a single visible brand", async ({
+  page,
+}, testInfo) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/");
+  for (const label of [
+    "Match centre",
+    "Insights",
+    "Match stats",
+    "Lineups",
+    "Player focus",
+  ]) {
+    await page
+      .getByRole("navigation")
+      .getByRole("button", { name: label, exact: true })
+      .click();
+    const audit = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    expect(audit.violations).toEqual([]);
+  }
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Match centre", exact: true })
+    .click();
+  await page.screenshot({
+    path: `artifacts/${testInfo.project.name}-dark-theme.png`,
+    fullPage: true,
+  });
+  await expect(page.locator(".theme-dark-logo:visible")).toHaveCount(1);
+  await expect(page.locator(".theme-light-logo:visible")).toHaveCount(0);
+});

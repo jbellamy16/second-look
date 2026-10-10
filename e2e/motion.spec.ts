@@ -102,6 +102,8 @@ test("rapid changes cancel stale motion and leave immediate truthful state", asy
   expect(await page.locator(".replay-pitch [data-event-time]").count()).toBe(1);
   for (const name of ["Analyst mode", "Fan mode", "Analyst mode"])
     await page.getByRole("button", { name, exact: true }).click();
+  await expect(page.getByText("Measurement notes")).not.toBeVisible();
+  await page.locator(".detail-panel .provenance summary").click();
   await expect(page.getByText("Measurement notes")).toBeVisible();
   await expect(page.getByTestId("score")).toHaveText("1:0");
   for (const name of ["Evidence (4)", "Explanation", "Visual"])
@@ -214,7 +216,7 @@ test("mid-pass motion freezes on pause and cancels when reduced motion changes",
   const reduced = await ball.getAttribute("transform");
   await page.clock.runFor(500);
   expect(await ball.getAttribute("transform")).toBe(reduced);
-  await page.getByRole("button", { name: "Clear event selection" }).click();
+  await page.getByRole("button", { name: "Clear selection" }).click();
   await page.clock.runFor(5000);
   await expect(ball).toHaveCount(0);
   await expect(page.getByTestId("clock")).toContainText("63:24");

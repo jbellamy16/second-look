@@ -66,8 +66,11 @@ export const metadata: Metadata = {
   },
 };
 export const viewport: Viewport = {
-  themeColor: "#071320",
-  colorScheme: "dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5f4f0" },
+    { media: "(prefers-color-scheme: dark)", color: "#111416" },
+  ],
+  colorScheme: "light dark",
   width: "device-width",
   initialScale: 1,
 };
@@ -77,7 +80,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+          (() => {
+            let appearance = 'system';
+            try { appearance = localStorage.getItem('second-look-appearance'); } catch {}
+            document.documentElement.dataset.theme =
+              appearance === 'light' || appearance === 'dark' ? appearance :
+              matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          })();
+        `,
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );

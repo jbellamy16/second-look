@@ -90,10 +90,9 @@ export function EvidenceReplay({
                 : "REPLAY PAUSED"}
           </span>
           <p>
-            {clock(active.time)} · {player(active.playerId).name} ·{" "}
-            {active.type}
+            {clock(active.time)} {player(active.playerId).name}: {active.type}
             {active.outcome
-              ? ` · ${active.outcome}`
+              ? ` (${active.outcome})`
               : active.type === "pass"
                 ? active.success
                   ? " completed"
@@ -110,7 +109,7 @@ export function EvidenceReplay({
         >
           {frame.visible.map((event) => (
             <option key={event.id} value={event.id}>
-              {clock(event.time)} · {event.type} · {player(event.playerId).name}
+              {clock(event.time)} {event.type} by {player(event.playerId).name}
             </option>
           ))}
         </select>
@@ -140,7 +139,7 @@ export function EvidenceReplay({
         <div className="replay-progress">
           <label htmlFor="replay-timeline">
             <span>
-              REPLAY · <time data-testid="replay-clock">{clock(time)}</time>
+              REPLAY <time data-testid="replay-clock">{clock(time)}</time>
             </span>
             <span>{clock(end)}</span>
           </label>
@@ -173,7 +172,7 @@ export function EvidenceReplay({
         <span>
           Event {frame.index + 1} of {events.length}
         </span>
-        <span>Interpolated recorded endpoints · no player tracking</span>
+        <span>Interpolated recorded endpoints, without player tracking</span>
       </div>
     </>
   );

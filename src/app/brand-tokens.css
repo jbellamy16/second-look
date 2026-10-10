@@ -1,18 +1,30 @@
 /* Second Look brand tokens - import after Tailwind's base layer */
 :root {
-  --sl-midnight: #071320;
-  --sl-navy: #0c1c2f;
-  --sl-surface: #17283d;
+  color-scheme: dark;
+  --sl-dark-logo-display: block;
+  --sl-light-logo-display: none;
+  --sl-primary-hover: #ffffff;
+  --sl-control-border: #ffffff55;
+  --sl-success-text: #84af9b;
+  --sl-pitch-line: #ffffff;
+  --sl-pitch-line-opacity: 0.8;
+  --sl-midnight: #111416;
+  --sl-navy: #181c1f;
+  --sl-surface: #24292d;
   --sl-blue: #347cff;
   --sl-blue-light: #61a8ff;
   --sl-green: #20d17a;
-  --sl-text: #f8fbff;
-  --sl-muted: #a6b6cb;
+  --sl-text: #f3f2ee;
+  --sl-muted: #a5abae;
   --sl-warning: #f3ab44;
   --sl-danger: #ff6275;
-  --sl-radius-card: 16px;
-  --sl-radius-control: 10px;
-  --sl-border: rgba(166, 182, 203, 0.18);
+  --sl-radius-card: 12px;
+  --sl-radius-control: 8px;
+  --sl-selected: #30363a;
+  --sl-hover: #ffffff08;
+  --sl-pitch: #28573b;
+  --sl-pitch-surround: #214a32;
+  --sl-border: rgba(215, 220, 223, 0.13);
 }
 
 /* Team identity is independent of action/status color. */
@@ -20,4 +32,58 @@
   --sl-harbor: #72c6ff;
   --sl-riverside: #ff7a83;
   --sl-icon-gap: 8px;
+}
+
+/* System appearance also works before JavaScript, or with it disabled. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --sl-midnight: #f5f4f0;
+    --sl-navy: #ffffff;
+    --sl-surface: #e9e9e4;
+    --sl-pitch: #347548;
+    --sl-pitch-surround: #2d663e;
+    --sl-text: #202629;
+    --sl-muted: #586269;
+    --sl-blue: #245ecc;
+    --sl-blue-light: #245ecc;
+    --sl-green: #167347;
+    --sl-warning: #895700;
+    --sl-danger: #b52c43;
+    --sl-selected: #dedfda;
+    --sl-hover: #18202408;
+    --sl-border: #252d322b;
+    --sl-control-border: #252d324d;
+    --sl-success-text: #386a50;
+    --sl-harbor: #17689a;
+    --sl-riverside: #b93148;
+    --sl-primary-hover: #394247;
+    --sl-dark-logo-display: none;
+    --sl-light-logo-display: block;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --sl-midnight: #f5f4f0;
+  --sl-navy: #ffffff;
+  --sl-surface: #e9e9e4;
+  --sl-pitch: #347548;
+  --sl-pitch-surround: #2d663e;
+  --sl-text: #202629;
+  --sl-muted: #586269;
+  --sl-blue: #245ecc;
+  --sl-blue-light: #245ecc;
+  --sl-green: #167347;
+  --sl-warning: #895700;
+  --sl-danger: #b52c43;
+  --sl-selected: #dedfda;
+  --sl-hover: #18202408;
+  --sl-border: #252d322b;
+  --sl-control-border: #252d324d;
+  --sl-success-text: #386a50;
+  --sl-harbor: #17689a;
+  --sl-riverside: #b93148;
+  --sl-primary-hover: #394247;
+  --sl-dark-logo-display: none;
+  --sl-light-logo-display: block;
 }

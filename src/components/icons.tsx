@@ -9,9 +9,6 @@ import {
   ChevronRight as LucideChevronRight,
   CircleHelp as LucideCircleHelp,
   Clock3 as LucideClock3,
-  Crosshair as LucideCrosshair,
-  Focus as LucideFocus,
-  LayoutGrid as LucideLayoutGrid,
   ListVideo as LucideListVideo,
   Pause as LucidePause,
   Play as LucidePlay,
@@ -21,17 +18,21 @@ import {
   TrendingUp as LucideTrendingUp,
   Users as LucideUsers,
   X as LucideX,
-  ArrowLeftRight,
   Flag,
-  CircleAlert,
-  CircleDot,
-  MoveRight,
   List,
-  ChartNoAxesCombined,
   Trophy,
   type LucideIcon,
   type LucideProps,
 } from "lucide-react";
+import {
+  IconArrowsExchange,
+  IconBallFootball,
+  IconEye,
+  IconPlayFootball,
+  IconShirtSport,
+  IconSoccerField,
+  type TablerIcon,
+} from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import type { EventType } from "@/lib/match";
 
@@ -70,9 +71,6 @@ export const ChevronDown = systemIcon(LucideChevronDown);
 export const ChevronRight = systemIcon(LucideChevronRight);
 export const CircleHelp = systemIcon(LucideCircleHelp);
 export const Clock3 = systemIcon(LucideClock3);
-export const Crosshair = systemIcon(LucideCrosshair);
-export const Focus = systemIcon(LucideFocus);
-export const LayoutGrid = systemIcon(LucideLayoutGrid);
 export const ListVideo = systemIcon(LucideListVideo);
 export const Pause = systemIcon(LucidePause);
 export const Play = systemIcon(LucidePlay);
@@ -82,14 +80,36 @@ export const Shield = systemIcon(ShieldCheck);
 export const TrendingUp = systemIcon(LucideTrendingUp);
 export const Users = systemIcon(LucideUsers);
 export const X = systemIcon(LucideX);
-export const Substitution = systemIcon(ArrowLeftRight);
 export const MatchEvents = systemIcon(List);
-export const Momentum = systemIcon(ChartNoAxesCombined);
 export const Competition = systemIcon(Trophy);
 const Corner = systemIcon(Flag);
-const Foul = systemIcon(CircleAlert);
-const Possession = systemIcon(CircleDot);
-const Carry = systemIcon(MoveRight);
+
+function footballIcon(Glyph: TablerIcon) {
+  return function FootballIcon({
+    size = 20,
+    className = "",
+    ...props
+  }: IconProps) {
+    return (
+      <Glyph
+        {...props}
+        size={size}
+        stroke={2}
+        fill="none"
+        aria-hidden="true"
+        focusable="false"
+        className={`sl-icon ${className}`}
+      />
+    );
+  };
+}
+export const FootballPitch = footballIcon(IconSoccerField);
+export const PlayerShirt = footballIcon(IconShirtSport);
+export const Watch = footballIcon(IconEye);
+export const Substitution = footballIcon(IconArrowsExchange);
+export const Goal = footballIcon(IconBallFootball);
+const Possession = footballIcon(IconBallFootball);
+const Carry = footballIcon(IconPlayFootball);
 
 function FootballGlyph({
   size = 20,
@@ -116,60 +136,84 @@ function FootballGlyph({
     </svg>
   );
 }
-// Original football extension: the same canvas, stroke, caps and optical footprint.
-export function Goal(props: IconProps) {
+// Original diagrams extend Tabler's 24px canvas and 2px rounded strokes.
+// They accompany text: nuanced actions should never rely on a glyph alone.
+export function Formation(props: IconProps) {
   return (
     <FootballGlyph {...props}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="m12 8 4 3-1.5 4.5h-5L8 11Zm0 0V3m4 8 4.5-2m-6 6.5 3 4m-8-4-3 4M8 11 3.5 9" />
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M10 7h4M7 12h2m6 0h2M6 17h2m3 0h2m3 0h2" />
+    </FootballGlyph>
+  );
+}
+export function HighBallWins(props: IconProps) {
+  return (
+    <FootballGlyph {...props}>
+      <path
+        d="M15 5h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4Z"
+        fill="currentColor"
+        fillOpacity=".18"
+        stroke="none"
+      />
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M9 5v14m6-14v14m6-10h-3v6h3" />
     </FootballGlyph>
   );
 }
 export function Shot(props: IconProps) {
   return (
     <FootballGlyph {...props}>
-      <circle cx="6" cy="18" r="3" />
-      <path d="m12 12 8-8m-7 0h7v7M3 9l3-3m3 15 3-3" />
+      <path d="M14 9V4h7v16h-7v-5m4-11v16m0-11h3m-3 6h3" />
+      <circle cx="4" cy="12" r="2" />
+      <path d="M9 12h6m-3-3 3 3-3 3" />
     </FootballGlyph>
   );
 }
 export function Pass(props: IconProps) {
   return (
     <FootballGlyph {...props}>
-      <circle cx="5" cy="16" r="2" />
-      <path d="M10 16h2a6 6 0 0 0 6-6V4m-4 4 4-4 4 4" />
+      <circle cx="4" cy="12" r="2" />
+      <path d="M9 12h8m-3-3 3 3-3 3M21 8v8" />
     </FootballGlyph>
   );
 }
 export function Tackle(props: IconProps) {
   return (
     <FootballGlyph {...props}>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M3 4v5l4 3m14 8v-5l-4-3M3 20l4-4M21 4l-4 4" />
+      <circle cx="19" cy="16" r="3" />
+      <path d="M4 3v9l-1 5a2 2 0 0 0 2 2h7a2 2 0 0 0 0-4H9l2-12M4 11h5" />
     </FootballGlyph>
   );
 }
 export function Interception(props: IconProps) {
   return (
     <FootballGlyph {...props}>
-      <path d="M3 7h6m6 0h6M9 4l3 3-3 3m9 10v-5a3 3 0 0 0-3-3h-3m3-3-3 3 3 3" />
-      <circle cx="6" cy="18" r="3" />
+      <circle cx="4" cy="12" r="2" />
+      <path d="M9 12h6m-3-3 3 3-3 3M20 5v14m-3 0h6" />
     </FootballGlyph>
   );
 }
 export function Recovery(props: IconProps) {
   return (
     <FootballGlyph {...props}>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M4 8a9 9 0 1 1-1 7M3 3v5h5" />
+      <circle cx="9" cy="10" r="6" />
+      <path d="m9 7 3 2-1 3H7L6 9Zm0 0V4m3 5 3-1M6 9 3 8m9 11 3 3 6-7" />
     </FootballGlyph>
   );
 }
 export function Tactics(props: IconProps) {
   return (
     <FootballGlyph {...props}>
-      <circle cx="5" cy="18" r="2" />
-      <path d="M5 12V9a4 4 0 0 1 4-4h6m-3-3 3 3-3 3m4 7 5 5m0-5-5 5" />
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="m7 14 3 3m0-3-3 3M7 8h7a3 3 0 0 1 3 3v5m-3-3 3 3 3-3" />
+    </FootballGlyph>
+  );
+}
+function Foul(props: IconProps) {
+  return (
+    <FootballGlyph {...props}>
+      <path d="M12 10h9v4h-5a6 6 0 1 1-4-4ZM17 10v4M7 3v2m6-1-1 2m-9 1 2 1" />
+      <circle cx="10" cy="16" r="2" />
     </FootballGlyph>
   );
 }
