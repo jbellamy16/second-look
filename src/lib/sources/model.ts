@@ -56,6 +56,7 @@ export const normalizedEventSchema = z.object({
   outgoingId: id.optional(),
   assistPlayerId: id.optional(),
   assistEventId: id.optional(),
+  goalkeeperId: id.optional(),
   possessionId: z.number().int().nonnegative().nullable(),
   scoringTeam: side.optional(),
   ownGoal: z.boolean().optional(),
@@ -165,6 +166,7 @@ export const matchSchema = z.object({
     substitutions: z.boolean(),
     passRecipients: z.boolean(),
     assists: z.boolean().optional(),
+    goalkeeperSaves: z.boolean().optional(),
     physicalDirection: z.literal(false),
   }),
   limitations: z.array(z.string()),
@@ -263,6 +265,16 @@ export function validateMatch(input: unknown): MatchData {
       fail("Invalid period timestamp");
     if (e.relatedEvents.some((ref) => !eventMap.has(ref)))
       fail("Unknown related event");
+    if (e.goalkeeperId) {
+      const keeper = playerMap.get(e.goalkeeperId);
+      if (
+        e.type !== "shot" ||
+        !keeper ||
+        keeper.team === e.team ||
+        (match.capabilities.lineups && !active.has(e.goalkeeperId))
+      )
+        fail("Invalid goalkeeper attribution");
+    }
     if (e.assistPlayerId || e.assistEventId) {
       const pass = e.assistEventId ? eventMap.get(e.assistEventId) : undefined;
       if (

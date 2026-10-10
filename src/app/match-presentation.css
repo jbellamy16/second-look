@@ -1401,3 +1401,13 @@
   color: var(--sl-muted);
   font-size: 11px;
 }
+
+.data-first .goalkeeper-stats-note {
+  margin: -12px 0 24px;
+  color: var(--sl-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.data-first .keeper-shots {
+  margin: 16px 0;
+}

@@ -47,6 +47,7 @@ export type MatchEvent = {
   outgoingId?: string;
   assistPlayerId?: string;
   assistEventId?: string;
+  goalkeeperId?: string;
   possessionId: number | null;
 };
 export const TEAMS = {
@@ -342,6 +343,7 @@ export function generateMatch(
       const outcome =
         random() < xg ? "goal" : random() < 0.6 ? "saved" : "wide";
       emit("shot", carrier, position, {
+        goalkeeperId: `${other(team)}-1`,
         end: {
           x: 100,
           y: outcome === "wide" ? (position.y < 50 ? 40 : 60) : 50,

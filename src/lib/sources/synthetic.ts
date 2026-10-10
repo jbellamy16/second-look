@@ -137,6 +137,7 @@ export class SyntheticMatchSource implements MatchSource {
         substitutions: true,
         passRecipients: true,
         assists: true,
+        goalkeeperSaves: true,
         physicalDirection: false,
         tracking: false,
         xg: true,

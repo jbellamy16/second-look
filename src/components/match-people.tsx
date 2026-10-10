@@ -4,6 +4,10 @@ import {
   eventMinute,
   type PlayerHighlights,
 } from "@/lib/sources/player-highlights";
+import {
+  goalkeeperStatistics,
+  isGoalkeeper,
+} from "@/lib/sources/goalkeeper-statistics";
 import { Goal, Pass, Substitution } from "./icons";
 import { AnimatedDetails } from "./motion";
 import {
@@ -94,6 +98,9 @@ export function MatchPeople({
   const active = activeMatchPlayers(match, time),
     visible = match.events.filter((e) => e.time <= time),
     who = match.players.find((p) => p.id === focusedPlayer) ?? match.players[0];
+  const keeper = isGoalkeeper(who)
+    ? goalkeeperStatistics(match, who, time)
+    : null;
   const highlights = playerHighlights(match, time);
   const focusedHighlights = highlights.get(who.id)!;
   const contributions = visible.filter(
@@ -197,38 +204,68 @@ export function MatchPeople({
       </p>
       <div className="player-status-line">
         <span className="player-badge">{playerStatus(who.id)}</span>
+        {keeper?.cleanSheet && (
+          <span className="player-badge">Clean sheet</span>
+        )}
         <PlayerBadges
           highlights={focusedHighlights}
           match={match}
           substitutionsOnly
         />
       </div>
-      <div className="player-metrics">
-        <div>
-          <strong>{focusedHighlights.goals}</strong>
-          <span>Goals</span>
-        </div>
-        {focusedHighlights.assists !== null && (
+      {keeper ? (
+        <>
+          <div className="player-metrics goalkeeper-metrics">
+            {[
+              ["Saves", keeper.saves],
+              ["On-target shots faced", keeper.shotsOnTargetFaced],
+              ["Goals conceded", keeper.goalsConceded],
+              [
+                "Pass completion",
+                keeper.passCompletion === null
+                  ? null
+                  : `${keeper.passCompletion}%`,
+              ],
+              ["Pass attempts", keeper.passAttempts],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <strong>{value ?? "—"}</strong>
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+          <p className="goalkeeper-stats-note">
+            While on the pitch · through {matchClock(match, time)}
+          </p>
+        </>
+      ) : (
+        <div className="player-metrics">
           <div>
-            <strong>{focusedHighlights.assists}</strong>
-            <span>Assists</span>
+            <strong>{focusedHighlights.goals}</strong>
+            <span>Goals</span>
           </div>
-        )}
-        {(["pass", "shot", "touch"] as const).map((type) => (
-          <div key={type}>
-            <strong>
-              {contributions.filter((e) => e.type === type).length}
-            </strong>
-            <span>
-              {type === "pass"
-                ? "Pass attempts"
-                : type === "shot"
-                  ? "Shots"
-                  : "Touches"}
-            </span>
-          </div>
-        ))}
-      </div>
+          {focusedHighlights.assists !== null && (
+            <div>
+              <strong>{focusedHighlights.assists}</strong>
+              <span>Assists</span>
+            </div>
+          )}
+          {(["pass", "shot", "touch"] as const).map((type) => (
+            <div key={type}>
+              <strong>
+                {contributions.filter((e) => e.type === type).length}
+              </strong>
+              <span>
+                {type === "pass"
+                  ? "Pass attempts"
+                  : type === "shot"
+                    ? "Shots"
+                    : "Touches"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
       <button
         className="secondary-button"
         aria-pressed={prefs.player === who.id}
@@ -251,6 +288,31 @@ export function MatchPeople({
         Recorded event locations through {matchClock(match, time)}. Density
         counts actions, not time spent or off-ball influence.
       </p>
+      {keeper && (
+        <AnimatedDetails className="keeper-shots">
+          <summary>Inspect shots faced ({keeper.shotsFaced.length})</summary>
+          <div className="event-feed-list">
+            {[...keeper.shotsFaced].reverse().map((event) => (
+              <button key={event.id} onClick={() => onEvent(event.id)}>
+                <time>{eventClock(match, event)}</time>
+                <span>
+                  {event.outcome === "saved" && event.goalkeeperId === who.id
+                    ? "Save"
+                    : event.outcome === "goal"
+                      ? "Goal conceded"
+                      : event.outcome === "wide"
+                        ? "Shot wide"
+                        : "Shot"}{" "}
+                  · {identities.player(event.playerId).name}
+                </span>
+              </button>
+            ))}
+            {!keeper.shotsFaced.length && (
+              <p>No shots faced through this moment.</p>
+            )}
+          </div>
+        </AnimatedDetails>
+      )}
       <AnimatedDetails>
         <summary>Inspect contributions ({contributions.length})</summary>
         <div className="event-feed-list">
