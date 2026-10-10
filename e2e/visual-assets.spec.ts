@@ -82,7 +82,7 @@ test("Riverside keeps its identity when an event is selected", async ({
     page.getByRole("heading", { name: "Hugo Silva", exact: true }),
   ).toBeVisible();
   const followBox = await page
-    .getByRole("button", { name: "Follow this player", exact: true })
+    .getByRole("button", { name: "Favorite Hugo Silva", exact: true })
     .boundingBox();
   expect(followBox!.height).toBeLessThan(60);
   const metricTops = await page

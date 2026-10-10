@@ -1,6 +1,7 @@
 "use client";
-import type { Insight, Mode } from "@/lib/intelligence";
+import { ANALYSIS_MODE, type Insight, type Mode } from "@/lib/intelligence";
 import { clock } from "@/lib/match";
+import scoreboardStyles from "./scoreboard.module.css";
 import { EMPTY_MATCH_CONTEXT } from "@/lib/match-context";
 import { matchContext } from "@/lib/sources/context";
 import {
@@ -17,7 +18,7 @@ import {
   type MatchData,
   type NormalizedEvent,
 } from "@/lib/sources/model";
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   EventIcon,
   Goal,
@@ -58,8 +59,6 @@ export function MatchHeader({
   onPlay,
   onSeek,
   onSpeed,
-  mode,
-  onMode,
   onRecap,
 }: {
   match: MatchData;
@@ -69,25 +68,8 @@ export function MatchHeader({
   onPlay: () => void;
   onSeek: (time: number) => void;
   onSpeed: (speed: number) => void;
-  mode: Mode;
-  onMode: (mode: Mode) => void;
   onRecap: () => void;
 }) {
-  const [fixtureDate, setFixtureDate] = useState<string | null>(null);
-  useEffect(() => {
-    // Presentation-only fixture date; never part of deterministic events or AI evidence.
-    const now = new Date();
-    const seasonStart =
-      now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
-    const season = `${seasonStart}–${String(seasonStart + 1).slice(-2)}`;
-    setFixtureDate(
-      `${season} · ${now.toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })}`,
-    );
-  }, [match.id]);
   const visible = match.events.filter((e) => e.time <= time);
   const score = recordedScore(visible);
   const goals = visible.filter((e) => e.scoringTeam && e.period !== "PS");
@@ -131,93 +113,106 @@ export function MatchHeader({
         data-match-id={match.id}
       >
         <h1 className="sr-only">{match.title}</h1>
-        <div className="score-match">
-          <div className="team-name home">
-            <span>
-              {match.teams.harbor.name}
-              <small>Home</small>
-            </span>
-            {match.kind === "synthetic" ? (
-              <Crest team="harbor" />
-            ) : (
-              <span className="club-monogram harbor" aria-hidden="true">
-                {match.teams.harbor.short.slice(0, 3).toUpperCase()}
-              </span>
-            )}
+        <div className={scoreboardStyles.summary}>
+          <div className={scoreboardStyles.competition}>
+            {match.competition}
           </div>
-          <div className="score">
-            <span className={`live-label ${playing ? "is-playing" : ""}`}>
-              <span />
-              {playing
-                ? "PLAYING"
-                : time >= match.duration
-                  ? "FULL TIME"
-                  : "PAUSED"}
-            </span>
-            <strong data-testid="score" aria-live="polite" aria-atomic="true">
-              <Metric value={score.harbor} important />
-              <span className="score-separator">:</span>
-              <Metric value={score.riverside} important />
-            </strong>
-            <span className="match-clock" data-testid="clock">
-              <time>{displayClock(match, time)}</time>
-              <span>
-                {time >= match.duration
-                  ? "FT"
-                  : periodAt(match, time).id === "1H"
-                    ? "1ST"
-                    : "2ND"}
-              </span>
-            </span>
-          </div>
-          <div className="team-name">
-            {match.kind === "synthetic" ? (
-              <Crest team="riverside" />
-            ) : (
-              <span className="club-monogram riverside" aria-hidden="true">
-                {match.teams.riverside.short.slice(0, 3).toUpperCase()}
-              </span>
-            )}
-            <span>
-              {match.teams.riverside.name}
-              <small>Away</small>
-            </span>
-          </div>
-        </div>
-        {goals.length > 0 && (
-          <div className="score-contributions" aria-label="Goals and assists">
-            <div className="score-contribution-row score-goals">
-              <div
-                className="home-scorers"
-                aria-label={`${match.teams.harbor.name} scorers`}
+          <div className={scoreboardStyles.matchup}>
+            <div
+              className={`${scoreboardStyles.team} ${scoreboardStyles.home}`}
+            >
+              <span>{match.teams.harbor.name}</span>
+              {match.kind === "synthetic" ? (
+                <Crest team="harbor" />
+              ) : (
+                <span className={scoreboardStyles.monogram} aria-hidden="true">
+                  {match.teams.harbor.short.slice(0, 3).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className={scoreboardStyles.center}>
+              <strong
+                className={scoreboardStyles.score}
+                data-testid="score"
+                aria-live="polite"
+                aria-atomic="true"
+                aria-label={`${match.teams.harbor.name} ${score.harbor}, ${match.teams.riverside.name} ${score.riverside}`}
               >
-                {names(scorerEntries("harbor"))}
-              </div>
-              <span className="score-contribution-label">
-                {halfTime
-                  ? `HT ${halfTime.harbor}–${halfTime.riverside}`
-                  : "Goals"}
-              </span>
-              <div
-                className="away-scorers"
-                aria-label={`${match.teams.riverside.name} scorers`}
-              >
-                {names(scorerEntries("riverside"))}
+                <Metric value={score.harbor} important />
+                <span className={scoreboardStyles.separator}>:</span>
+                <Metric value={score.riverside} important />
+              </strong>
+              <div className={scoreboardStyles.clock} data-testid="clock">
+                <time>{displayClock(match, time)}</time>
+                <span className={scoreboardStyles.status}>
+                  {time >= match.duration ? (
+                    "Full time"
+                  ) : (
+                    <>
+                      {periodAt(match, time).id === "1H"
+                        ? "1st half"
+                        : "2nd half"}
+                      {playing ? " · Playing" : " · Paused"}
+                    </>
+                  )}
+                </span>
               </div>
             </div>
-            {(homeAssists.length > 0 || awayAssists.length > 0) && (
-              <div className="score-contribution-row score-assists">
-                <div aria-label={`${match.teams.harbor.name} assists`}>
-                  {names(homeAssists)}
+            <div
+              className={`${scoreboardStyles.team} ${scoreboardStyles.away}`}
+            >
+              {match.kind === "synthetic" ? (
+                <Crest team="riverside" />
+              ) : (
+                <span className={scoreboardStyles.monogram} aria-hidden="true">
+                  {match.teams.riverside.short.slice(0, 3).toUpperCase()}
+                </span>
+              )}
+              <span>{match.teams.riverside.name}</span>
+            </div>
+          </div>
+          {goals.length > 0 && (
+            <div
+              className={`score-contributions ${scoreboardStyles.details}`}
+              aria-label="Goals and assists"
+            >
+              <div
+                className={`score-contribution-row score-goals ${scoreboardStyles.detailRow}`}
+              >
+                <div
+                  className="home-scorers"
+                  aria-label={`${match.teams.harbor.name} scorers`}
+                >
+                  {names(scorerEntries("harbor"))}
                 </div>
-                <span className="score-contribution-label">Assists</span>
-                <div aria-label={`${match.teams.riverside.name} assists`}>
-                  {names(awayAssists)}
+                <span className="score-contribution-label">
+                  {halfTime
+                    ? `HT ${halfTime.harbor}–${halfTime.riverside}`
+                    : "Goals"}
+                </span>
+                <div
+                  className="away-scorers"
+                  aria-label={`${match.teams.riverside.name} scorers`}
+                >
+                  {names(scorerEntries("riverside"))}
                 </div>
               </div>
-            )}
-          </div>
-        )}
+              {(homeAssists.length > 0 || awayAssists.length > 0) && (
+                <div
+                  className={`score-contribution-row score-assists ${scoreboardStyles.detailRow} ${scoreboardStyles.assists}`}
+                >
+                  <div aria-label={`${match.teams.harbor.name} assists`}>
+                    {names(homeAssists)}
+                  </div>
+                  <span className="score-contribution-label">Assists</span>
+                  <div aria-label={`${match.teams.riverside.name} assists`}>
+                    {names(awayAssists)}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </section>
       <div className="match-controls">
         <div className="playback">
@@ -288,33 +283,6 @@ export function MatchHeader({
         </div>
       </div>
       <div className="view-toolbar">
-        <SelectionGroup
-          className="mode-switch"
-          label="Viewing mode"
-          value={mode}
-        >
-          {(["fan", "analyst"] as const).map((m) => (
-            <button
-              key={m}
-              className={mode === m ? "selected" : ""}
-              aria-pressed={mode === m}
-              onClick={() => onMode(m)}
-            >
-              {m === "fan" ? "Fan mode" : "Analyst mode"}
-            </button>
-          ))}
-        </SelectionGroup>
-        <div className="fixture-details">
-          <span className="fixture-meta">
-            {match.competition}
-            {match.kind === "synthetic"
-              ? fixtureDate && ` · ${fixtureDate}`
-              : `${match.season && !match.competition.includes(match.season) ? ` · ${match.season}` : ""}${match.date ? ` · ${new Date(match.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}` : ""}`}
-          </span>
-          {match.kind === "synthetic" && (
-            <span className="synthetic-badge">Synthetic demo</span>
-          )}
-        </div>
         <button className="catchup-button" onClick={onRecap}>
           <ListVideo size={20} />
           Catch me up
@@ -386,7 +354,7 @@ export function InsightCard({
   match,
   onSelect,
   lead = false,
-  mode = "fan",
+  mode = ANALYSIS_MODE,
 }: {
   insight: Insight;
   match: MatchData;

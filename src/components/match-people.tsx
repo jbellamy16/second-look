@@ -9,7 +9,7 @@ import {
   isGoalkeeper,
 } from "@/lib/sources/goalkeeper-statistics";
 import { passStatistics } from "@/lib/sources/pass-statistics";
-import { Goal, Pass, Substitution } from "./icons";
+import { Goal, Pass, Star, Substitution } from "./icons";
 import { AnimatedDetails } from "./motion";
 import {
   activeMatchPlayers,
@@ -111,6 +111,10 @@ export function MatchPeople({
       e.type !== "substitution",
   );
   const passing = passStatistics(contributions);
+  // The Wyscout adapter does not expose carries; missing coverage is not zero.
+  const carries = ["synthetic", "statsbomb"].includes(match.provenance.provider)
+    ? contributions.filter((e) => e.type === "carry").length
+    : null;
   const playerStatus = (id: string) =>
     active.some((p) => p.id === id)
       ? "On the pitch"
@@ -198,7 +202,26 @@ export function MatchPeople({
       </div>
       <div className="player-identity-line">
         {match.kind === "synthetic" && <Crest team={who.team} small />}
-        <h2>{who.name}</h2>
+        <div className="player-name-action">
+          <h2>{who.name}</h2>
+          <button
+            type="button"
+            className="player-favorite-button"
+            aria-label={`Favorite ${who.name}`}
+            aria-pressed={prefs.player === who.id}
+            title={
+              prefs.player === who.id ? "Remove favorite" : "Favorite player"
+            }
+            onClick={() =>
+              setPrefs({
+                ...prefs,
+                player: prefs.player === who.id ? "" : who.id,
+              })
+            }
+          >
+            <Star size={20} />
+          </button>
+        </div>
         <span className={`number ${who.team}`}>{who.number ?? "—"}</span>
       </div>
       <p>
@@ -264,27 +287,19 @@ export function MatchPeople({
             </strong>
             <span>Pass completion</span>
           </div>
-          {(["shot", "touch"] as const).map((type) => (
-            <div key={type}>
-              <strong>
-                {contributions.filter((e) => e.type === type).length}
-              </strong>
-              <span>{type === "shot" ? "Shots" : "Touches"}</span>
-            </div>
-          ))}
+          <div>
+            <strong>
+              {contributions.filter((e) => e.type === "shot").length}
+            </strong>
+            <span>Shots</span>
+          </div>
+          <div>
+            <strong>{carries ?? "—"}</strong>
+            <span>Carries</span>
+            {carries === null && <small>Not recorded</small>}
+          </div>
         </div>
       )}
-      <button
-        className="secondary-button"
-        aria-pressed={prefs.player === who.id}
-        onClick={() =>
-          setPrefs({ ...prefs, player: prefs.player === who.id ? "" : who.id })
-        }
-      >
-        {prefs.player === who.id
-          ? "Following this player"
-          : "Follow this player"}
-      </button>
       <Pitch
         events={pitchEvents(contributions)}
         identities={identities}

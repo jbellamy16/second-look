@@ -1,18 +1,16 @@
 "use client";
 import { useEffect, useState, type ReactNode } from "react";
-import type { Category, Mode } from "@/lib/intelligence";
+import type { Category } from "@/lib/intelligence";
 import type { TeamId } from "@/lib/match";
 import type { MatchData } from "@/lib/sources/model";
 import { useAppearance, type Appearance } from "./appearance";
-import { BarChart3, Check, Users } from "./icons";
+import { Check } from "./icons";
 export type MatchPreferences = {
-  mode: Mode;
   team: TeamId | "all";
   player: string;
   categories: Category[];
 };
 export const defaultPreferences: MatchPreferences = {
-  mode: "fan",
   team: "all",
   player: "",
   categories: ["pressure", "chances", "rhythm"],
@@ -23,21 +21,20 @@ export function useMatchPreferences() {
     [ready, setReady] = useState(false);
   useEffect(() => {
     const read = (event?: Event) => {
-      if (event instanceof CustomEvent && event.detail) {
-        setPrefs(event.detail);
-        return;
-      }
       try {
-        const p = JSON.parse(localStorage.getItem(key) ?? "null");
+        const p =
+          event instanceof CustomEvent && event.detail
+            ? event.detail
+            : JSON.parse(localStorage.getItem(key) ?? "null");
         if (
           p &&
-          ["fan", "analyst"].includes(p.mode) &&
           ["all", "harbor", "riverside"].includes(p.team) &&
           typeof p.player === "string" &&
           Array.isArray(p.categories)
         )
           setPrefs({
-            ...p,
+            team: p.team,
+            player: p.player,
             categories: p.categories.filter((c: string) =>
               ["pressure", "chances", "rhythm"].includes(c),
             ),
@@ -95,26 +92,6 @@ export function MatchSettings({
           <option value="dark">Dark</option>
         </select>
       </label>
-      <div className="settings-modes">
-        {(["fan", "analyst"] as const).map((mode) => (
-          <button
-            key={mode}
-            className={prefs.mode === mode ? "selected" : ""}
-            onClick={() => setPrefs({ ...prefs, mode })}
-          >
-            {mode === "fan" ? <Users /> : <BarChart3 />}
-            <div>
-              <strong>{mode === "fan" ? "Fan mode" : "Analyst mode"}</strong>
-              <p>
-                {mode === "fan"
-                  ? "Key moments and observations."
-                  : "Window comparisons, event evidence, and limitations."}
-              </p>
-            </div>
-            {prefs.mode === mode && <Check size={20} />}
-          </button>
-        ))}
-      </div>
       <label className="setting-label">
         Follow a team
         <select

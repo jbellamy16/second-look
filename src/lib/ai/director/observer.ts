@@ -6,7 +6,7 @@ import {
   type NormalizedEvent,
 } from "../../sources/model";
 
-export const DIRECTOR_VERSION = "director-1.0.0";
+export const DIRECTOR_VERSION = "director-1.1.2";
 export type Claim = {
   id: string;
   headline: string;
@@ -31,6 +31,19 @@ export type Candidate = Claim & {
   importance: "moment" | "pattern" | "major";
   rank: number; // editorial ordering only, never a probability
 };
+export const claimEmphasis = {
+  "recovery-shot": "sequence",
+  "shot-sequence": "sequence",
+  "passing-pair": "contribution",
+  "substitute-involvement": "contribution",
+  "player-involvement": "contribution",
+  "activity-change": "comparison",
+  "shot-location": "comparison",
+  "window-comparison": "comparison",
+} as const satisfies Record<
+  Candidate["category"],
+  "sequence" | "comparison" | "contribution"
+>;
 export const EVIDENCE_LIMITS = [
   "Recorded actions only; no off-ball positions, intentions, formations or physical attacking direction.",
   "Relationships and equal-window comparisons are descriptive, not causal or statistically significant.",
@@ -84,7 +97,9 @@ export function observe(
     anchor?: string,
   ) => {
     const preferenceCategory =
-      category === "recovery-shot"
+      category === "recovery-shot" ||
+      (category === "activity-change" &&
+        statistics[0]?.label === "recoveries in the attacking third")
         ? "pressure"
         : ["passing-pair", "substitute-involvement"].includes(category)
           ? "rhythm"
@@ -128,6 +143,10 @@ export function observe(
     const name = match.teams[team].short;
     const own = recent.filter((e) => e.team === team);
     for (const shot of own.filter((e) => e.type === "shot").slice(-6)) {
+      const shooter = match.players.find(
+        (p) => p.id === shot.actorId && p.team === team,
+      );
+      const shotLabel = `${shooter?.name ?? name}'s shot at ${matchClock(match, shot.time)}`;
       const sequence = possessionBefore(match, visible, shot);
       const wins = sequence.filter(
         (e) =>
@@ -145,8 +164,8 @@ export function observe(
           team,
           sequence.filter((e) => e.order >= win.order),
           `${name}: recovery to shot`,
-          `${name} recorded a shot after winning the ball in the same possession.`,
-          `A recorded ${win.type} at ${matchClock(match, win.time)} was followed by a shot at ${matchClock(match, shot.time)} in the same possession. ${win.source.precision === "minute" || shot.source.precision === "minute" ? "Source timestamps have minute precision; elapsed seconds are not claimed." : `The recorded interval was ${seconds} seconds.`} This is sequence evidence, not proof that the recovery caused the chance.`,
+          `${name} won the ball at ${matchClock(match, win.time)} before ${shotLabel} in the same possession.`,
+          `${name}'s recorded ${win.type} at ${matchClock(match, win.time)} was followed by ${shotLabel} in the same possession. ${win.source.precision === "minute" || shot.source.precision === "minute" ? "Source timestamps have minute precision; elapsed seconds are not claimed." : `The recorded interval was ${seconds} seconds.`} This is sequence evidence, not proof that the recovery caused the chance.`,
           win.source.precision === "minute" ||
             shot.source.precision === "minute"
             ? []
@@ -170,8 +189,8 @@ export function observe(
           team,
           sequence,
           `${name}: passing passage ends in a shot`,
-          `${name} completed ${passes.length} recorded passes in the possession before this shot.`,
-          `${passes.length} successful pass events precede the shot at ${matchClock(match, shot.time)} within the same team, period and possession. Missing events or off-ball movements cannot be reconstructed.`,
+          `${name} completed ${passes.length} passes in the possession before ${shotLabel}.`,
+          `${name} completed ${passes.length} recorded passes before ${shotLabel}, within the same period and possession. Missing events or off-ball movements cannot be reconstructed.`,
           [
             {
               label: "Completed passes before shot",
@@ -208,7 +227,7 @@ export function observe(
           team,
           pair,
           `${name}: a repeated passing connection`,
-          `${from} found ${to} with ${pair.length} completed passes in the recent window.`,
+          `${from} found ${to} with ${pair.length} completed passes from ${matchClock(match, Math.max(period.start, cutoff - 900))} to ${matchClock(match, cutoff)}.`,
           `${pair.length} recorded successful passes from ${from} to ${to} between ${matchClock(match, Math.max(period.start, cutoff - 900))} and ${matchClock(match, cutoff)}. This is a directional pairing, not a measure of movement or chemistry.`,
           [
             {
@@ -243,8 +262,8 @@ export function observe(
             team,
             [sub, ...involvement],
             `${actor.name}: involvement after coming on`,
-            `${actor.name} has ${involvement.length} recorded on-ball actions since coming on${shots ? `, including ${shots} shots` : ""}.`,
-            `Substitution at ${matchClock(match, sub.time)}; ${involvement.length} recorded passes, carries, shots or recoveries by the incoming player since then. This does not establish a substitution effect or compare unequal playing time.`,
+            `${actor.name} has ${involvement.length} recorded on-ball actions since coming on at ${matchClock(match, sub.time)}${shots ? `, including ${shots} ${shots === 1 ? "shot" : "shots"}` : ""}.`,
+            `${actor.name} came on at ${matchClock(match, sub.time)} and has ${involvement.length} recorded passes, carries, shots, recoveries or interceptions since then. This does not establish a substitution effect or compare unequal playing time.`,
             [
               {
                 label: "Recorded involvements",
@@ -259,19 +278,36 @@ export function observe(
       }
     }
     // Two complete, equal windows entirely inside the current period.
-    if (cutoff - period.start >= 1800) {
+    const width = Math.min(900, Math.floor((cutoff - period.start) / 2));
+    // Allow a useful early-half comparison without crossing the interval break
+    // or comparing a partial window against a full 15 minutes.
+    if (width >= 300) {
+      const current = visible.filter(
+        (e) =>
+          e.team === team && e.period === period.id && e.time > cutoff - width,
+      );
       const prior = visible.filter(
         (e) =>
           e.team === team &&
           e.period === period.id &&
-          e.time > cutoff - 1800 &&
-          e.time <= cutoff - 900,
+          e.time > cutoff - 2 * width &&
+          e.time <= cutoff - width,
       );
       const metrics = [
         {
           label: "shots",
           test: (e: NormalizedEvent) => e.type === "shot",
           min: 3,
+          delta: 2,
+        },
+        {
+          label: "recoveries in the attacking third",
+          test: (e: NormalizedEvent) =>
+            match.capabilities.ballRecoveries &&
+            (e.position?.x ?? -1) >= 66.7 &&
+            e.type === "recovery" &&
+            e.success !== false,
+          min: 2,
           delta: 2,
         },
         {
@@ -294,7 +330,7 @@ export function observe(
         },
       ];
       for (const metric of metrics) {
-        const a = own.filter(metric.test),
+        const a = current.filter(metric.test),
           b = prior.filter(metric.test);
         if (
           a.length >= metric.min &&
@@ -306,21 +342,28 @@ export function observe(
             team,
             [...b, ...a],
             `${name}: more ${metric.label}`,
-            `${name} recorded ${a.length} ${metric.label} in the latest 15 minutes, compared with ${b.length} in the preceding 15.`,
-            `${metric.label}: ${a.length} (${matchClock(match, cutoff - 900)}–${matchClock(match, cutoff)}) versus ${b.length} (${matchClock(match, cutoff - 1800)}–${matchClock(match, cutoff - 900)}). Equal windows in ${period.id}. Forward is measured in normalized action coordinates, not physical stadium direction.`,
+            `${name} recorded ${a.length} ${metric.label} from ${matchClock(match, cutoff - width)} to ${matchClock(match, cutoff)}, compared with ${b.length} in the preceding equal window.`,
+            `${name}: ${a.length} ${metric.label} (${matchClock(match, cutoff - width)}–${matchClock(match, cutoff)}) versus ${b.length} (${matchClock(match, cutoff - 2 * width)}–${matchClock(match, cutoff - width)}). Each window is ${width} seconds in ${period.id}; this is descriptive, not evidence of cause. Forward is measured in normalized action coordinates, not physical stadium direction.`,
             [
-              { label: metric.label, value: a.length, unit: "events / 15 min" },
+              {
+                label: metric.label,
+                value: a.length,
+                unit: `events / ${width} seconds`,
+              },
               {
                 label: `Previous ${metric.label}`,
                 value: b.length,
-                unit: "events / 15 min",
+                unit: `events / ${width} seconds`,
               },
             ],
-            7,
+            metric.label === "shots" ||
+              metric.label === "recoveries in the attacking third"
+              ? 9
+              : 7,
             `${metric.label}:${a[0]?.id}`,
           );
       }
-      const a = own.filter((e) => e.type === "shot" && e.position),
+      const a = current.filter((e) => e.type === "shot" && e.position),
         b = prior.filter((e) => e.type === "shot" && e.position);
       if (a.length >= 3 && b.length >= 3) {
         const mean = (es: NormalizedEvent[]) =>
@@ -332,7 +375,7 @@ export function observe(
             [...b, ...a],
             `${name}: shot origins have shifted`,
             `${name}'s recent shots started ${mean(a) > mean(b) ? "farther forward" : "farther back"} on the normalized pitch.`,
-            `Mean shot-origin x: ${mean(a)} versus ${mean(b)} on the 0–100 normalized pitch in consecutive 15-minute windows, with ${a.length} and ${b.length} located shots. This is not shot quality, distance to goal or physical attacking direction.`,
+            `${name}: mean shot-origin x ${mean(a)} versus ${mean(b)} on the 0–100 normalized pitch in consecutive ${width}-second windows ending at ${matchClock(match, cutoff)}, with ${a.length} and ${b.length} located shots. This is not shot quality, distance to goal or physical attacking direction.`,
             [
               {
                 label: "Recent mean x",

@@ -1,10 +1,12 @@
 # AI Match Director 1.0
 
-The director adds event relationships, bounded investigation, editorial selection and reusable verified stories to the existing match experience. It preserves canonical sources, the earlier detectors and explanation endpoints, provider adapters, Redis quotas, deterministic fallbacks and the visual/motion system. No paid call, deployment or inference enablement was performed in this sprint.
+The director adds event relationships, bounded investigation, editorial selection and reusable verified stories to the existing match experience. It preserves canonical sources, the earlier detectors and explanation endpoints, provider adapters, Redis quotas, deterministic fallbacks and the visual/motion system. The original implementation sprint made no paid calls. The October 10 [Foundry evaluation](../FOUNDRY-EVALUATION.md) subsequently exercised real investigations; public inference remains disabled.
+
+For the latest measured Mini/GPT-5.4 comparison and version 1.1.2 changes, see [editorial rules and model comparison](../EDITORIAL-MODEL-COMPARISON.md). Mini remains configured; public inference is disabled.
 
 ## Audit of the previous workflow
 
-The previous observer discovers changes in high recoveries, shots and pass attempts. Its two-request AI workflow retrieves a fixed evidence packet and selects up to four existing fact IDs; the server supplies required score/goal context and renders approved sentences. The model does not discover candidates, ask follow-up evidence questions or author factual prose. Reliable identity/count/cutoff checks provide value independently of AI. A model call adds only ordering/selection; it is unnecessary for a quiet opening or routine arithmetic. There is no evidence yet that the old or new model-directed editorial choices outperform the deterministic baseline. Earlier live results in `../AI-EVALUATION.md` belong to the previous workflow.
+The previous observer discovers changes in high recoveries, shots and pass attempts. Its two-request AI workflow retrieves a fixed evidence packet and selects up to four existing fact IDs; the server supplies required score/goal context and renders approved sentences. The model does not discover candidates, ask follow-up evidence questions or author factual prose. Reliable identity/count/cutoff checks provide value independently of AI. A model call adds only ordering/selection; it is unnecessary for a quiet opening or routine arithmetic. There is no evidence yet that the old or new model-directed editorial choices outperform the deterministic baseline. The October 9 OpenAI results in `../AI-EVALUATION.md` belong to the previous workflow; the October 10 Foundry report includes the director.
 
 ## Architecture and actual responsibilities
 
@@ -21,7 +23,9 @@ flowchart LR
   F --> S
 ```
 
-These are logical responsibilities in one workflow, not separate agent personas. The model chooses tools, players and windows, explores another explanation on a second turn, selects newly computed claims, prioritizes up to two Fan or three Analyst stories, chooses brief/detailed language and a compatible visualization, or abstains. Statistics, thresholds, identities, relationship grammar and verification remain deterministic.
+These are logical responsibilities in one workflow, not separate agent personas. The first tool call reads a server-bounded recent window that includes complete comparison evidence. The model then chooses follow-up tools, players and windows, explores another explanation on a second turn, selects newly computed claims, prioritizes up to two Fan or three Analyst stories, chooses brief/detailed language and a compatible visualization, or abstains. Statistics, thresholds, identities, relationship grammar and verification remain deterministic.
+
+The editorial instructions prioritize supported changes over routine passages, then a complementary named event or informative preferred-player contribution. Candidate summaries and measurements guide investigation without bypassing retrieval. Shot stories identify the player and timestamp; combined recaps do not rely on “this shot.”
 
 **Language boundary:** the model authors the investigation and editorial plan, not arbitrary factual prose. Claim references alone cannot validate a generated sentence. The renderer constrains factual language to computed claim forms. This intentionally limits linguistic freedom; novel free-form explanation is not implemented or claimed. Narrative quality and editorial benefit require human/live evaluation.
 
@@ -31,7 +35,7 @@ These are logical responsibilities in one workflow, not separate agent personas.
 - At least four completed passes in a recorded possession before a shot.
 - Repeated directional passing pairs, only with supported recipients and known identities.
 - Incoming players' recorded contributions after substitutions, without attributing causation.
-- Equal-window changes in shots, attacking-third activity and normalized forward passes, wholly inside one period.
+- Equal-window changes in shots, recorded recoveries in the attacking third, attacking-third activity and normalized forward passes, wholly inside one period. Windows are 5–15 minutes each, shortening symmetrically early in a half. Recovery comparisons count recovery events only, excluding failed recoveries; they are not the broader interception/tackle ball-win measure.
 - Changes in mean shot-origin x with at least three located shots in each window. This is not xG or distance to goal.
 - Investigation-selected player contributions and shot/pass count comparisons over model-selected equal windows. These claims need not be on the initial observer shortlist.
 
@@ -53,7 +57,7 @@ All seven tools enforce server-selected match identity, strict input validation,
 
 A sequence query returns the complete bounded possession context up to its anchor, potentially starting before the requested interval; it is never truncated into an invented possession. Returned event lists cap at 40, claim evidence at 120 IDs and each serialized tool response at 48,000 characters. Aggregates cover all matching events even when displayed lists truncate. Related-event IDs are cutoff-filtered. No raw provider payload, final score, future events, infrastructure access or private model reasoning is exposed. Statistics are not accepted from the model.
 
-The verifier creates a fresh investigation, replays the exact tool queries, recomputes the claim registry, and rejects unknown/unretrieved claims, arbitrary fields or prose, duplicate/overlapping stories, mismatched visualization relationships and inconsistent abstention.
+The verifier creates a fresh investigation, replays the exact tool queries, recomputes the claim registry, and rejects unknown/unretrieved claims, arbitrary fields or prose, duplicate/overlapping stories, mismatched visualization relationships and inconsistent abstention. Response schemas enumerate only claims already retrieved, with audience-specific story limits and mandatory abstention when no verified claims are available. The first query is constrained to the complete recent review window; it cannot omit the earlier half of a comparison. Tool results identify incompatible claim pairs. After validation, an editorial filter keeps the first story in each equivalent observation group and reports any omissions. This removes repetition without admitting unsupported facts.
 
 ## Application integration
 
@@ -61,7 +65,7 @@ The verifier creates a fresh investigation, replays the exact tool queries, reco
 
 The relationship card sits inside the existing intelligence panel. It has replay, optional evidence/validation details and a broadcast preview, without new navigation. The evidence replay uses the established player identities, pitch and motion components. Offline computation is explicitly labelled. A model abstention hides the investigated relationship instead of replacing it with a falsely labelled AI story.
 
-Proactive inference requires **both** existing provider enablement and `AI_PROACTIVE_ENABLED=true`. It remains false by default. No settings or credentials were activated. Playback only considers new candidate episodes, importance rank >=7, a 60-second attempt cooldown, existing server quotas and stale request cancellation. Exact-cutoff cached answers cannot appear before their cutoff; answers expire after 180 match seconds. Rewind, source, preference and audience changes invalidate work. Stable episode IDs and evidence overlap reduce repetition; this is in-memory viewing-session state, not a persistent personalization profile.
+Proactive inference requires **both** existing provider enablement and `AI_PROACTIVE_ENABLED=true`. It remains false by default. Foundry server credentials were configured during Azure setup; both inference flags remain disabled publicly. Playback only considers new candidate episodes, importance rank >=7, a 60-second attempt cooldown, existing server quotas and stale request cancellation. Exact-cutoff cached answers cannot appear before their cutoff; answers expire after 180 match seconds. Rewind, source, preference and audience changes invalidate work. Stable episode IDs and evidence overlap reduce repetition; this is in-memory viewing-session state, not a persistent personalization profile.
 
 ## Provider and cost boundaries
 
@@ -71,11 +75,11 @@ Per uncached investigation: at most **three model requests**, **four tool calls*
 
 Cache identity includes match ID, a full canonical-data digest, exact cutoff, audience, preferences/seen evidence, provider, model and director/prompt version. Metrics report request attempts, tool calls, latency, token usage, known-model cost estimates and cache status; a cache hit incurs zero new requests/cost. Failed attempts remain reserved and report unknown cost when usage cannot be established. The existing provider utility does not supply token counts for network failures.
 
-At the checked GPT-5.4-mini standard rates ($0.75/M input, $0.075/M cached input, $4.50/M output), 10,000 uncached input plus 1,000 output tokens across a workflow would estimate **$0.012**. This is an illustrative total, not measured director usage or an invoice. Foundry cost stays unknown without deployment pricing. The six-request live harness reserves $0.11 per request using a deliberately conservative payload-byte/token envelope, including failures, under a proposed $0.70 allowance. Actual rates must be rechecked before authorization.
+At the checked GPT-5.4-mini standard rates ($0.75/M input, $0.075/M cached input, $4.50/M output), 10,000 uncached input plus 1,000 output tokens across a workflow would estimate **$0.012**. This is an illustrative total. The [Foundry evaluation report](../FOUNDRY-EVALUATION.md) records measured token-based estimates using verified GlobalStandard pricing; billing invoices were not inspected. The generic runtime cost helper still returns unknown for Foundry deployments because deployment names alone do not identify pricing. The six-request live harness reserves $0.11 per request using a deliberately conservative payload-byte/token envelope, including failures, under a proposed $0.70 allowance. Actual rates must be rechecked before authorization.
 
 Official contracts checked October 9, 2026: [OpenAI function calling](https://developers.openai.com/api/docs/guides/function-calling), [GPT-5.4-mini pricing](https://developers.openai.com/api/docs/models/gpt-5.4-mini), [Azure Responses reference](https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/responses).
 
-**Verification status:** new OpenAI workflow tested with scripted transport only, not live; Microsoft Foundry adapter tested with scripted transport only, not live. Azure account access remains blocked by the reported Authenticator issue. Neither provider's narrative quality is claimed as verified.
+**Verification status:** the director has passed bounded Foundry live checks, including synthetic and permitted historical data. Azure authentication is working. Two rejected editorial responses led to local fixes, and a burst hit the Azure token-rate limit. See the [complete report](../FOUNDRY-EVALUATION.md). The OpenAI director remains scripted-test-only. Human quality sign-off remains pending.
 
 ## Broadcast contract
 
@@ -89,7 +93,7 @@ Official contracts checked October 9, 2026: [OpenAI function calling](https://de
 4. After separate paid authorization, enable the chosen provider in an isolated process and use Investigate this passage or Catch Me Up. Tool traces in How we know show actual completed query names, time windows, returned counts and verified claim counts. A rejected response falls back visibly. Do not narrate tool activity that has not actually occurred.
 5. Only after explicit authorization for autonomous inference, enable the separate proactive flag. The same computed candidates trigger bounded investigation during playback.
 
-A completed live nine-stage demonstration and an editorial improvement claim remain pending authorized model calls and human review. No fabricated animation or mock output is presented as live inference.
+A complete public live demonstration and an editorial improvement claim remain pending production usage controls and human review. No fabricated animation or mock output is presented as live inference.
 
 ## Evaluation and review
 
@@ -109,7 +113,7 @@ The authorization flag is read before local configuration and cannot be supplied
 
 ## Remaining limitations
 
-Constrained factual language is less expressive than free-form AI writing. Candidate thresholds are heuristic and not statistically calibrated. Dynamic questions are limited to implemented read-only tools and grammars; formation, intentions, off-ball movement and causal explanations are unavailable. Sequence tools require possession support, and no physical pitch-direction claim is possible. Long candidate evidence beyond the cap is conservatively omitted. Client novelty state is session-local. Live quality, live latency and actual token costs remain unmeasured for this version. P2 language expansion and advanced trained metrics are intentionally deferred.
+Constrained factual language is less expressive than free-form AI writing. Candidate thresholds are heuristic and not statistically calibrated. Dynamic questions are limited to implemented read-only tools and grammars; formation, intentions, off-ball movement and causal explanations are unavailable. Sequence tools require possession support, and no physical pitch-direction claim is possible. Long candidate evidence beyond the cap is conservatively omitted. Client novelty state is session-local. The bounded live evaluation measures sample latency and token costs, but does not establish population-level reliability or editorial superiority. P2 language expansion and advanced trained metrics are intentionally deferred.
 
 ## Verification artifacts
 

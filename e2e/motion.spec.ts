@@ -105,8 +105,6 @@ test("rapid changes cancel stale motion and leave immediate truthful state", asy
   await page.clock.runFor(1000);
   expect(await range.inputValue()).toBe(String(start));
   expect(await page.locator(".replay-pitch [data-event-time]").count()).toBe(1);
-  for (const name of ["Analyst mode", "Fan mode", "Analyst mode"])
-    await page.getByRole("button", { name, exact: true }).click();
   await expect(page.getByText("Measurement notes")).not.toBeVisible();
   await page.locator(".detail-panel .provenance summary").click();
   await expect(page.getByText("Measurement notes")).toBeVisible();
@@ -136,7 +134,6 @@ test("reduced motion removes decoration while replay and keyboard selection work
   await page.getByRole("button", { name: "Pause replay", exact: true }).click();
   const range = page.getByLabel("Replay timeline");
   await range.fill((await range.getAttribute("max")) as string);
-  await page.getByRole("button", { name: "Analyst mode", exact: true }).click();
   await page.getByRole("button", { name: "Catch me up", exact: true }).click();
   expect(
     await page.evaluate(

@@ -181,22 +181,20 @@ test("both sources share the layout and evidence flow at the same viewport", asy
   expect(inference).toEqual([]);
 });
 
-test("preferences synchronize between sources without resetting playback or leaking spoilers", async ({
+test("detailed analysis persists between sources without resetting playback or leaking spoilers", async ({
   page,
 }) => {
   await page.goto("/");
   await selectSource(page, "Recorded");
-  await page.getByRole("button", { name: "Analyst mode", exact: true }).click();
   await selectSource(page, "Synthetic");
   await expect(
-    page.getByRole("button", { name: "Analyst mode", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("button", { name: "Fan mode", exact: true }).click();
+    page.getByRole("button", { name: /^(Fan|Analyst) mode$/ }),
+  ).toHaveCount(0);
   await page.getByRole("button", { name: "Recorded", exact: true }).click();
   await expect(shell(page).getByTestId("clock")).toContainText("30:00");
   await expect(
-    page.getByRole("button", { name: "Fan mode", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+    page.getByRole("button", { name: /^(Fan|Analyst) mode$/ }),
+  ).toHaveCount(0);
   await expect(shell(page).getByTestId("final-score")).toHaveCount(0);
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await page.getByRole("checkbox", { name: "Reveal final score" }).check();

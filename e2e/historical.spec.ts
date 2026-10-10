@@ -53,7 +53,6 @@ test("source selection, spoiler-safe replay, event exploration and match switchi
       .getByRole("heading", { name: "Arsenal are picking up the rhythm" })
       .first(),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Analyst mode", exact: true }).click();
   await expect(
     page
       .locator(".historical-shell .selected-observation")

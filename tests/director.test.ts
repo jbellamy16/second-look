@@ -28,6 +28,44 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("Match Director evidence boundaries", () => {
+  it("advertises sequence presentation for the live pre-substitution case and rejects a comparison", () => {
+    const fixture = source.read("substitution");
+    const time =
+      Math.floor(fixture.events.find((e) => e.type === "substitution")!.time) -
+      1;
+    const session = createInvestigation(fixture, time, "analyst");
+    const result = session.execute("get_match_context", {
+      ...query,
+      matchId: fixture.id,
+      start: 2700,
+      end: time,
+    });
+    const claim = result.claims.find(
+      (c) => c.category === "shot-sequence" && c.team === "riverside",
+    )!;
+    expect(claim).toBeDefined();
+    expect(claim.allowedEmphasis).toBe("sequence");
+    const plan = {
+      decision: "publish",
+      stories: [
+        { claimId: claim.id, form: "detail", emphasis: claim.allowedEmphasis },
+      ],
+    };
+    expect(
+      validateEditorialPlan(
+        plan,
+        session.candidates,
+        new Set(session.claims.keys()),
+      ).stories,
+    ).toHaveLength(1);
+    expect(() =>
+      validateEditorialPlan(
+        { ...plan, stories: [{ ...plan.stories[0], emphasis: "comparison" }] },
+        session.candidates,
+        new Set(session.claims.keys()),
+      ),
+    ).toThrow("Invalid comparison");
+  });
   it("rejects other matches, future windows/events, unknown actors and tool names", () => {
     const session = createInvestigation(match, cutoff, "fan");
     for (const q of [
@@ -103,7 +141,9 @@ describe("Match Director evidence boundaries", () => {
   });
   it("requires actual retrieved claims and rejects fabricated prose, duplicates and invalid comparisons", () => {
     const candidates = observe(match, cutoff),
-      c = candidates[0];
+      c = candidates.find(
+        (candidate) => candidate.category === "recovery-shot",
+      )!;
     const plan = {
       decision: "publish",
       stories: [{ claimId: c.id, form: "brief", emphasis: "sequence" }],
@@ -217,6 +257,53 @@ function scriptedProvider(abstain = false, invalid = false) {
     );
 }
 describe("bounded provider integration (scripted transport, not quality evidence)", () => {
+  it.each(["fan", "analyst"] as const)(
+    "constrains %s story count at provider generation, not only after spending",
+    async (mode) => {
+      configure("foundry");
+      const transport = scriptedProvider();
+      vi.stubGlobal("fetch", transport);
+      await investigate(match, cutoff, mode, {}, "foundry");
+      for (const [index, call] of (
+        transport.mock.calls as unknown as [string, RequestInit][]
+      ).entries()) {
+        const request = JSON.parse(String(call[1].body));
+        expect(request.text.format.schema.properties.stories.maxItems).toBe(
+          index === 0 ? 0 : mode === "fan" ? 2 : 3,
+        );
+        if (!index) {
+          expect(request.text.format.schema.properties.decision.const).toBe(
+            "abstain",
+          );
+          expect(request.tool_choice).toEqual({
+            type: "function",
+            name: "get_match_events",
+          });
+          expect(request.tools).toHaveLength(1);
+          expect(request.tools[0].parameters.properties.start.enum).toEqual([
+            2700,
+          ]);
+          expect(request.tools[0].parameters.properties.end.enum).toEqual([
+            cutoff,
+          ]);
+          expect(request.tools[0].parameters.properties.team).toEqual({
+            type: "null",
+          });
+        }
+        if (index) {
+          const retrieved = JSON.parse(
+            request.input.find(
+              (item: { type: string }) => item.type === "function_call_output",
+            ).output,
+          ).claims.map((c: { id: string }) => c.id);
+          expect(
+            request.text.format.schema.properties.stories.items.properties
+              .claimId.enum,
+          ).toEqual(retrieved);
+        }
+      }
+    },
+  );
   it.each(["openai", "foundry"] as const)(
     "investigates with %s and keeps actual provenance",
     async (provider) => {
@@ -242,6 +329,53 @@ describe("bounded provider integration (scripted transport, not quality evidence
     expect(result.stories).toEqual([]);
     expect(result.provenance.contextFactIds).toContain("score");
   });
+  it("recovers from a cross-half comparison without admitting rejected evidence or adding a model turn", async () => {
+    configure();
+    const successful = scriptedProvider();
+    const transport = vi
+      .fn()
+      .mockImplementationOnce(successful)
+      .mockResolvedValueOnce(
+        Response.json({
+          status: "completed",
+          output: [
+            {
+              type: "function_call",
+              name: "compare_time_windows",
+              call_id: "invalid-comparison",
+              arguments: JSON.stringify(query),
+            },
+          ],
+        }),
+      )
+      .mockImplementationOnce(successful);
+    vi.stubGlobal("fetch", transport);
+    const result = await investigate(match, cutoff, "fan", {}, "openai");
+    expect(result.source).toBe("openai");
+    expect(result.stories).toHaveLength(1);
+    expect(result.trace.map((entry) => entry.tool)).toEqual([
+      "get_match_events",
+    ]);
+    expect(result.metrics.toolInvocations).toBe(2);
+    expect(transport).toHaveBeenCalledTimes(3);
+    const lastRequest = JSON.parse(transport.mock.calls[2][1].body);
+    const rejected = JSON.parse(lastRequest.input.at(-1).output);
+    expect(rejected.error).toContain("equal complete windows");
+    expect(rejected.claims).toBeUndefined();
+    expect(
+      rejected.availablePeriods.every((p: { end: number }) => p.end <= cutoff),
+    ).toBe(true);
+    for (const period of rejected.availablePeriods) {
+      if (!period.comparisonExample) continue;
+      const { previous, current } = period.comparisonExample;
+      expect(previous[0]).toBeGreaterThanOrEqual(period.start);
+      expect(previous[1]).toBe(current[0]);
+      expect(current[1]).toBeLessThanOrEqual(period.end);
+      expect(previous[1] - previous[0]).toBe(current[1] - current[0]);
+      expect(current[1] - current[0]).toBeLessThanOrEqual(900);
+    }
+    expect(lastRequest.tools).toBeUndefined();
+  });
   it("rejects unsupported generated claims without another paid retry", async () => {
     configure();
     const transport = scriptedProvider(false, true);
@@ -251,6 +385,34 @@ describe("bounded provider integration (scripted transport, not quality evidence
     ).rejects.toThrow("Uninvestigated");
     expect(transport).toHaveBeenCalledTimes(2);
   });
+  it.each([false, true])(
+    "handles repeated final messages and rejects conflicts: %s",
+    async (conflicting) => {
+      configure();
+      const successful = scriptedProvider(true);
+      const transport = vi
+        .fn()
+        .mockImplementationOnce(successful)
+        .mockImplementationOnce(async () => {
+          const response = await successful();
+          const body = await response.json();
+          const duplicate = structuredClone(body.output[0]);
+          if (conflicting)
+            duplicate.content[0].text = JSON.stringify({
+              decision: "publish",
+              stories: [],
+            });
+          body.output.push(duplicate);
+          return Response.json(body);
+        });
+      vi.stubGlobal("fetch", transport);
+      const result = investigate(match, cutoff, "fan", {}, "openai");
+      if (conflicting)
+        await expect(result).rejects.toThrow("conflicting editorial");
+      else expect((await result).decision).toBe("abstain");
+      expect(transport).toHaveBeenCalledTimes(2);
+    },
+  );
   it("never calls a model for offline, restricted evidence, empty candidates or cancelled work", async () => {
     const transport = vi.fn();
     vi.stubGlobal("fetch", transport);
@@ -356,7 +518,12 @@ it("investigation-selected player windows compute new claims beyond the observer
     playerId: actor.id,
     team: "harbor",
   });
-  expect(verifier.claims.get(derived.id)).toEqual(derived);
+  const { allowedEmphasis, editorialGroup, incompatibleClaimIds, ...rawClaim } =
+    derived;
+  expect(verifier.claims.get(derived.id)).toEqual(rawClaim);
+  expect(allowedEmphasis).toBe("contribution");
+  expect(editorialGroup).toBe("harbor:player-involvement");
+  expect(incompatibleClaimIds.every((id) => session.claims.has(id))).toBe(true);
 });
 it("disabled categories suppress candidate investigations", () => {
   expect(observe(match, cutoff, "fan", { categories: [] })).toEqual([]);

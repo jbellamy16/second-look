@@ -9,6 +9,8 @@ import {
   TEAMS,
 } from "./match";
 export type Mode = "fan" | "analyst";
+// The app presents the detailed analysis consistently; legacy API modes remain supported.
+export const ANALYSIS_MODE = "analyst" as const;
 export type Category = "pressure" | "chances" | "rhythm";
 export type Insight = {
   id: string;

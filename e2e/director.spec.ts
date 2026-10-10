@@ -1,5 +1,102 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { SyntheticMatchSource } from "../src/lib/sources/synthetic";
+import { createInvestigation } from "../src/lib/ai/director/tools";
+import { packageStory } from "../src/lib/ai/director/story";
+
+test("story evidence presents the comparison and keeps technical details secondary", async ({
+  page,
+}, testInfo) => {
+  // UI fixture computed from the same recorded events as the live walkthrough;
+  // no provider calls are made or claimed by this test.
+  const match = new SyntheticMatchSource().read("pressure");
+  const session = createInvestigation(match, 3804, "analyst");
+  const evidence = session.execute("compare_time_windows", {
+    matchId: match.id,
+    start: 3252,
+    end: 3804,
+    team: "harbor",
+    playerId: null,
+    eventId: null,
+  });
+  const claim = evidence.claims.find(
+    (claim) =>
+      claim.category === "window-comparison" && claim.id.endsWith(":shot"),
+  )!;
+  const story = packageStory(
+    claim,
+    match,
+    3804,
+    "analyst",
+    "offline",
+    "detail",
+    "comparison",
+  );
+  await page.route("**/api/insights", (route) =>
+    route.fulfill({ json: { mode: "offline", proactive: false } }),
+  );
+  await page.route("**/api/director", (route) =>
+    route.fulfill({
+      json: {
+        source: "offline",
+        stories: [story],
+        provenance: { cutoff: 3804 },
+        trace: [],
+        metrics: { requests: 0, toolInvocations: 0, cached: false },
+      },
+    }),
+  );
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Investigate this passage", exact: true })
+    .click();
+  const panel = page.locator(".story-evidence");
+  await panel.getByText("How we know this story", { exact: true }).click();
+  await expect(
+    panel.getByRole("region", { name: "Supporting comparison" }),
+  ).toBeVisible();
+  await expect(panel).toContainText("9m 12s window");
+  await expect(panel.locator(".story-current strong")).toHaveText("4");
+  await expect(panel.locator(".story-previous strong")).toHaveText("0");
+  await expect(panel.locator(".story-event-list li")).toHaveCount(4);
+  await expect(panel.locator(".story-technical-body")).not.toBeVisible();
+  await expect(
+    panel.getByText(story.evidenceEventIds[0], { exact: true }),
+  ).not.toBeVisible();
+  const audit = await new AxeBuilder({ page })
+    .include(".director-story")
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(audit.violations).toEqual([]);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await panel.screenshot({
+    path: `artifacts/evidence-redesign-${testInfo.project.name}.png`,
+  });
+  await panel.getByText("Source & technical details", { exact: true }).click();
+  await expect(
+    panel.getByText(story.evidenceEventIds[0], { exact: true }),
+  ).toBeVisible();
+  await expect(panel).toContainText("No AI tool calls");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator(".director-actions button").first()).toHaveCSS(
+    "color",
+    "rgb(248, 250, 252)",
+  );
+  const darkAudit = await new AxeBuilder({ page })
+    .include(".director-story")
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(darkAudit.violations).toEqual([]);
+  await panel.getByText("Source & technical details", { exact: true }).click();
+  await panel.screenshot({
+    path: `artifacts/evidence-redesign-${testInfo.project.name}-dark.png`,
+  });
+});
 test("computed story connects evidence, broadcast JSON, and rewind-safe visibility", async ({
   page,
 }, testInfo) => {

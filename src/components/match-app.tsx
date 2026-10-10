@@ -3,7 +3,7 @@ import { DirectorStory } from "./director-story";
 import { buildEvidence } from "@/lib/ai/evidence";
 import type { Provenance } from "@/lib/ai/service";
 import type { Narrative } from "@/lib/foundry";
-import { Insight, rankInsights } from "@/lib/intelligence";
+import { ANALYSIS_MODE, Insight, rankInsights } from "@/lib/intelligence";
 import {
   DEMO_TIME,
   DURATION,
@@ -109,7 +109,7 @@ export function MatchApp({
   );
   const insights = useMemo(
     () =>
-      rankInsights(allInsights, visible, prefs.mode, {
+      rankInsights(allInsights, visible, ANALYSIS_MODE, {
         ...prefs,
         seenEvidenceIds,
       }).map((r) => r.insight),
@@ -153,10 +153,10 @@ export function MatchApp({
   const replayEvents = replay
     ? visible.filter((e) => replay.ids.includes(e.id))
     : [];
-  const displayKey = `${scenario}-${profile}-${time}-${prefs.mode}-${insight?.id}`;
+  const displayKey = `${scenario}-${profile}-${time}-${ANALYSIS_MODE}-${insight?.id}`;
   const currentNarrative =
     narrative?.key === displayKey ? narrative.value : null;
-  const summary = matchSummary(canonicalMatch, time, prefs.mode, insights);
+  const summary = matchSummary(canonicalMatch, time, ANALYSIS_MODE, insights);
   const context = (
     <MatchContext
       match={canonicalMatch}
@@ -182,7 +182,7 @@ export function MatchApp({
     const packet = buildEvidence(
       visible,
       time,
-      prefs.mode,
+      ANALYSIS_MODE,
       { ...prefs, seenEvidenceIds },
       selected,
     );
@@ -355,7 +355,7 @@ export function MatchApp({
           scenario,
           profile,
           time: Math.floor(time),
-          mode: prefs.mode,
+          mode: ANALYSIS_MODE,
           preferences: {
             team: prefs.team,
             player: prefs.player,
@@ -406,7 +406,7 @@ export function MatchApp({
           scenario,
           profile,
           time: Math.floor(time),
-          mode: prefs.mode,
+          mode: ANALYSIS_MODE,
           team: insight.team,
           category: insight.category,
         }),
@@ -704,6 +704,7 @@ export function MatchApp({
             </option>
           ))}
         </select>
+        <span className="synthetic-badge">Synthetic demo</span>
       </div>
       <InsightNotice
         key={scenario}
@@ -731,8 +732,6 @@ export function MatchApp({
           setPitchView("recent");
           setPlaying(!playing);
         }}
-        mode={prefs.mode}
-        onMode={(mode) => setPrefs({ ...prefs, mode })}
         onRecap={() => {
           setPlaying(false);
           setModal("recap");
@@ -795,7 +794,7 @@ export function MatchApp({
                 key={canonicalMatch.id}
                 match={canonicalMatch}
                 time={time}
-                mode={prefs.mode}
+                mode={ANALYSIS_MODE}
                 preferences={{
                   team: prefs.team,
                   player: prefs.player,
@@ -810,7 +809,7 @@ export function MatchApp({
             insight={insight}
             insights={insights}
             onSelect={selectInsight}
-            mode={prefs.mode}
+            mode={ANALYSIS_MODE}
             onEvent={(id) => {
               const e = visible.find((e) => e.id === id);
               if (e) selectEvent(e);
@@ -862,7 +861,7 @@ export function MatchApp({
           match={canonicalMatch}
           insights={insights}
           onSelect={selectInsight}
-          mode={prefs.mode}
+          mode={ANALYSIS_MODE}
           empty={context}
         />
       )}

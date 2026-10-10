@@ -2,7 +2,8 @@ import { z } from "zod";
 import type { Mode } from "../../intelligence";
 import type { MatchData } from "../../sources/model";
 import type { ProviderMode } from "../providers";
-import { DIRECTOR_VERSION, type Candidate } from "./observer";
+import { DIRECTOR_VERSION, claimEmphasis, type Candidate } from "./observer";
+import { evidenceOverlaps } from "./editorial";
 
 export const editorialSchema = z
   .object({
@@ -105,37 +106,10 @@ export function validateEditorialPlan(
     const c = candidates.find((c) => c.id === story.claimId);
     if (!c || !retrieved.has(story.claimId) || seen.has(story.claimId))
       throw new Error("Uninvestigated or duplicate claim");
-    if (
-      story.emphasis === "comparison" &&
-      !["activity-change", "shot-location", "window-comparison"].includes(
-        c.category,
-      )
-    )
-      throw new Error("Invalid comparison");
-    if (
-      story.emphasis === "contribution" &&
-      ![
-        "passing-pair",
-        "substitute-involvement",
-        "player-involvement",
-      ].includes(c.category)
-    )
-      throw new Error("Invalid contributor");
-    if (
-      story.emphasis === "sequence" &&
-      !["recovery-shot", "shot-sequence"].includes(c.category)
-    )
-      throw new Error("Invalid sequence");
+    if (story.emphasis !== claimEmphasis[c.category])
+      throw new Error(`Invalid ${story.emphasis}`);
     for (const prior of candidates.filter((c) => seen.has(c.id))) {
-      const intersection = c.evidenceIds.filter((id) =>
-        prior.evidenceIds.includes(id),
-      ).length;
-      if (
-        intersection /
-          Math.min(c.evidenceIds.length, prior.evidenceIds.length) >
-        0.65
-      )
-        throw new Error("Overlapping stories");
+      if (evidenceOverlaps(c, prior)) throw new Error("Overlapping stories");
     }
     seen.add(c.id);
   }
