@@ -148,3 +148,12 @@ No hosted deployment is performed by this phase. Node standalone and Cloudflare
 CI verification cover deployability. Public inference still needs the existing
 shared TLS Redis usage store, operator quotas and human editorial review; offline
 historical replay does not require credentials or Redis.
+
+## Foundation follow-up
+
+The source boundary is now versioned and validates full match metadata, rosters,
+periods, identities, relations and scores. Both source experiences share the
+playback clock and statistics implementation. See [canonical architecture](CANONICAL-FOOTBALL.md)
+and [independent rights review](DATA-RIGHTS.md). The Wyscout conversion rules above
+remain in force. StatsBomb is a separate adapter restricted to local development;
+it does not replace the licensed public fixtures.

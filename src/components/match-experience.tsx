@@ -1,12 +1,15 @@
 "use client";
+import type { Fixture } from "@/lib/sources/catalog";
 import { useState } from "react";
 import { MatchApp } from "./match-app";
 import { HistoricalApp } from "./historical-app";
 import { SelectionGroup } from "./motion";
 export function MatchExperience({
   historicalEnabled,
+  fixtures,
 }: {
   historicalEnabled: boolean;
+  fixtures: readonly Fixture[];
 }) {
   const [source, setSource] = useState<"synthetic" | "historical">("synthetic");
   const selector = historicalEnabled ? (
@@ -44,6 +47,6 @@ export function MatchExperience({
   return source === "synthetic" ? (
     <MatchApp sourceSelector={selector} />
   ) : (
-    <HistoricalApp sourceSelector={selector} />
+    <HistoricalApp sourceSelector={selector} fixtures={fixtures} />
   );
 }

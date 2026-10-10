@@ -1,3 +1,4 @@
+import { displayPoint } from "./sources/coordinates";
 import type { MatchEvent, Point } from "./match";
 
 export type PlaybackSample = {
@@ -25,10 +26,8 @@ export function replayFrame(events: MatchEvent[], time: number) {
 
 export function pitchPoint(event: MatchEvent, end = false): Point {
   const p = end && event.end ? event.end : event.position;
-  return {
-    x: 50 + (event.team === "harbor" ? p.x : 100 - p.x) * 9,
-    y: 45 + (event.team === "harbor" ? p.y : 100 - p.y) * 5.5,
-  };
+  const display = displayPoint(p, event.team);
+  return { x: 50 + display.x * 9, y: 45 + display.y * 5.5 };
 }
 
 // Schematic travel along this action's recorded endpoints only. Never connect

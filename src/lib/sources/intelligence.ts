@@ -1,3 +1,5 @@
+import { evidenceEvent } from "./evidence-view";
+import { calculateStatistics } from "./analytics";
 import {
   detectInsights,
   rankInsights,
@@ -6,6 +8,7 @@ import {
 } from "../intelligence";
 import type { EvidencePacket, Fact } from "../ai/evidence";
 import {
+  periodAt,
   eventClock,
   matchClock,
   recordedScore,
@@ -16,38 +19,23 @@ import type { TeamId } from "../match";
 export function historicalInsights(match: MatchData, time: number) {
   return detectInsights(match.events, time, {
     teams: match.teams,
-    periodStart: time >= match.secondHalfStart ? match.secondHalfStart : 0,
-    ballRecoveries: false,
+    periodStart:
+      match.capabilities.comparisonScope === "continuous"
+        ? 0
+        : periodAt(match, time).start,
+    ballRecoveries: match.capabilities.ballRecoveries,
   });
 }
 export function historicalStats(events: NormalizedEvent[], team: TeamId) {
-  const own = events.filter((e) => e.team === team),
-    passes = own.filter((e) => e.type === "pass");
-  return {
-    passes: passes.length,
-    completed: passes.filter((e) => e.success === true).length,
-    unknownPassOutcomes: passes.filter((e) => e.success === undefined).length,
-    shots: own.filter((e) => e.type === "shot").length,
-    attackingThird: own.filter(
-      (e) =>
-        ["pass", "shot", "touch"].includes(e.type) &&
-        e.position &&
-        e.position.x >= (100 / 3) * 2,
-    ).length,
-    interceptions: own.filter((e) => e.source.tags.includes(1401)).length,
-    forward: passes.filter((e) => e.position && e.end && e.end.x > e.position.x)
-      .length,
-    backward: passes.filter(
-      (e) => e.position && e.end && e.end.x < e.position.x,
-    ).length,
-  };
+  return calculateStatistics(events)[team];
 }
+
 export function eventDescription(match: MatchData, e: NormalizedEvent) {
   const who =
     match.players.find((p) => p.id === e.playerId)?.name ??
     "Unidentified player";
   if (e.type === "substitution")
-    return `${who} on for ${match.players.find((p) => p.id === e.outgoingId)?.name ?? "unidentified player"} (minute precision)`;
+    return `${who} on for ${match.players.find((p) => p.id === e.outgoingId)?.name ?? "unidentified player"}${e.source.precision === "minute" ? " (minute precision)" : ""}`;
   if (e.scoringTeam)
     return `${e.ownGoal ? "Own goal" : "Goal"} by ${who} · ${match.teams[e.scoringTeam].name}`;
   return `${e.source.eventType} · ${who}`;
@@ -58,10 +46,24 @@ export function historicalSequence(
   selected: NormalizedEvent,
   cutoff: number,
 ) {
+  if (selected.time > cutoff) return [];
+  if (
+    selected.possessionId !== null &&
+    match.capabilities.possession !== "unavailable"
+  )
+    return match.events.filter(
+      (e) =>
+        e.order <= selected.order &&
+        e.time <= cutoff &&
+        e.period === selected.period &&
+        e.possessionId === selected.possessionId &&
+        e.team === selected.team &&
+        ["pass", "carry", "shot", "goal", "touch"].includes(e.type),
+    );
   const preceding = match.events.filter(
     (e) =>
       e.time <= cutoff &&
-      e.time <= selected.time &&
+      e.order <= selected.order &&
       e.period === selected.period,
   );
   const index = preceding.findIndex((e) => e.id === selected.id);
@@ -138,7 +140,9 @@ export function historicalEvidence(
         why: e.scoringTeam
           ? "A recorded scoring action changed the score."
           : e.type === "shot"
-            ? "A recorded attempt; this dataset supplies no calibrated chance probability."
+            ? e.xg === undefined
+              ? "A recorded attempt; no chance probability is available for this event."
+              : "A recorded attempt with a source-supplied chance estimate; it does not establish tactical cause."
             : "A personnel change is recorded, but its tactical effect is not established.",
         watch: "Watch whether subsequent attacks produce further attempts.",
       });
@@ -148,7 +152,10 @@ export function historicalEvidence(
         kind: "abstention",
         priority: 7,
         text:
-          time - (time >= match.secondHalfStart ? match.secondHalfStart : 0) <
+          time -
+            (match.capabilities.comparisonScope === "continuous"
+              ? 0
+              : periodAt(match, time).start) <
           1800
             ? "Two complete comparison windows within this half are not yet available."
             : "No recent change meets the evidence thresholds. There is no supported tactical shift to call.",
@@ -189,18 +196,7 @@ export function historicalEvidence(
     mode,
     facts,
     // A goal stays a shot in normalized data; the evidence view marks scoring actions for requiredContext.
-    events: visible
-      .filter((e) => ids.has(e.id))
-      .map((e) => ({
-        id: e.id,
-        time: e.time,
-        team: e.team,
-        playerId: e.playerId,
-        type: e.scoringTeam ? "goal" : e.type,
-        period: e.period,
-        periodSeconds: e.periodSeconds,
-        sourceEventId: e.source.eventId,
-      })),
+    events: visible.filter((e) => ids.has(e.id)).map(evidenceEvent),
     comparisons,
     ranking: ranking.map(({ insight, ...rest }) => ({
       ...rest,
@@ -210,3 +206,8 @@ export function historicalEvidence(
     fullTime: time >= match.duration,
   };
 }
+
+// Provider-independent entrypoints; historical names remain compatibility aliases.
+export const matchInsights = historicalInsights;
+export const matchEvidence = historicalEvidence;
+export const matchSequence = historicalSequence;

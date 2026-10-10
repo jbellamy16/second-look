@@ -1,4 +1,5 @@
 "use client";
+import { useMatchPlayback } from "./use-match-playback";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
@@ -52,7 +53,6 @@ import {
 } from "@/lib/match";
 import {
   Category,
-  detectInsights,
   Insight,
   Mode,
   recap,
@@ -64,6 +64,7 @@ import type { Provenance } from "@/lib/ai/service";
 import { ProvenanceDetails, providerLabel } from "./provenance";
 import { Pitch } from "./pitch";
 import { InsightNotice } from "./insight-notice";
+import { matchInsights } from "@/lib/sources/intelligence";
 import { SyntheticMatchSource } from "@/lib/sources/synthetic";
 import { pitchEvents as toLegacyEvents } from "@/lib/sources/model";
 import { EvidenceReplay } from "./evidence-replay";
@@ -140,17 +141,19 @@ export function MatchApp({
   const [focusedPlayer, setFocusedPlayer] = useState("harbor-9");
   const requestVersion = useRef(0);
   const visiblePage = usePageVisibility();
-  const matchTime = useRef(time);
-  matchTime.current = time;
-  const events = useMemo(
-    () => toLegacyEvents(new SyntheticMatchSource().read(scenario).events),
+  const canonicalMatch = useMemo(
+    () => new SyntheticMatchSource().read(scenario),
     [scenario],
+  );
+  const events = useMemo(
+    () => toLegacyEvents(canonicalMatch.events),
+    [canonicalMatch],
   );
   const visible = useMemo(() => eventsAt(events, time), [events, time]);
   const stats = useMemo(() => statistics(visible), [visible]);
   const allInsights = useMemo(
-    () => detectInsights(visible, time),
-    [visible, time],
+    () => matchInsights(canonicalMatch, time),
+    [canonicalMatch, time],
   );
   const insights = useMemo(
     () =>
@@ -264,24 +267,14 @@ export function MatchApp({
         localStorage.setItem("second-look-preferences", JSON.stringify(prefs));
       } catch {}
   }, [prefs, ready]);
-  useEffect(() => {
-    if (!playing) return;
-    const started = performance.now();
-    const initial = matchTime.current;
-    const timer = setInterval(
-      () =>
-        setTime(
-          Math.min(
-            DURATION,
-            Math.floor(
-              initial + ((performance.now() - started) * speed) / 1000,
-            ),
-          ),
-        ),
-      250,
-    );
-    return () => clearInterval(timer);
-  }, [playing, speed]);
+  useMatchPlayback(
+    time,
+    setTime,
+    playing && visiblePage,
+    speed,
+    DURATION,
+    true,
+  );
   useEffect(() => {
     if (time >= DURATION || !visiblePage) setPlaying(false);
   }, [time, visiblePage]);

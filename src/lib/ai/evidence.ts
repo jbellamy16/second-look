@@ -1,3 +1,4 @@
+import { evidenceEvent } from "../sources/evidence-view";
 import { z } from "zod";
 import {
   detectInsights,
@@ -219,7 +220,7 @@ export function buildEvidence(
     time,
     mode,
     facts,
-    events: visible.filter((e) => ids.has(e.id)),
+    events: visible.filter((e) => ids.has(e.id)).map(evidenceEvent),
     comparisons,
     ranking,
     limitations: LIMITATIONS,
