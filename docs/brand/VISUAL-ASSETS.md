@@ -1,6 +1,6 @@
 # Between the Lines visual asset system
 
-Reviewed and implemented 9 October 2026. The football glyphs and fictional club identities are retained through the Between the Lines rebrand. The original product logo has been replaced; current brand exports are documented in [the brand guide](README.md).
+Reviewed and implemented 9 October 2026. The stadium label uses Tabler’s 16px outline stadium glyph, treated as decorative beside the written venue name. The football glyphs and fictional club identities are retained through the Between the Lines rebrand. The original product logo has been replaced; current brand exports are documented in [the brand guide](README.md).
 
 ## Direction and family selection
 

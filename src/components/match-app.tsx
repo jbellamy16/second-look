@@ -20,6 +20,7 @@ import {
   Play,
   RotateCcw,
   Settings2,
+  Stadium,
   Tactics,
   Shot,
   HighBallWins,
@@ -616,7 +617,10 @@ export function MatchApp() {
                     ? "FULL TIME"
                     : "PAUSED"}
               </span>
-              <span>Harbor Park</span>
+              <span className="stadium-label">
+                <Stadium size={16} />
+                Harbor Park
+              </span>
             </div>
           </section>
           <div className="view-toolbar">

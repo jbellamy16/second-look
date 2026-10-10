@@ -27,6 +27,7 @@ import {
 import {
   IconArrowsExchange,
   IconBallFootball,
+  IconBuildingStadium,
   IconEye,
   IconPlayFootball,
   IconShirtSport,
@@ -103,6 +104,7 @@ function footballIcon(Glyph: TablerIcon) {
     );
   };
 }
+export const Stadium = footballIcon(IconBuildingStadium);
 export const FootballPitch = footballIcon(IconSoccerField);
 export const PlayerShirt = footballIcon(IconShirtSport);
 export const Watch = footballIcon(IconEye);
