@@ -3,8 +3,7 @@ import { ModalHeader } from "./modal-header";
 import { DirectorStory } from "./director-story";
 import type { Provenance } from "@/lib/ai/service";
 import type { Narrative } from "@/lib/foundry";
-import type { Mode } from "@/lib/intelligence";
-import { rankInsights } from "@/lib/intelligence";
+import { ANALYSIS_MODE, rankInsights } from "@/lib/intelligence";
 import { matchSummary } from "@/lib/sources/context";
 import { type Fixture } from "@/lib/sources/catalog";
 import {
@@ -174,8 +173,7 @@ function HistoricalReplay({
     [playing, setPlaying] = useState(false),
     [speed, setSpeed] = useState(8);
   const [prefs, setPrefs] = useMatchPreferences();
-  const mode = prefs.mode;
-  const setMode = (mode: Mode) => setPrefs({ ...prefs, mode });
+  const mode = ANALYSIS_MODE;
   const [detailTab, setDetailTab] = useState<
     "visual" | "evidence" | "explanation"
   >("visual");
@@ -445,11 +443,6 @@ function HistoricalReplay({
           setSelectedInsight(null);
           if (time >= match.duration) setTime(0);
           setPlaying(!playing);
-        }}
-        mode={mode}
-        onMode={(m) => {
-          invalidate();
-          setMode(m);
         }}
         onRecap={() => {
           invalidate();

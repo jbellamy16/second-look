@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-test("playback, evidence, modes, recap, and rewind stay synchronized", async ({
+test("playback, evidence, recap, and rewind stay synchronized", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -17,7 +17,6 @@ test("playback, evidence, modes, recap, and rewind stay synchronized", async ({
   await expect(
     page.getByRole("heading", { name: "Passage replay" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Analyst mode", exact: true }).click();
   await expect(page.getByText("Measurement notes")).not.toBeVisible();
   await page.locator(".detail-panel .provenance summary").click();
   await expect(page.getByText("Measurement notes")).toBeVisible();
@@ -61,10 +60,12 @@ test("scenarios, navigation, player preferences and mobile layout work", async (
     .click();
   await page.getByRole("button", { name: /17 Nico Wells/ }).click();
   await expect(page.getByRole("heading", { name: "Nico Wells" })).toBeVisible();
-  await page.getByRole("button", { name: "Follow this player" }).click();
+  await page
+    .getByRole("button", { name: "Favorite Nico Wells", exact: true })
+    .click();
   await expect(
-    page.getByRole("button", { name: "Following this player" }),
-  ).toBeVisible();
+    page.getByRole("button", { name: "Favorite Nico Wells", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await page.reload();
   await page
     .getByRole("navigation")
@@ -72,8 +73,8 @@ test("scenarios, navigation, player preferences and mobile layout work", async (
     .click();
   await page.getByLabel("Focus player").selectOption("harbor-12");
   await expect(
-    page.getByRole("button", { name: "Following this player" }),
-  ).toBeVisible();
+    page.getByRole("button", { name: "Favorite Nico Wells", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   const width = await page.evaluate(() => ({
     scroll: document.documentElement.scrollWidth,
     viewport: innerWidth,
@@ -157,7 +158,11 @@ test("the demo shows a pattern emerging and reset clears custom filters", async 
 }) => {
   await page.clock.install();
   await page.goto("/");
-  await expect(page.getByText("Synthetic demo", { exact: true })).toBeVisible();
+  await expect(
+    page
+      .locator(".fixture-selector")
+      .getByText("Synthetic demo", { exact: true }),
+  ).toBeVisible();
   await expect(page.locator(".demo-controls")).toHaveCount(0);
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await page.getByLabel("Generator profile").selectOption("balanced");
@@ -183,8 +188,8 @@ test("the demo shows a pattern emerging and reset clears custom filters", async 
     page.getByRole("heading", { name: "Harbor are winning it higher" }),
   ).toHaveCount(1);
   await expect(
-    page.getByRole("button", { name: "Fan mode", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+    page.getByRole("button", { name: /^(Fan|Analyst) mode$/ }),
+  ).toHaveCount(0);
 });
 
 test("every major screen fits the viewport and captures review evidence", async ({
@@ -321,7 +326,7 @@ test("pitch markers support touch-sized selection and keyboard inspection", asyn
   );
 });
 
-test("explainability is readable in both modes and captures the evidence drawer", async ({
+test("detailed explainability captures the evidence drawer", async ({
   page,
 }, testInfo) => {
   await page.goto("/");
@@ -336,7 +341,6 @@ test("explainability is readable in both modes and captures the evidence drawer"
     path: `artifacts/${testInfo.project.name}-explainability.png`,
     fullPage: true,
   });
-  await page.getByRole("button", { name: "Analyst mode", exact: true }).click();
   await expect(details).toContainText("descriptive threshold");
   await page.getByRole("button", { name: "Catch me up", exact: true }).click();
   await page.getByRole("dialog").locator(".provenance summary").click();
@@ -356,10 +360,22 @@ test("explainability is readable in both modes and captures the evidence drawer"
 test("OpenAI UI requests narration only on demand and clears stale results on rewind", async ({
   page,
 }) => {
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      "second-look-preferences",
+      JSON.stringify({
+        mode: "fan",
+        team: "harbor",
+        player: "harbor-9",
+        categories: ["pressure", "chances", "rhythm"],
+      }),
+    ),
+  );
   let calls = 0;
   await page.route("**/api/insights", async (route) => {
     if (route.request().method() === "GET")
       return route.fulfill({ json: { mode: "openai" } });
+    expect(route.request().postDataJSON().mode).toBe("analyst");
     calls++;
     await route.fulfill({
       json: {
@@ -386,6 +402,19 @@ test("OpenAI UI requests narration only on demand and clears stale results on re
     });
   });
   await page.goto("/");
+  await expect(
+    page.getByRole("button", { name: /^(Fan|Analyst) mode$/ }),
+  ).toHaveCount(0);
+  await expect(page.locator(".selected-observation")).toContainText(
+    "descriptive threshold",
+  );
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await expect(page.getByLabel("Follow a team")).toHaveValue("harbor");
+  await expect(page.getByLabel("Follow a player")).toHaveValue("harbor-9");
+  await expect(
+    page.getByRole("button", { name: /^(Fan|Analyst) mode$/ }),
+  ).toHaveCount(0);
+  await page.keyboard.press("Escape");
   await expect(
     page.getByRole("button", { name: "Explain with OpenAI", exact: true }),
   ).toBeVisible();

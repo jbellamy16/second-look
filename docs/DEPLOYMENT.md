@@ -1,10 +1,55 @@
 # Deploy Between the Lines to Azure
 
-For the current Cloudflare route, see [Cloudflare deployment](CLOUDFLARE.md). This runbook preserves the Azure option.
+The Azure deployment is live. For the alternative Cloudflare route, see [Cloudflare deployment](CLOUDFLARE.md).
 
 ## Current status
 
-No Azure deployment has been verified. OpenAI Fan narration passed a local authorized live check; an Analyst context omission is fixed with offline captured-response verification, and the revised flow has not been rechecked live. Foundry remains unverified live. On October 9, 2026, the owner logged into Azure CLI but reported that the required access remains unavailable. Normal inference stays disabled. Nothing in this repository provisions resources automatically.
+Azure hosting resources were provisioned and the current application deployed on October 10, 2026, under the owner's free-only authorization. Public verification completed at 11:32 a.m. America/Chicago. Normal inference stays disabled. Nothing in this repository provisions resources automatically.
+
+| Resource         | Configuration                                                                                |
+| ---------------- | -------------------------------------------------------------------------------------------- |
+| Subscription     | Personal `Azure subscription 1` (`f5539b65-3db7-428e-a605-e4c0763c1c5d`)                     |
+| Resource group   | `rg-between-the-lines`, West US 3                                                            |
+| App Service plan | `asp-between-the-lines-free`, verified SKU `F1`, tier `Free`                                 |
+| Web app          | `between-the-lines-jb-f5539b65`, Linux Node 24 LTS, startup `node server.js`                 |
+| Live app origin  | `https://between-the-lines-jb-f5539b65.azurewebsites.net`                                    |
+| Access           | Public HTTPS, minimum TLS 1.2, FTP and basic publishing authentication disabled              |
+| AI               | Foundry selected; AI and proactive inference disabled; minute/hour/day/total quotas all zero |
+
+No paid hosting, Redis, registry, storage or monitoring workspace was added. A pay-per-token model deployment was subsequently authorized and provisioned as described below. The subscription is pay-as-you-go with its spending limit off; the free hosting tier and disabled inference are the scope of this setup, not a subscription-wide billing cap. F1 provides 60 CPU minutes per day, 1 GB memory and 1 GB storage, with no uptime SLA. Do not upgrade automatically if those limits are reached. See [Microsoft's Linux App Service pricing](https://azure.microsoft.com/en-us/pricing/details/app-service/linux/).
+
+### Foundry model deployment
+
+On October 10, 2026, the owner authorized deployment of the app's model. Deployment `between-the-lines-gpt54-mini` was created under the existing Foundry account `josh-5098-resource` in `rg-josh-5843` (West US 3), alongside project `josh-5098`.
+
+- Model: `gpt-5.4-mini`, version `2026-03-17`.
+- Deployment type: `GlobalStandard`, pay-per-token; no provisioned throughput was purchased.
+- Capacity: 10 units. Azure reports 10 requests and 10,000 tokens per minute. These are throughput limits, not a spending cap.
+- Provisioning state verified: `Succeeded`; the quota allocation succeeded.
+- The web app now has `FOUNDRY_ENDPOINT=https://josh-5098-resource.openai.azure.com`, `FOUNDRY_DEPLOYMENT=between-the-lines-gpt54-mini` and the resource key stored only in its server-side settings. `AI_PROVIDER=foundry`, but `AI_ENABLED=false`, legacy `FOUNDRY_ENABLED=false`, proactive inference disabled and all application quotas zero.
+- No model inference requests were made during provisioning. Subsequent isolated Foundry evaluation completed 43 HTTP attempts for approximately $0.20 in known token charges; see [the full report](FOUNDRY-EVALUATION.md) for failures, fixes and the unresolved editorial-quality limitation. The evaluation temporarily raised throughput capacity and restored it to 10. The evaluation fixes are included in the current release candidate. A persistent TLS Redis usage store and an approved finite request allowance are still required.
+
+OpenAI Fan narration previously passed a local authorized live check. The revised Fan and Analyst recap composition subsequently passed the isolated Foundry check. Public provider execution and production Redis are still unverified.
+
+A later [editorial/model comparison](EDITORIAL-MODEL-COMPARISON.md) temporarily deployed GPT-5.4, completed 88 model requests for an estimated $0.95456210, then deleted that comparison deployment and restored Mini capacity to 10. Mini remains the selected deployment. The final editorial fixes are included in the current release candidate; public AI flags and quotas remain disabled/zero.
+
+### Current release candidate
+
+The current release brings the centered scoreboard, favorite stars, Carries metric, improved evidence presentation, and one consistent analyst-detail experience. Mode choices and the duplicate league/date pill have been removed. Saved team/player preferences are preserved. Director 1.1.2 includes bounded query recovery, complete comparison-window retrieval, stricter claim selection and duplicate-story filtering. Public paid inference remains disabled.
+
+Local verification: 308 unit tests passed (2 optional tests skipped), type checking and production build passed, and 111 browser checks passed (36 hidden-source checks skipped). GitHub CI additionally enables recorded fixtures and Redis. The release is packaged without local environment files; deployment results are recorded in the release conversation and ignored artifacts.
+
+### Initial verified Azure release
+
+The release was built from an isolated copy of the current working tree, including the favorite star and Carries card. Local environment files and credentials were excluded. `NEXT_PUBLIC_SITE_URL` was set to the Azure origin before building. Linux x64 Sharp runtime packages were added at the exact versions and SHA-512 integrity values in the lockfile. The standalone ZIP was uploaded with the signed-in Azure CLI; basic publishing authentication remains disabled.
+
+- Deployment ID: `be75ee82-1b67-4873-b01d-85a8c3d09578`.
+- ZIP SHA-256: `dad9fd9943fe3b5e092acc20083ac1994198567a29ff090f58a6ce7d970ac1cb`.
+- Type checking and production build passed. Unit checks: 301 passed, 2 skipped (optional Redis/research coverage). Production browser checks: 111 passed, 36 skipped for the hidden recorded-match experience.
+- Public homepage, manifest, favicons and social images returned HTTP 200, with metadata using the Azure origin.
+- The status API reports offline configuration and proactive inference disabled. Recap requests at kickoff and 63:24 returned timestamp-correct offline evidence; invalid input returned HTTP 400.
+- Public Chromium checks at 1440px and 390px verified all five navigation sections, favorite toggling, the Carries card, recap opening and rewind to 0–0, without page errors or horizontal overflow.
+- Local evidence: `artifacts/azure-live-verification.json` and `artifacts/azure-live-*-player.png` (ignored build artifacts). Physical Safari, live AI, production Redis and the hidden historical UI were not verified by this release.
 
 ## 1. Prepare an existing App Service
 
@@ -26,6 +71,8 @@ Configure the existing app:
 - Keep `AI_ENABLED=false` until paid inference is approved. Production inference requires an existing TLS Redis store shared across all instances; see the controls and persistence requirements in `AI-EVALUATION.md`.
 
 ## 2. Configure GitHub
+
+The new app has basic publishing authentication disabled and no GitHub deployment credentials configured. The existing workflow below uses a publish profile and therefore cannot deploy to this app as-is. Prefer updating the workflow to OIDC or deploying with the signed-in Azure CLI. Set `NEXT_PUBLIC_SITE_URL` to the reserved app origin before building; the runtime setting alone does not update built metadata.
 
 Create a GitHub environment named `production`. Add:
 
@@ -53,7 +100,7 @@ Keep all secrets server-side; never put keys in repository variables, browser co
 
 1. Load the public URL in a signed-out/private browser. Confirm score 1–0 at 63:24 in the pressure fixture.
 2. Play, pause, seek back to kickoff: score must be 0–0; early recaps must exclude later events.
-3. Select pressure evidence and replay; switch to Analyst mode and inspect window comparisons.
+3. Select pressure evidence and replay; inspect the detailed window comparisons supplied by default.
 4. Select **Explain with Microsoft Foundry**. Confirm the **MICROSOFT FOUNDRY · VERIFIED STORY** label appears and a natural-language explanation is returned. A “configured” header alone is insufficient.
 5. Review prose for unsupported claims. Check that evidence IDs match the displayed pattern and that event-derived figures remain unchanged.
 6. Confirm offline fallback by temporarily setting `AI_ENABLED=false` and restarting; restore only if the configured integration works.

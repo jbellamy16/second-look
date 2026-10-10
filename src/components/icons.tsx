@@ -15,6 +15,7 @@ import {
   RotateCcw as LucideRotateCcw,
   Settings2 as LucideSettings2,
   ShieldCheck,
+  Star as LucideStar,
   TrendingUp as LucideTrendingUp,
   Users as LucideUsers,
   X as LucideX,
@@ -77,6 +78,7 @@ export const Play = systemIcon(LucidePlay);
 export const RotateCcw = systemIcon(LucideRotateCcw);
 export const Settings2 = systemIcon(LucideSettings2);
 export const Shield = systemIcon(ShieldCheck);
+export const Star = systemIcon(LucideStar);
 export const TrendingUp = systemIcon(LucideTrendingUp);
 export const Users = systemIcon(LucideUsers);
 export const X = systemIcon(LucideX);

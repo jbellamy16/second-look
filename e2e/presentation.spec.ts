@@ -47,17 +47,24 @@ test("both sources share the layout and evidence flow at the same viewport", asy
     geometry[source] = await shell(page)
       .locator(".fixture-selector,.scoreboard,.playback,.pitch-panel")
       .evaluateAll((els) => {
-        // Recorded goal/assist credits legitimately give scoreboards different heights.
-        // Compare the shared layout below that content, rather than forcing equal scoresheets.
-        const scoreHeight = els
+        // The synthetic badge can add a row on phones; scorer credits also vary.
+        // Compare spacing from each preceding block, without forcing source content
+        // to have identical heights or hiding a gap/overlap regression.
+        const fixture = els
+          .find((el) => el.classList.contains("fixture-selector"))!
+          .getBoundingClientRect();
+        const scoreboard = els
           .find((el) => el.classList.contains("scoreboard"))!
-          .getBoundingClientRect().height;
+          .getBoundingClientRect();
         return els.flatMap((el) => {
           const b = el.getBoundingClientRect();
-          // Source labels can wrap on narrow screens; the pitch must align with its grid.
           const y = el.matches(".pitch-panel")
             ? b.y - el.closest(".match-grid")!.getBoundingClientRect().top
-            : b.y - (el.matches(".playback") ? scoreHeight : 0);
+            : el.matches(".scoreboard")
+              ? b.y - fixture.bottom
+              : el.matches(".playback")
+                ? b.y - scoreboard.bottom
+                : b.y;
           return [b.x, y, b.width];
         });
       });
@@ -181,22 +188,20 @@ test("both sources share the layout and evidence flow at the same viewport", asy
   expect(inference).toEqual([]);
 });
 
-test("preferences synchronize between sources without resetting playback or leaking spoilers", async ({
+test("detailed analysis persists between sources without resetting playback or leaking spoilers", async ({
   page,
 }) => {
   await page.goto("/");
   await selectSource(page, "Recorded");
-  await page.getByRole("button", { name: "Analyst mode", exact: true }).click();
   await selectSource(page, "Synthetic");
   await expect(
-    page.getByRole("button", { name: "Analyst mode", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("button", { name: "Fan mode", exact: true }).click();
+    page.getByRole("button", { name: /^(Fan|Analyst) mode$/ }),
+  ).toHaveCount(0);
   await page.getByRole("button", { name: "Recorded", exact: true }).click();
   await expect(shell(page).getByTestId("clock")).toContainText("30:00");
   await expect(
-    page.getByRole("button", { name: "Fan mode", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+    page.getByRole("button", { name: /^(Fan|Analyst) mode$/ }),
+  ).toHaveCount(0);
   await expect(shell(page).getByTestId("final-score")).toHaveCount(0);
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await page.getByRole("checkbox", { name: "Reveal final score" }).check();

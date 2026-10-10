@@ -18,9 +18,9 @@ Watching football and understanding how a match is changing are different things
 - An interactive SVG pitch: actual event positions, numbered possession sequences, pass/shot endpoints, and progressive sequence replay. No invented tracking.
 - Event-derived score, attempts, shots on target, pass completion, high ball wins, and synthetic chance probabilities.
 - Pattern detection for attacking-third ball wins, shot frequency, and passing activity, with equal 15-minute comparison windows and supporting event IDs.
-- Fan mode, analyst mode, timestamp-safe Catch Me Up, lineups, and player action maps.
-- Device-local team, player, mode, and insight category preferences that filter and reorder observations.
-- Server-side OpenAI (GPT-5.4 Mini) and Microsoft Foundry Responses API adapters with shared forced evidence retrieval, structured selection, validation, and honest provider attribution. **Both are mock-tested. OpenAI Fan narration passed an authorized live check. An Analyst context omission is fixed and verified by replaying the captured selection; the revised flow still needs live verification. Foundry remains unverified live.**
+- Consistent detailed analysis, timestamp-safe Catch Me Up, lineups, and player action maps.
+- Device-local team, player, and insight category preferences that filter and reorder observations.
+- Server-side OpenAI (GPT-5.4 Mini) and Microsoft Foundry Responses API adapters with shared forced evidence retrieval, structured selection, validation, and honest provider attribution. **Both have offline contract tests. Foundry director investigations and both recap modes passed bounded live checks; see [the latest editorial/model comparison](docs/EDITORIAL-MODEL-COMPARISON.md). Human editorial review remains pending, and public inference is disabled.**
 - Optional AI Catch Me Up, contextual insight narration, and expandable “How Between the Lines knows” evidence.
 - Shared Redis quotas, cache, and deduplication; inference remains off by default.
 - Explicit offline demonstration mode; request failures or invalid model output fall back to computed explanations without claiming AI generation.
@@ -129,11 +129,11 @@ See `.env.example` for all settings. Legacy `FOUNDRY_ENABLED=true` still selects
 
 ## Cloudflare deployment
 
-Cloudflare Workers is the current hosting target while Azure access is unavailable. The OpenNext build preserves the app, OpenAI/Foundry adapters and Azure standalone output. It isolates build inputs to exclude local secrets. OpenAI is selected but inference stays disabled with zero quotas until separately approved and shared usage storage is verified in the host runtime. See [Cloudflare deployment](docs/CLOUDFLARE.md) for build, preview, verification and publishing instructions.
+Cloudflare Workers remains an alternative hosting route alongside the verified Azure deployment. The OpenNext build preserves the app, OpenAI/Foundry adapters and Azure standalone output. It isolates build inputs to exclude local secrets. OpenAI is selected but inference stays disabled with zero quotas until separately approved and shared usage storage is verified in the host runtime. See [Cloudflare deployment](docs/CLOUDFLARE.md) for build, preview, verification and publishing instructions.
 
 ## Azure deployment
 
-Deployment has **not** been performed. The owner logged into Azure CLI but reported that the required access remains unavailable. No resources or recurring charges were created. See [the deployment runbook](docs/DEPLOYMENT.md).
+**Live:** [Between the Lines on Azure](https://between-the-lines-jb-f5539b65.azurewebsites.net). Deployed and verified October 10, 2026, on the owner's F1 Free Linux App Service with Node 24 and HTTPS. Inference remains disabled with zero quotas. The release includes the favorite star and recorded carry counts. Type checking, 301 unit checks and 111 enabled production-browser checks passed; public desktop/mobile smoke checks verified navigation, preferences, playback, offline APIs and branding assets. See [the deployment runbook](docs/DEPLOYMENT.md) for resource details and verification limits.
 
 Included:
 
@@ -145,15 +145,15 @@ Included:
 
 Primary target: overall prize. Secondary target: Best Use of Microsoft Foundry. The [official rules](https://github.com/microsoft/insidethegamehackathon/blob/main/OFFICIAL%20RULES.md) were reviewed October 9, 2026. Their five equally weighted judging criteria map to the synthetic feed and tests, evidence-first tool workflow, second-screen utility, responsive experience, and Microsoft integration. Registration ends October 20 at noon Pacific; submission ends October 27 at 11:59 p.m. Pacific. Video must be less than two minutes; repository must be public; judges need free access through the judging period.
 
-Read [submission preparation](docs/SUBMISSION.md) for the pitch, demo flow, 90-second script, and remaining steps. This implementation is ready for local refinement, **not a claim of a submitted or cloud-verified entry**.
+Read [submission preparation](docs/SUBMISSION.md) for the pitch, demo flow, 90-second script, and remaining steps. The offline application is deployed and cloud-verified; this is **not a claim of a submitted entry or public AI enablement**.
 
 ## Known limits and next work
 
-- Review Fan/Analyst usefulness with a human football reviewer; another live check of the revised flow needs fresh authorization. Verify Foundry when access returns.
-- Deploy and verify the public Azure URL; test on actual mobile Safari and run an accessibility audit.
+- Review the captured Foundry Fan/Analyst outputs with a human football reviewer before public AI enablement.
+- Test the deployed Azure app on actual mobile Safari; browser accessibility checks passed in Chromium, but physical-device review remains outstanding.
 - The feed simplifies football mechanics and only detects three pattern families; validate it with football domain review.
 - No audio, multilingual narratives, authentication, or persisted cross-device preferences.
-- AI editorial benefit remains unmeasured; Fan passed live validation, while the revised Analyst composition is verified only by captured-response replay. Configure an existing shared Redis store before production inference.
+- AI editorial benefit remains unproven; Foundry investigations and both recap modes passed bounded live validation. Configure an existing shared Redis store before production inference.
 - Consider a measured substitution comparison detector and exportable broadcast insight JSON as follow-up refinements.
 
 Original application graphics are SVG/CSS. UI symbols use Lucide (ISC license); third-party library licenses remain applicable. No affiliation with fictional teams is implied, and no official league branding is reproduced.

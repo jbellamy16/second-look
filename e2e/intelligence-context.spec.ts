@@ -39,18 +39,6 @@ for (const { source, match } of fixtures) {
     const shell = page.locator(".app-shell").filter({ visible: true });
     const timeline = shell.getByRole("slider", { name: "Match timeline" });
     await expect(timeline).toBeVisible();
-    if (source === "Synthetic") {
-      await expect(shell.locator(".fixture-meta")).toHaveText(
-        /Coastal League · \d{4}–\d{2} · \d+ \w+ \d{4}/,
-      );
-      await expect(shell.locator(".fixture-meta")).not.toContainText(
-        "Invitational",
-      );
-    }
-    if (source === "Recorded")
-      await expect(shell.locator(".fixture-meta")).toHaveText(
-        "Premier League · 2017–18 · 11 Aug 2017",
-      );
     const checkpoints = [
       0,
       600,
@@ -98,7 +86,7 @@ for (const { source, match } of fixtures) {
         .getByRole("button", { name: "Catch me up", exact: true })
         .click();
       const dialog = page.getByRole("dialog");
-      const recap = matchSummary(match, time, "fan", insights);
+      const recap = matchSummary(match, time, "analyst", insights);
       await expect(dialog.locator(".recap-summary")).toHaveText(
         recap.summary || "No match developments to highlight yet.",
       );

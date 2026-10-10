@@ -7,6 +7,7 @@ import {
 } from "../../sources/model";
 import {
   EVIDENCE_LIMITS,
+  claimEmphasis,
   observe,
   possessionBefore,
   visibleEvents,
@@ -14,6 +15,7 @@ import {
   type Candidate,
 } from "./observer";
 import type { Mode, StoryPreferences } from "../../intelligence";
+import { editorialGroup, evidenceOverlaps } from "./editorial";
 
 export const toolNames = [
   "get_match_events",
@@ -25,6 +27,7 @@ export const toolNames = [
   "get_match_context",
 ] as const;
 export type ToolName = (typeof toolNames)[number];
+export class EvidenceQueryError extends Error {}
 const querySchema = z
   .object({
     matchId: z.string().min(1).max(160),
@@ -114,7 +117,7 @@ export function createInvestigation(
   }[] = [];
   function execute(name: string, raw: unknown) {
     if (!(toolNames as readonly string[]).includes(name))
-      throw new Error("Unknown evidence tool");
+      throw new EvidenceQueryError("Unknown evidence tool");
     if (trace.length >= 4) throw new Error("Tool budget exhausted");
     const query = querySchema.parse(raw);
     if (
@@ -123,7 +126,7 @@ export function createInvestigation(
       query.start > query.end ||
       query.end - query.start > 1800
     )
-      throw new Error("Invalid evidence window");
+      throw new EvidenceQueryError("Invalid evidence window");
     if (
       query.playerId &&
       !match.players.some(
@@ -131,9 +134,9 @@ export function createInvestigation(
           p.id === query.playerId && (!query.team || p.team === query.team),
       )
     )
-      throw new Error("Unknown player identity");
+      throw new EvidenceQueryError("Unknown player identity");
     if (query.eventId && !visible.some((e) => e.id === query.eventId))
-      throw new Error("Unknown or future event");
+      throw new EvidenceQueryError("Unknown or future event");
     let events = visible.filter(
       (e) =>
         e.time > query.start &&
@@ -186,12 +189,14 @@ export function createInvestigation(
         selected.time < query.start ||
         (query.team && selected.team !== query.team)
       )
-        throw new Error("Invalid sequence anchor");
+        throw new EvidenceQueryError("Invalid sequence anchor");
       if (
         match.capabilities.possession === "unavailable" ||
         selected.possessionId === null
       )
-        throw new Error("Possession sequences unsupported by source");
+        throw new EvidenceQueryError(
+          "Possession sequences unsupported by source",
+        );
       events = possessionBefore(match, visible, selected);
       extra = {
         sequenceKind: match.capabilities.possession,
@@ -199,7 +204,7 @@ export function createInvestigation(
       };
     }
     if (name === "get_player_involvement" && !query.playerId)
-      throw new Error("Player required");
+      throw new EvidenceQueryError("Player required");
     if (name === "get_shot_locations")
       events = events.filter((e) => e.type === "shot");
     if (name === "compare_time_windows") {
@@ -208,7 +213,7 @@ export function createInvestigation(
         (p) => query.start - width >= p.start && query.end <= p.end,
       );
       if (!width || !period)
-        throw new Error(
+        throw new EvidenceQueryError(
           "Comparison requires equal complete windows in one period",
         );
       const prior = visible.filter(
@@ -244,7 +249,7 @@ export function createInvestigation(
               query.team,
               [...previous, ...current],
               `${actor}: ${label} in focus`,
-              `${actor} recorded ${current.length} ${label} in the selected window, compared with ${previous.length} in the preceding equal window.`,
+              `${actor} recorded ${current.length} ${label} from ${matchClock(match, query.start)} to ${matchClock(match, query.end)}, compared with ${previous.length} in the preceding equal window.`,
               `${actor}: ${current.length} ${label} from ${matchClock(match, query.start)} to ${matchClock(match, query.end)}, versus ${previous.length} from ${matchClock(match, query.start - width)} to ${matchClock(match, query.start)}. Each window is ${width} seconds in ${period.id}. Selection is exploratory; this is not statistical significance or causation.`,
               [
                 {
@@ -291,8 +296,8 @@ export function createInvestigation(
           actor.team,
           support,
           `${actor.name}: recorded contributions`,
-          `${actor.name} contributed ${passes} pass attempts and ${shots} shots in the selected passage.`,
-          `${actor.name} recorded ${support.length} passes, carries, shots or recoveries from ${matchClock(match, query.start)} to ${matchClock(match, query.end)}, including ${passes} pass attempts and ${shots} shots. This counts recorded actions, not touches, time in possession or off-ball influence.`,
+          `${actor.name} recorded ${passes} pass ${passes === 1 ? "attempt" : "attempts"} and ${shots} ${shots === 1 ? "shot" : "shots"} from ${matchClock(match, query.start)} to ${matchClock(match, query.end)}.`,
+          `${actor.name} recorded ${support.length} passes, carries, shots, recoveries or interceptions from ${matchClock(match, query.start)} to ${matchClock(match, query.end)}, including ${passes} pass ${passes === 1 ? "attempt" : "attempts"} and ${shots} ${shots === 1 ? "shot" : "shots"}. This counts recorded actions, not touches, time in possession or off-ball influence.`,
           [
             { label: "Pass attempts", value: passes, unit: "events" },
             { label: "Shots", value: shots, unit: "events" },
@@ -329,7 +334,20 @@ export function createInvestigation(
       totalEvents: events.length,
       truncated: entry.truncated,
       events: returned.map((e) => publicEvent(e, allowed, match)),
-      claims: supported,
+      claims: supported.map((claim) => ({
+        ...claim,
+        allowedEmphasis: claimEmphasis[claim.category],
+        editorialGroup: editorialGroup(claim),
+        incompatibleClaimIds: candidates
+          .filter(
+            (other) =>
+              other.id !== claim.id &&
+              claims.has(other.id) &&
+              (editorialGroup(other) === editorialGroup(claim) ||
+                evidenceOverlaps(claim, other)),
+          )
+          .map((other) => other.id),
+      })),
       ...extra,
       limitations: [...match.limitations, ...EVIDENCE_LIMITS],
     };

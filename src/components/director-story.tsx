@@ -9,6 +9,7 @@ import type { DirectorResult } from "@/lib/ai/director/runner";
 import { AnimatedDetails, Reveal } from "./motion";
 import { EvidenceReplay } from "./evidence-replay";
 import { providerLabel } from "./provenance";
+import { StoryEvidence } from "./story-evidence";
 
 export function BroadcastPreview({ story }: { story: BroadcastStory }) {
   return (
@@ -288,57 +289,12 @@ export function DirectorStory({
           formatTime={(t) => matchClock(match, t)}
         />
       )}
-      <AnimatedDetails className="director-disclosure">
-        <summary>How we know this story</summary>
-        <p>{story.source.attribution}. Evidence quality: recorded events.</p>
-        <ul>
-          {story.statistics.map((s, i) => (
-            <li key={i}>
-              {s.label}: {s.value} {s.unit}
-            </li>
-          ))}
-        </ul>
-        <ul>
-          {story.limitations.map((l, i) => (
-            <li key={i}>{l}</li>
-          ))}
-        </ul>
-        {validAnswer?.notice && <p>{validAnswer.notice}</p>}
-        <ul>
-          {events.map((e) => (
-            <li key={e.id}>
-              {matchClock(match, e.time)} · {e.type} ·{" "}
-              {match.players.find((p) => p.id === e.actorId)?.name ??
-                "Unidentified player"}{" "}
-              <small>{e.id}</small>
-            </li>
-          ))}
-        </ul>
-        {validAnswer?.trace.length ? (
-          <>
-            <p>
-              {validAnswer.metrics.requests} model requests ·{" "}
-              {validAnswer.metrics.toolInvocations} tool calls ·{" "}
-              {validAnswer.metrics.cached ? "cached" : "new response"}
-            </p>
-            <ul>
-              {validAnswer.trace.map((t, i) => (
-                <li key={i}>
-                  {t.tool}: {t.query.start}–{t.query.end}s, {t.eventIds.length}{" "}
-                  events, {t.claimIds.length} verified claims
-                </li>
-              ))}
-            </ul>
-            <ul>
-              {validAnswer.provenance.validation.map((v) => (
-                <li key={v}>{v}</li>
-              ))}
-            </ul>
-          </>
-        ) : (
-          <p>No AI tool calls are claimed for this computed story.</p>
-        )}
-      </AnimatedDetails>
+      <StoryEvidence
+        story={story}
+        match={match}
+        events={events}
+        answer={validAnswer}
+      />
       <BroadcastPreview story={story} />
     </Reveal>
   );

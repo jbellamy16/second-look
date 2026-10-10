@@ -1,12 +1,16 @@
 # AI evaluation and release gate
 
+## Latest editorial and model comparison
+
+The owner-authorized [three-arm editorial/model comparison](EDITORIAL-MODEL-COMPARISON.md) completed 36 workflow attempts for an estimated $0.95456210. It retains four rejected plans and the subsequent fixes. Final paired difficult-case checks passed on both Mini and GPT-5.4; keep Mini configured based on the observed usefulness/cost tradeoff. The complete final live matrix and human semantic sign-off remain pending. Public inference stays disabled.
+
 ## AI Intelligence 2.0
 
-The new Match Director has a separate [architecture, safety contract, 200-case evaluation and live-review protocol](intelligence/README.md). Its OpenAI and Foundry workflows have **not been run live**. Scripted tests establish contract behavior only; editorial improvement remains unknown. `npm run eval:director:live` requires new explicit approval for at most six requests and a $0.70 allowance. The older live results below do not validate the new workflow.
+The new Match Director has a separate [architecture, safety contract, 200-case evaluation and live-review protocol](intelligence/README.md). The Foundry director and recap workflows were exercised with real requests on October 10, 2026; see the [Foundry evaluation report](FOUNDRY-EVALUATION.md) for measured costs, failures, fixes and coverage. Public inference remains disabled. Human semantic review and evidence of editorial improvement remain pending. The older OpenAI results below belong to the preceding workflow.
 
-## Status for this implementation
+## Earlier OpenAI evaluation (October 9)
 
-Two owner-authorized OpenAI evaluations on October 9, 2026 completed **eight real HTTP 200 Responses requests** in total. No Foundry live calls, public deployment or paid infrastructure creation occurred. Normal inference remains disabled.
+Two owner-authorized OpenAI evaluations on October 9, 2026 completed **eight real HTTP 200 Responses requests** in total. No Foundry calls occurred in those October 9 runs. Subsequent Azure deployment and Foundry testing are documented separately; normal public inference remains disabled.
 
 | Run                | Requests | Fan result                           | Analyst result                         | Input / output tokens | Estimated cost |
 | ------------------ | -------- | ------------------------------------ | -------------------------------------- | --------------------- | -------------- |
@@ -16,7 +20,7 @@ Two owner-authorized OpenAI evaluations on October 9, 2026 completed **eight rea
 
 These estimates use returned token usage and standard GPT-5.4 Mini rates; actual billing was not inspected. The initial report did not retain the cause of rejection. The diagnostic recheck retained public fact selections and showed that the Analyst selected valid comparisons but omitted the early goal. It did not invent a statistic.
 
-The server now supplies required score, latest goal, selected insight and abstention context, leaving AI to choose additional observations within the four-fact limit. Unknown IDs, duplicates and arbitrary prose still fail validation. A sanitized capture in `eval/fixtures/openai-2026-10-09.json` replays both real selections successfully under this contract, including a rewind rejection. **This is offline regression evidence: the revised prompt and Analyst composition have not been tested live.** All eight authorized requests are consumed; any further live run needs a new allowance.
+The server now supplies required score, latest goal, selected insight and abstention context, leaving AI to choose additional observations within the four-fact limit. Unknown IDs, duplicates and arbitrary prose still fail validation. A sanitized capture in `eval/fixtures/openai-2026-10-09.json` replays both real selections successfully under this contract, including a rewind rejection. **This was offline regression evidence at the time; both revised recap modes subsequently passed the October 10 Foundry evaluation.** All eight authorized requests are consumed; any further live run needs a new allowance.
 
 Assistant review of the accepted Fan recap found its 1–0 score, Arlo Hayes goal at 01:00, four high ball wins versus zero, and four shots versus zero consistent with the recorded pressure fixture at 63:24. The selection is useful context but remains templated; this small sample does not demonstrate improved editorial quality over the deterministic baseline. Human semantic review remains pending. Mocked token counts and timings are separate from these real observations.
 
