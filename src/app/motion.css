@@ -275,7 +275,7 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--sl-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -292,7 +292,7 @@ button:disabled {
   gap: 6px;
   padding: 4px 20px 14px;
   color: var(--sl-muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .replay-controls {
   flex-wrap: wrap;
