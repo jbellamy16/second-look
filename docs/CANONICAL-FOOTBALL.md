@@ -189,3 +189,32 @@ A licensed live feed will additionally need incremental ordering, correction and
 reconnection policies; none is integrated or purchased here. Before promoting
 the balanced generator, evaluate a wider league/season sample and statistical
 uncertainty rather than optimize toward one match.
+
+## Shared match experience
+
+Both source experiences use `MatchShell` for Match centre, Insights, Match stats,
+Lineups, Player focus and Settings. Source switching retains the section and each
+source's replay state; background playback is suspended. Preferences and appearance
+synchronize on this device. Statistics share a capability-aware comparison view;
+unavailable metrics never become fabricated zeroes.
+
+Pitch views explicitly separate recent actions (last 60 seconds, up to ten records),
+pattern evidence and passage playback. Dense patterns aggregate counts into pitch
+areas with responsive cell sizes; records remain individually selectable. Coincident
+events share a selectable count at the actual location. Numbers identify event order
+or area counts, never inferred player positions. Goal emphasis follows `scoringTeam`,
+including own goals, instead of requiring a provider-specific `goal` event type.
+
+Historical passages are chronological context: up to twelve records in the thirty
+seconds preceding the selection, bounded by its period, order and viewer cutoff.
+They may include both teams, duels, stoppages and unlocated records. They do not assert
+continuous possession. The shared replay controls preserve real timestamps and allow
+individual record stepping; historical playback does not interpolate ball or player
+motion. Synthetic endpoint interpolation remains labeled schematic generated motion.
+
+Historical insight comparisons retain two complete windows within one half. When no
+trend qualifies, both sources share recorded match context: goals, recent attempts or
+substitutions, then shot or pass totals with inspectable evidence. Match centre,
+Insights and Catch Me Up use this hierarchy from kickoff without weakening comparison
+thresholds. The curated synthetic narrative retains its explicitly labeled continuous
+comparison scope; benchmark activity bins remain period aware for both sources.

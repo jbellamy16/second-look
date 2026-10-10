@@ -1,12 +1,8 @@
+import { requiredContext } from "../src/lib/ai/narration";
 import { vi } from "vitest";
 import type { EvidencePacket } from "../src/lib/ai/evidence";
 export function editorialBaseline(packet: EvidencePacket) {
-  const ids: string[] = [];
-  if (packet.facts.some((f) => f.id === "score")) ids.push("score");
-  const goal = packet.events.findLast((e) => e.type === "goal");
-  if (goal && packet.facts.some((f) => f.id === `moment-${goal.id}`))
-    ids.push(`moment-${goal.id}`);
-  if (packet.facts.some((f) => f.id === "no-pattern")) ids.push("no-pattern");
+  const ids = requiredContext(packet);
   for (const fact of [...packet.facts].sort((a, b) => b.priority - a.priority))
     if (!ids.includes(fact.id) && ids.length < 4) ids.push(fact.id);
   return { factIds: ids };

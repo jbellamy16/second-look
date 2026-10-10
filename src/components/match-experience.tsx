@@ -3,6 +3,7 @@ import type { Fixture } from "@/lib/sources/catalog";
 import { useState } from "react";
 import { MatchApp } from "./match-app";
 import { HistoricalApp } from "./historical-app";
+import type { MatchSection } from "./match-shell";
 import { SelectionGroup } from "./motion";
 export function MatchExperience({
   historicalEnabled,
@@ -11,42 +12,55 @@ export function MatchExperience({
   historicalEnabled: boolean;
   fixtures: readonly Fixture[];
 }) {
+  const [section, setSection] = useState<MatchSection>("match");
+  const [visitedHistorical, setVisitedHistorical] = useState(false);
   const [source, setSource] = useState<"synthetic" | "historical">("synthetic");
   const selector = historicalEnabled ? (
-    <div className="match-source-bar">
-      <div>
-        <span className="eyebrow">MATCH SOURCE</span>
-        <p>
-          {source === "synthetic"
-            ? "A reproducible football story"
-            : "Real matches. Recorded moments."}
-        </p>
-      </div>
-      <SelectionGroup
-        className="mode-switch source-switch"
-        label="Match source"
-        value={source}
+    <SelectionGroup
+      className="mode-switch source-switch"
+      label="Match source"
+      value={source}
+    >
+      <button
+        className={source === "synthetic" ? "selected" : ""}
+        aria-pressed={source === "synthetic"}
+        onClick={() => setSource("synthetic")}
       >
-        <button
-          className={source === "synthetic" ? "selected" : ""}
-          aria-pressed={source === "synthetic"}
-          onClick={() => setSource("synthetic")}
-        >
-          Synthetic
-        </button>
-        <button
-          className={source === "historical" ? "selected" : ""}
-          aria-pressed={source === "historical"}
-          onClick={() => setSource("historical")}
-        >
-          Real Match
-        </button>
-      </SelectionGroup>
-    </div>
+        Synthetic
+      </button>
+      <button
+        className={source === "historical" ? "selected" : ""}
+        aria-pressed={source === "historical"}
+        onClick={() => {
+          setVisitedHistorical(true);
+          setSource("historical");
+        }}
+      >
+        Recorded
+      </button>
+    </SelectionGroup>
   ) : null;
-  return source === "synthetic" ? (
-    <MatchApp sourceSelector={selector} />
-  ) : (
-    <HistoricalApp sourceSelector={selector} fixtures={fixtures} />
+  return (
+    <>
+      <div hidden={source !== "synthetic"}>
+        <MatchApp
+          sourceSelector={selector}
+          section={section}
+          setSection={setSection}
+          active={source === "synthetic"}
+        />
+      </div>
+      {visitedHistorical && (
+        <div hidden={source !== "historical"}>
+          <HistoricalApp
+            sourceSelector={selector}
+            fixtures={fixtures}
+            section={section}
+            setSection={setSection}
+            active={source === "historical"}
+          />
+        </div>
+      )}
+    </>
   );
 }

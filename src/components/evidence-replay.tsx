@@ -1,21 +1,34 @@
 "use client";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, useId, useEffect } from "react";
 import { clock, player, type MatchEvent } from "@/lib/match";
-import { playbackTime, replayFrame, type PlaybackSample } from "@/lib/playback";
+import { playbackTime, type PlaybackSample } from "@/lib/playback";
 import { Pitch } from "./pitch";
 import { Pause, Play, RotateCcw } from "./icons";
 import { usePageVisibility } from "./motion";
 
+type ReplayEvent = Omit<MatchEvent, "position"> & {
+  position: MatchEvent["position"] | null;
+};
 export function EvidenceReplay({
   events,
   suspended,
+  identities,
+  formatTime = clock,
+  describe,
+  generated = true,
 }: {
-  events: MatchEvent[];
+  events: ReplayEvent[];
   suspended: boolean;
+  identities?: Parameters<typeof Pitch>[0]["identities"];
+  formatTime?: (time: number) => string;
+  describe?: (event: ReplayEvent) => string;
+  generated?: boolean;
 }) {
+  const timelineId = useId();
   const start = events[0].time,
     end = events.at(-1)!.time;
   const [time, setTime] = useState(start);
+  const [stepIndex, setStepIndex] = useState<number | null>(null);
   const [playing, setPlaying] = useState(true);
   const [speed, setSpeed] = useState(8);
   const visiblePage = usePageVisibility();
@@ -26,6 +39,9 @@ export function EvidenceReplay({
     playing: false,
   });
   const running = playing && !suspended && visiblePage;
+  useEffect(() => {
+    if (suspended) setPlaying(false);
+  }, [suspended]);
   // Re-anchor before changing speed/pause so fractional progress is preserved.
   useLayoutEffect(() => {
     const previous = sample.current;
@@ -54,6 +70,7 @@ export function EvidenceReplay({
     };
   }, [running, speed, end]);
   function seek(next: number, resume = false) {
+    setStepIndex(null);
     const bounded = Math.max(start, Math.min(end, next));
     sample.current = {
       time: bounded,
@@ -64,21 +81,41 @@ export function EvidenceReplay({
     setTime(bounded);
     setPlaying(resume);
   }
-  const frame = replayFrame(events, time);
+  function selectStep(index: number) {
+    seek(events[index].time);
+    setStepIndex(index);
+  }
+  const visible =
+    stepIndex === null
+      ? events.filter((e) => e.time <= time)
+      : events.slice(0, stepIndex + 1);
+  const frame = { visible, active: visible.at(-1), index: visible.length - 1 };
   const active = frame.active!;
   return (
     <>
       <Pitch
-        events={frame.visible}
+        events={frame.visible.filter(
+          (e): e is MatchEvent => e.position !== null,
+        )}
+        identities={identities}
+        formatTime={formatTime}
+        includeAllActions
+        aggregate={false}
         selected={active.id}
         sequence
-        onSelect={(event) => seek(event.time)}
-        playback={{
-          sample,
-          end,
-          nextTime: events[frame.index + 1]?.time ?? end,
-          running,
-        }}
+        onSelect={(event) =>
+          selectStep(events.findIndex((e) => e.id === event.id))
+        }
+        playback={
+          generated
+            ? {
+                sample,
+                end,
+                nextTime: events[frame.index + 1]?.time ?? end,
+                running,
+              }
+            : undefined
+        }
       />
       <div className="event-inspector">
         <div>
@@ -86,33 +123,69 @@ export function EvidenceReplay({
             {time >= end
               ? "REPLAY COMPLETE"
               : running
-                ? "REPLAYING RECORDED ACTIONS"
+                ? "REPLAYING ACTIONS"
                 : "REPLAY PAUSED"}
           </span>
           <p>
-            {clock(active.time)} {player(active.playerId).name}: {active.type}
+            {formatTime(active.time)}{" "}
+            {describe
+              ? describe(active)
+              : `${player(active.playerId).name}: ${active.type}`}
             {active.outcome
               ? ` (${active.outcome})`
               : active.type === "pass"
-                ? active.success
-                  ? " completed"
-                  : " incomplete"
+                ? active.success === undefined
+                  ? " (outcome unavailable)"
+                  : active.success
+                    ? " completed"
+                    : " incomplete"
                 : ""}
           </p>
+          {"source" in active && (
+            <small>
+              Source ID:{" "}
+              {
+                (active as ReplayEvent & { source: { eventId: string } }).source
+                  .eventId
+              }
+            </small>
+          )}
         </div>
         <select
           aria-label="Recorded event"
           value={active.id}
           onChange={(e) =>
-            seek(events.find((event) => event.id === e.target.value)!.time)
+            selectStep(events.findIndex((event) => event.id === e.target.value))
           }
         >
-          {frame.visible.map((event) => (
+          {events.map((event) => (
             <option key={event.id} value={event.id}>
-              {clock(event.time)} {event.type} by {player(event.playerId).name}
+              {formatTime(event.time)} {event.type} by{" "}
+              {(identities?.player ?? player)(event.playerId).name}
             </option>
           ))}
         </select>
+      </div>
+      {!active.position && (
+        <p className="limitations">
+          This action has no recorded pitch location.
+        </p>
+      )}
+      <div className="event-steps">
+        <button
+          className="text-button"
+          disabled={frame.index <= 0}
+          onClick={() => selectStep(frame.index - 1)}
+        >
+          Previous action
+        </button>
+        <button
+          className="text-button"
+          disabled={frame.index >= events.length - 1}
+          onClick={() => selectStep(frame.index + 1)}
+        >
+          Next action
+        </button>
       </div>
       <div className="replay-transport" aria-label="Sequence playback">
         <button
@@ -137,16 +210,16 @@ export function EvidenceReplay({
           <RotateCcw size={16} />
         </button>
         <div className="replay-progress">
-          <label htmlFor="replay-timeline">
+          <label htmlFor={timelineId}>
             <span>
-              REPLAY <time data-testid="replay-clock">{clock(time)}</time>
+              REPLAY <time data-testid="replay-clock">{formatTime(time)}</time>
             </span>
-            <span>{clock(end)}</span>
+            <span>{formatTime(end)}</span>
           </label>
           <input
-            id="replay-timeline"
+            id={timelineId}
             aria-label="Replay timeline"
-            aria-valuetext={clock(time)}
+            aria-valuetext={formatTime(time)}
             type="range"
             min={start}
             max={end}
@@ -172,7 +245,11 @@ export function EvidenceReplay({
         <span>
           Event {frame.index + 1} of {events.length}
         </span>
-        <span>Interpolated recorded endpoints, without player tracking</span>
+        <span>
+          {generated
+            ? "Schematic generated endpoints, without player tracking"
+            : "Recorded passage · no possession or motion inferred"}
+        </span>
       </div>
     </>
   );

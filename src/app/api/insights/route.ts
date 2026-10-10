@@ -29,7 +29,8 @@ export async function POST(req: Request) {
     return json({ error: "Invalid match request" }, 400);
   }
   const events = pitchEvents(
-    new SyntheticMatchSource().read(input.scenario).events,
+    new SyntheticMatchSource().read(input.scenario, { profile: input.profile })
+      .events,
   );
   const insight = detectInsights(events, input.time).find(
     (i) => i.team === input.team && i.category === input.category,

@@ -25,7 +25,11 @@ export default defineConfig({
     },
     {
       name: "mobile",
-      use: { ...devices["iPhone 13"], defaultBrowserType: "chromium" },
+      use: {
+        ...devices["iPhone 13"],
+        viewport: { width: 390, height: 844 },
+        defaultBrowserType: "chromium",
+      },
     },
   ],
   // Android-sized touch viewport complements the iPhone-sized Chromium project.

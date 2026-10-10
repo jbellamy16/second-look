@@ -35,7 +35,7 @@ test("Between the Lines metadata, installed identity, and SVG logos agree", asyn
   expect(manifest.short_name).toBe("BTL");
   for (const icon of manifest.icons)
     expect((await request.get(icon.src)).ok()).toBe(true);
-  if (page.viewportSize()!.width <= 600) {
+  {
     await page.getByRole("button", { name: "Settings", exact: true }).click();
   }
   await page
@@ -65,9 +65,9 @@ test("the new identity fits a 320px viewport with reduced motion", async ({
   expect(box!.width).toBeGreaterThanOrEqual(128);
   expect(box!.x + box!.width).toBeLessThanOrEqual(320);
   for (const [selector, minimum] of [
-    [".pitch-caption", 14],
-    [".verified-label", 12],
-    [".catchup-button", 14],
+    [".selected-observation h2", 20],
+    [".detail-tabs button", 12],
+    [".catchup-button", 12],
   ] as const) {
     const size = await page
       .locator(selector)

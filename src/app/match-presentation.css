@@ -1,0 +1,903 @@
+/* The same presentation rules apply to every match source. */
+.data-first main {
+  padding: 16px 28px 36px;
+  max-width: 1600px;
+}
+.data-first .topbar {
+  height: 56px;
+  min-height: 56px;
+}
+.data-first .fixture-selector {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 0 0 16px;
+}
+.data-first .fixture-selector .source-switch {
+  margin: 0;
+  flex: 0 0 auto;
+}
+.data-first .fixture-selector select {
+  flex: 1;
+  min-width: 0;
+  max-width: 540px;
+  background: var(--sl-navy);
+  height: 44px;
+  font-size: 13px;
+}
+.data-first .source-switch button {
+  min-width: 95px;
+  min-height: 38px;
+  justify-content: center;
+}
+.data-first .scoreboard {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 18px 0;
+  min-height: 112px;
+  border-radius: 0;
+  border-inline: 0;
+  background: transparent;
+}
+.data-first .score-match {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 100px minmax(0, 1fr);
+  width: min(760px, 100%);
+  gap: 22px;
+}
+.data-first .team-name {
+  font-size: 20px;
+  gap: 14px;
+  min-width: 0;
+}
+.data-first .team-name.home {
+  justify-content: flex-end;
+}
+.data-first .team-name small {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  margin-top: 5px;
+}
+.data-first .score > strong {
+  font-size: 42px;
+  gap: 14px;
+}
+.data-first .scoreboard .crest,
+.club-monogram {
+  width: 44px;
+  height: 50px;
+  flex-shrink: 0;
+}
+.club-monogram {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--sl-border);
+  border-radius: 8px;
+  background: var(--sl-navy);
+}
+.club-monogram.harbor {
+  color: var(--sl-harbor);
+  border-bottom: 3px solid var(--sl-harbor);
+}
+.club-monogram.riverside {
+  color: var(--sl-riverside);
+  border-bottom: 3px solid var(--sl-riverside);
+}
+.data-first .scoreboard > .live-label {
+  position: absolute;
+  right: 0;
+  top: 8px;
+  font-size: 9px;
+  padding: 3px 5px;
+  border: 0;
+  background: transparent;
+}
+.data-first .match-controls {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.data-first .match-controls .playback {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 20px 0 8px;
+  margin: 0;
+  gap: 14px;
+}
+.data-first .match-controls .timeline {
+  min-width: 0;
+}
+.data-first .match-controls .timeline input {
+  height: 20px;
+}
+.data-first .match-controls .timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+}
+.data-first .match-controls .catchup-button {
+  white-space: nowrap;
+  margin: 0;
+  min-height: 44px;
+  font-size: 13px;
+}
+.data-first .view-toolbar {
+  padding: 10px 0 16px;
+  margin: 0 0 20px;
+  border-bottom: 0;
+}
+.data-first .view-toolbar .mode-switch {
+  margin: 0;
+}
+.data-first .fixture-meta {
+  color: var(--sl-muted);
+  font-size: 12px;
+}
+.data-first .match-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(310px, 0.52fr);
+  gap: 22px;
+}
+.data-first .match-grid[hidden] {
+  display: none;
+}
+.data-first .pitch-panel {
+  padding: 0;
+  overflow: hidden;
+}
+.data-first .pitch-panel > .panel-header {
+  padding: 12px 18px 0;
+  min-height: 44px;
+  border: 0;
+}
+.data-first .pitch-panel > .panel-header h2 {
+  font-size: 14px;
+}
+.data-first .pitch-view-switch {
+  margin: 8px 14px;
+}
+.data-first .pitch-view-switch button {
+  min-height: 38px;
+}
+.data-first .pitch-topline {
+  margin: 0;
+  padding: 6px 20px 10px;
+  font-size: 11px;
+}
+.data-first .pitch-topline > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.data-first .event-inspector {
+  padding: 12px 18px;
+  gap: 12px;
+}
+.data-first .event-inspector p {
+  font-size: 12px;
+  margin: 0;
+}
+.data-first .event-inspector select {
+  width: 46%;
+  min-width: 0;
+  font-size: 12px;
+}
+.data-first .event-inspector small {
+  display: block;
+  font-size: 10px;
+  color: var(--sl-muted);
+  margin-top: 6px;
+}
+.data-first .pitch-notes {
+  padding: 0 18px 12px;
+  font-size: 11px;
+  color: var(--sl-muted);
+}
+.data-first .pitch-notes summary {
+  cursor: pointer;
+  min-height: 32px;
+  padding-top: 8px;
+}
+.data-first .pitch-notes p {
+  line-height: 1.6;
+  margin-top: 8px;
+}
+.data-first .detail-panel {
+  position: static;
+  padding: 0;
+  border-top: 2px solid var(--sl-green);
+  min-width: 0;
+}
+.data-first .selected-observation {
+  padding: 20px 20px 12px;
+}
+.observation-team {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--sl-muted);
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+.data-first .selected-observation h2 {
+  font-size: 23px;
+  letter-spacing: -0.5px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.data-first .selected-observation > p {
+  margin-top: 12px;
+  line-height: 1.6;
+  font-size: 13px;
+}
+.measured-change {
+  margin-top: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.change-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.change-total > strong {
+  font-size: 38px;
+  line-height: 1;
+  letter-spacing: -1px;
+  font-weight: 600;
+}
+.change-total small {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.5;
+  color: var(--sl-muted);
+  margin-top: 6px;
+}
+.change-delta {
+  font-size: 20px;
+  color: var(--sl-success-text);
+  text-align: right;
+}
+.window-row {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) 30px;
+  gap: 10px;
+  align-items: center;
+  margin-top: 9px;
+  font-size: 10px;
+  color: var(--sl-muted);
+}
+.window-row b {
+  text-align: right;
+  font-size: 12px;
+  color: var(--sl-text);
+}
+.window-track {
+  display: block;
+  height: 6px;
+  background: var(--sl-surface);
+  border-radius: 2px;
+}
+.window-track i {
+  display: block;
+  height: 100%;
+  background: var(--sl-green);
+  border-radius: inherit;
+}
+.window-row.baseline .window-track i {
+  background: var(--sl-muted);
+  opacity: 0.65;
+}
+.data-first .detail-tabs {
+  margin: 4px 14px 0;
+  padding: 0;
+}
+.data-first .detail-tabs button {
+  min-height: 44px;
+  font-size: 12px;
+}
+.data-first .detail-content {
+  padding: 16px 20px 18px;
+}
+.data-first .detail-content > p {
+  font-size: 13px;
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+.data-first .comparison-pitches {
+  gap: 10px;
+}
+.data-first .comparison-pitches .pitch {
+  width: 100%;
+  margin: 0 0 8px;
+}
+.data-first .metric-note {
+  color: var(--sl-muted);
+  font-size: 10px !important;
+  margin: 10px 0 16px;
+}
+.data-first .sequence-button {
+  width: 100%;
+  min-height: 44px;
+  font-size: 12px;
+  margin-top: 16px;
+}
+.data-first .narrate-button {
+  min-height: 44px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+.data-first .provenance {
+  margin-top: 6px;
+}
+.data-first .provenance summary {
+  font-size: 11px;
+  min-height: 40px;
+}
+.data-first .evidence-list {
+  max-height: 340px;
+  overflow: auto;
+}
+.data-first .evidence-list button {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  font-size: 12px;
+  text-align: left;
+  align-items: center;
+}
+.data-first .evidence-list button time {
+  color: var(--sl-muted);
+  flex-shrink: 0;
+}
+.data-first .evidence-list button svg {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.data-first .match-event-feed {
+  padding: 0 18px;
+}
+.match-event-feed > summary {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 0;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+.match-event-feed > summary span {
+  color: var(--sl-muted);
+}
+.data-first .match-event-feed .event-feed-list {
+  max-height: 360px;
+  overflow: auto;
+}
+.data-first .match-event-feed .event-feed-list button {
+  display: flex;
+  gap: 16px;
+}
+.data-first .more-observations {
+  border-top: 1px solid var(--sl-border);
+  padding: 0 20px;
+}
+.more-observations summary {
+  font-size: 12px;
+  padding-block: 16px;
+  cursor: pointer;
+}
+.data-first .observations-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.7fr);
+  gap: 24px;
+  align-items: start;
+}
+.data-first .observation-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--sl-navy);
+  padding: 20px;
+  border: 1px solid var(--sl-border);
+  border-radius: 10px;
+}
+.data-first .observation-card h3 {
+  font-size: 20px;
+  line-height: 1.35;
+  margin: 0 0 12px;
+}
+.data-first .observation-card p {
+  font-size: 13px;
+  line-height: 1.65;
+}
+.data-first .observation-card p span {
+  display: block;
+  color: var(--sl-muted);
+}
+.data-first .observation-card.lead-observation {
+  padding: 28px;
+  border-top: 3px solid var(--sl-green);
+}
+.data-first .lead-observation h3 {
+  font-size: 32px;
+  letter-spacing: -0.8px;
+}
+.data-first .lead-observation .change-total > strong {
+  font-size: 56px;
+}
+.data-first .lead-observation .window-row {
+  grid-template-columns: 100px 1fr 35px;
+  font-size: 12px;
+}
+.explore-evidence {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--sl-success-text);
+  margin-top: 22px;
+}
+.supporting-observations {
+  display: grid;
+  gap: 16px;
+}
+.data-first .more-observations .observation-card {
+  padding: 14px 0;
+  border: 0;
+  border-top: 1px solid var(--sl-border);
+  border-radius: 0;
+}
+.data-first .more-observations .observation-card h3 {
+  font-size: 16px;
+}
+.empty-observation {
+  padding: 24px;
+}
+.empty-observation h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+.empty-observation p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--sl-muted);
+}
+.data-first .demo-controls,
+.data-first .match-attribution {
+  margin-top: 22px;
+  font-size: 12px;
+  color: var(--sl-muted);
+}
+.data-first .demo-controls > summary,
+.match-attribution summary {
+  min-height: 44px;
+  cursor: pointer;
+}
+.match-attribution p {
+  margin: 10px 0;
+  max-width: 80ch;
+  line-height: 1.6;
+}
+.match-attribution a {
+  text-decoration: underline;
+}
+.data-first .modal-header {
+  justify-content: flex-end;
+  margin-bottom: 0;
+}
+.data-first .recap-body > h2 {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+.recap-cutoff {
+  color: var(--sl-muted);
+  font-size: 12px;
+}
+.data-first .recap-score {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 0;
+  margin: 16px 0;
+  border-block: 1px solid var(--sl-border);
+}
+.data-first .recap-score span {
+  font-size: 14px;
+  flex: 1;
+}
+.data-first .recap-score span:last-child {
+  text-align: right;
+}
+.data-first .recap-score strong {
+  font-size: 28px;
+  white-space: nowrap;
+}
+.data-first .recap-summary {
+  font-size: 14px;
+  line-height: 1.7;
+}
+.data-first .recap-summary p + p {
+  margin-top: 12px;
+}
+.data-first .recap-timeline {
+  margin: 16px 0;
+}
+.data-first .recap-timeline button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  font-size: 13px;
+}
+.data-first .recap-timeline button time,
+.data-first .recap-timeline button svg {
+  flex-shrink: 0;
+}
+.data-first .recap-timeline button svg:last-child {
+  margin-left: auto;
+}
+.data-first .recap-timeline button > span {
+  min-width: 0;
+}
+@media (max-width: 1100px) {
+  .data-first .match-grid {
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 16px;
+  }
+  .data-first main {
+    padding-inline: 20px;
+  }
+  .data-first .team-name {
+    font-size: 17px;
+  }
+}
+@media (max-width: 820px) {
+  .data-first .match-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .data-first .match-left {
+    display: contents;
+  }
+  .data-first .pitch-panel {
+    order: 0;
+  }
+  .data-first .detail-panel {
+    order: 1;
+  }
+  .data-first .match-event-feed {
+    order: 2;
+  }
+  .data-first .observations-page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .data-first main {
+    padding: 10px 12px 96px;
+  }
+  .data-first .topbar {
+    min-height: 52px;
+    height: 52px;
+  }
+  .data-first .fixture-selector {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 10px;
+  }
+  .data-first .fixture-selector .source-switch {
+    width: 100%;
+  }
+  .data-first .fixture-selector .source-switch button {
+    flex: 1;
+  }
+  .data-first .fixture-selector select {
+    width: 100%;
+    flex-basis: 100%;
+    font-size: 12px;
+  }
+  .data-first .scoreboard {
+    min-height: 108px;
+    padding: 22px 0 12px;
+  }
+  .data-first .score-match {
+    grid-template-columns: minmax(0, 1fr) 82px minmax(0, 1fr);
+    gap: 6px;
+  }
+  .data-first .team-name,
+  .data-first .team-name.home {
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+    font-size: 13px;
+    align-items: center;
+  }
+  .data-first .team-name.home {
+    flex-direction: column-reverse;
+  }
+  .data-first .scoreboard .crest,
+  .club-monogram {
+    width: 26px;
+    height: 30px;
+    font-size: 9px;
+  }
+  .data-first .team-name small {
+    display: none;
+  }
+  .data-first .score > strong {
+    font-size: 32px;
+    gap: 10px;
+  }
+  .data-first .match-clock {
+    font-size: 11px;
+  }
+  .data-first .match-controls {
+    flex-wrap: wrap;
+    gap: 0;
+    justify-content: flex-end;
+  }
+  .data-first .match-controls .playback {
+    flex-basis: 100%;
+    gap: 8px;
+    padding: 14px 0 4px;
+  }
+  .data-first .match-controls .catchup-button {
+    padding: 0 4px;
+    min-height: 44px;
+    font-size: 12px;
+  }
+  .data-first .view-toolbar {
+    flex-wrap: wrap;
+    padding: 0 0 12px;
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+  .data-first .fixture-meta {
+    width: 100%;
+    font-size: 10px;
+  }
+  .data-first .view-toolbar .mode-switch {
+    margin-top: -49px;
+    max-width: 58%;
+  }
+  .data-first .view-toolbar .mode-switch button {
+    min-height: 38px;
+    padding-inline: 8px;
+    font-size: 11px;
+  }
+  .data-first .pitch-view-switch button {
+    font-size: 10px;
+    padding: 4px;
+  }
+  .data-first .pitch-topline {
+    font-size: 10px;
+    padding-inline: 12px;
+  }
+  .data-first .event-inspector {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+  .data-first .event-inspector select {
+    width: 100%;
+  }
+  .data-first .event-inspector > div {
+    width: 100%;
+  }
+  .data-first .selected-observation {
+    padding: 18px 18px 10px;
+  }
+  .data-first .selected-observation h2 {
+    font-size: 22px;
+  }
+  .data-first .observation-card.lead-observation {
+    padding: 20px;
+  }
+  .data-first .lead-observation h3 {
+    font-size: 27px;
+  }
+  .data-first .modal {
+    padding: 18px;
+  }
+  .data-first .recap-score span {
+    font-size: 12px;
+  }
+  .data-first .pitch-notes {
+    font-size: 10px;
+  }
+}
+/* A compact transport and one aligned row of secondary controls. */
+.data-first .match-header > .fixture-meta {
+  display: block;
+  margin-top: 8px;
+}
+.data-first .view-toolbar {
+  min-height: 0;
+  padding: 8px 0;
+  margin-bottom: 14px;
+}
+.data-first .view-toolbar .mode-switch {
+  flex: 0 1 auto;
+  max-width: none;
+  margin: 0;
+}
+.data-first .view-toolbar .catchup-button {
+  min-height: 44px;
+  font-size: 14px;
+}
+.data-first .match-controls .playback {
+  padding: 8px 0 0;
+}
+.data-first .timeline {
+  position: relative;
+}
+.data-first .timeline-events {
+  position: absolute;
+  inset: -10px 0 auto;
+  height: 10px;
+}
+.data-first .timeline-events button {
+  min-height: 22px;
+  width: 22px;
+  font-size: 14px;
+  background: var(--sl-navy);
+}
+.data-first .match-controls .timeline input {
+  display: block;
+  margin: 0;
+  min-height: 44px;
+}
+.data-first .pitch-panel > .panel-header {
+  height: 44px;
+  padding-top: 0;
+}
+@media (max-width: 600px) {
+  .data-first .view-toolbar {
+    flex-wrap: nowrap;
+  }
+  .data-first .view-toolbar .mode-switch button {
+    font-size: 12px;
+  }
+  .data-first .pitch-view-switch button {
+    font-size: 11px;
+    min-height: 44px;
+  }
+  .data-first .pitch-panel > .panel-header h2 {
+    font-size: 13px;
+  }
+  .data-first .pitch-panel > .panel-header .text-button {
+    font-size: 12px;
+  }
+  .data-first .match-controls {
+    display: block;
+  }
+  .data-first .match-controls .playback {
+    padding: 8px 0 0;
+  }
+  .data-first .match-header > .fixture-meta {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .data-first .timeline-labels > span:nth-child(even) {
+    visibility: visible;
+  }
+  .data-first .view-toolbar .catchup-button {
+    padding-inline: 8px;
+    font-size: 12px;
+  }
+}
+.data-first .view-toolbar .mode-switch button {
+  white-space: nowrap;
+}
+.data-first .event-feed-list small {
+  display: block;
+  font-size: 11px;
+  color: var(--sl-muted);
+}
+.data-first .player-identity-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+@media (min-width: 601px) {
+  .data-first .topbar {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .data-first .view-toolbar .mode-switch {
+    flex: 0 0 auto;
+  }
+  .data-first .view-toolbar .mode-switch button {
+    padding-inline: 6px;
+    min-width: 0;
+  }
+  .data-first .view-toolbar .catchup-button {
+    flex-shrink: 0;
+  }
+  .data-first .pitch-panel > .panel-header {
+    display: none;
+  }
+  .data-first .pitch-panel:has(.replay-transport) > .panel-header {
+    display: flex;
+  }
+  .data-first .pitch-view-switch {
+    margin-top: 12px;
+  }
+}
+.data-first .nav-item.active {
+  color: var(--sl-text);
+}
+.data-first .main-navigation .nav-item.active:hover,
+.data-first .mode-switch button.selected:hover,
+.data-first .detail-tabs button.selected:hover {
+  color: var(--sl-text);
+}
+.data-first .action-picker select {
+  width: 100%;
+}
+.data-first .provenance-content h3 {
+  margin: 14px 0 6px;
+  font-size: 13px;
+}
+
+/* Descriptive context shares the intelligence space without implying a trend. */
+.data-first .match-context {
+  padding: 20px;
+}
+.data-first .match-context > h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+.data-first .context-item + .context-item {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--sl-border);
+}
+.data-first .context-label {
+  display: block;
+  color: var(--sl-muted);
+  font-size: 11px;
+  margin: 6px 0;
+}
+.data-first .context-item h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+.data-first .context-item p {
+  margin: 0 0 8px;
+  line-height: 1.6;
+}
+.data-first .context-item > time,
+.data-first .context-evidence > summary {
+  color: var(--sl-muted);
+  font-size: 12px;
+}
+.data-first .context-evidence > summary {
+  padding: 12px 0;
+  cursor: pointer;
+}
+.data-first .context-evidence .evidence-list {
+  max-height: 240px;
+  overflow: auto;
+}
+.data-first .context-item h3,
+.data-first .selected-observation h2,
+.data-first .observation-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.data-first .context-item h3 .sl-icon,
+.data-first .selected-observation h2 .sl-icon,
+.data-first .observation-card h3 .sl-icon {
+  flex-shrink: 0;
+}

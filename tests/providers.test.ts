@@ -94,7 +94,7 @@ it.each([
 ])("rejects unsupported or misleading selection %j", (value) => {
   expect(() => renderSelection(value, packet)).toThrow();
 });
-it("requires abstention when no pattern qualifies and rejects forged comparison metrics", () => {
+it("requires restrained abstention when no actions exist and rejects forged comparison metrics", () => {
   const quiet = buildEvidence(generateMatch("quiet"), 0, "fan");
   expect(renderSelection({ factIds: [] }, quiet).selectedFactIds).toEqual([
     "score",
@@ -103,7 +103,7 @@ it("requires abstention when no pattern qualifies and rejects forged comparison 
   expect(
     renderSelection({ factIds: ["score", "no-pattern"] }, quiet).narrative
       .explanation,
-  ).toContain("not yet enough");
+  ).toContain("No match developments to highlight");
   const insight = detectInsights(events, DEMO_TIME)[0];
   expect(() => verifyInsight({ ...insight, current: 99 }, events)).toThrow();
   expect(() =>

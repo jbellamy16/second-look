@@ -12,10 +12,10 @@ test("playback, evidence, modes, recap, and rewind stay synchronized", async ({
   await expect(page.getByTestId("clock")).toContainText("63:24");
   await expect(
     page.getByRole("heading", { name: "Harbor are winning it higher" }),
-  ).toHaveCount(2);
+  ).toHaveCount(1);
   await page.getByRole("button", { name: "Show me the sequence" }).click();
   await expect(
-    page.getByRole("heading", { name: "Sequence replay" }),
+    page.getByRole("heading", { name: "Passage replay" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Analyst mode", exact: true }).click();
   await expect(page.getByText("Measurement notes")).not.toBeVisible();
@@ -23,15 +23,15 @@ test("playback, evidence, modes, recap, and rewind stay synchronized", async ({
   await expect(page.getByText("Measurement notes")).toBeVisible();
   await page.getByRole("button", { name: /Catch me up/ }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(page.getByText(/Event-derived recap/)).toContainText("63:24");
+  await expect(page.locator(".recap-cutoff")).toContainText("63:24");
   await page.getByRole("button", { name: "Close dialog" }).click();
   await page.getByRole("button", { name: "Restart match" }).click();
   await expect(page.getByTestId("score")).toHaveText("0:0");
   await expect(page.getByTestId("clock")).toContainText("00:00");
   await page.getByRole("button", { name: /Catch me up/ }).click();
-  await expect(
-    page.getByText("No major moments yet.", { exact: false }),
-  ).toBeVisible();
+  await expect(page.getByRole("dialog").locator(".recap-summary")).toHaveText(
+    "No match developments to highlight yet.",
+  );
   await page.getByRole("button", { name: "Close dialog" }).click();
   await page.getByRole("button", { name: "Play match", exact: true }).click();
   await expect(page.getByTestId("clock")).not.toContainText("00:00");
@@ -42,12 +42,14 @@ test("scenarios, navigation, player preferences and mobile layout work", async (
   page,
 }, testInfo) => {
   await page.goto("/");
-  await expect(page.getByLabel("Demo scenario")).not.toBeVisible();
+  await expect(page.getByLabel("Fixture")).toBeVisible();
   await page.locator(".demo-controls > summary").focus();
   await page.keyboard.press("Enter");
-  await page.getByLabel("Demo scenario").selectOption("quiet");
-  await expect(page.getByText("Let the game tell its story.")).toBeVisible();
-  await page.getByLabel("Demo scenario").selectOption("substitution");
+  await page.getByLabel("Fixture").selectOption("quiet");
+  await expect(
+    page.getByRole("heading", { name: "Match context", exact: true }),
+  ).toBeVisible();
+  await page.getByLabel("Fixture").selectOption("substitution");
   await page
     .getByRole("navigation")
     .getByRole("button", { name: "Match stats" })
@@ -95,22 +97,18 @@ test("explanation provenance, category preferences, and arbitrary seeking are tr
 }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Explore the explanation" }).click();
-  await expect(
-    page.getByText("Verified explanation from recorded events"),
-  ).toBeVisible();
+  await expect(page.locator(".explanation-text")).toBeVisible();
   await expect(page.getByRole("status")).toContainText("Offline demo");
-  await page
-    .getByRole("button", { name: "Settings", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
   for (const name of ["Pressure", "Chances", "Rhythm"])
     await page.getByRole("checkbox", { name }).uncheck();
   await page.getByRole("button", { name: "Save my experience" }).click();
   await expect(
-    page.getByText("Choose an insight category in Settings."),
+    page.getByRole("heading", { name: "Match context", exact: true }),
   ).toBeVisible();
   await page.reload();
   await expect(
-    page.getByText("Choose an insight category in Settings."),
+    page.getByRole("heading", { name: "Match context", exact: true }),
   ).toBeVisible();
   const timeline = page.getByRole("slider", { name: "Match timeline" });
   await timeline.focus();
@@ -138,16 +136,16 @@ test("selected evidence drives replay, which retains its final frame", async ({
     page.getByText("REPLAY COMPLETE", { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Sequence replay" }),
+    page.getByRole("heading", { name: "Passage replay" }),
   ).toBeVisible();
   await expect(page.getByTestId("clock")).toContainText("63:24");
-  await page.getByRole("button", { name: "Back to the pattern" }).click();
+  await page.getByRole("button", { name: "Clear selection" }).click();
   await expect(
-    page.getByRole("heading", { name: "Where it happened" }),
+    page.getByRole("button", { name: "Pattern evidence", exact: true }),
   ).toBeVisible();
   await page
     .getByLabel("Recorded event", { exact: true })
-    .selectOption({ index: 1 });
+    .selectOption({ index: 0 });
   await expect(page.locator(".event-inspector p")).toContainText(selectedTime);
 });
 
@@ -158,15 +156,15 @@ test("the demo shows a pattern emerging and reset clears custom filters", async 
   await page.goto("/");
   await page.locator(".demo-controls > summary").click();
   await page.getByRole("button", { name: "Watch the build-up" }).click();
-  await expect(page.getByText("Let the game tell its story.")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Match context", exact: true }),
+  ).toBeVisible();
   await page.clock.runFor(6000);
   await expect(
     page.getByRole("heading", { name: "Harbor are winning it higher" }),
-  ).toHaveCount(2);
+  ).toHaveCount(1);
   await page.getByRole("button", { name: "Pause match", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Settings", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
   for (const name of ["Pressure", "Chances", "Rhythm"])
     await page.getByRole("checkbox", { name }).uncheck();
   await page.getByRole("button", { name: "Save my experience" }).click();
@@ -174,7 +172,7 @@ test("the demo shows a pattern emerging and reset clears custom filters", async 
   await expect(page.getByTestId("clock")).toContainText("63:24");
   await expect(
     page.getByRole("heading", { name: "Harbor are winning it higher" }),
-  ).toHaveCount(2);
+  ).toHaveCount(1);
   await expect(
     page.getByRole("button", { name: "Fan mode", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -301,13 +299,11 @@ test("pitch markers support touch-sized selection and keyboard inspection", asyn
   await page.goto("/");
   const markers = page.locator(".pitch-panel .event-marker");
   await markers.last().click();
+  await expect(page.locator(".event-inspector p")).toBeVisible();
   await expect(
-    page.getByText("SELECTED ACTION", { exact: true }),
+    page.getByRole("heading", { name: "Passage replay" }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Event sequence" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Back to the pattern" }).click();
+  await page.getByRole("button", { name: "Clear selection" }).click();
   const label = await markers.first().getAttribute("aria-label");
   await markers.first().focus();
   await page.keyboard.press("Enter");
@@ -381,19 +377,21 @@ test("OpenAI UI requests narration only on demand and clears stale results on re
     });
   });
   await page.goto("/");
-  await expect(page.getByText("OpenAI configured")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Explain with OpenAI", exact: true }),
+  ).toBeVisible();
   await page
     .getByRole("button", { name: "Explain with OpenAI", exact: true })
     .click();
   await expect(
-    page.getByText("Verified story from OpenAI", { exact: true }),
+    page.getByText(/This is a mocked narration for a browser test/),
   ).toBeVisible();
   expect(calls).toBe(1);
   await page.getByRole("button", { name: "Play match", exact: true }).click();
   await expect(page.getByTestId("clock")).not.toContainText("63:24");
   expect(calls).toBe(1);
   await expect(
-    page.getByText("Verified story from OpenAI", { exact: true }),
+    page.getByText(/This is a mocked narration for a browser test/),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Restart match" }).click();
   await expect(page.getByTestId("clock")).toContainText("00:00");

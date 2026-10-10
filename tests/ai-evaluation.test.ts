@@ -53,7 +53,7 @@ for (const scenario of ["pressure", "substitution", "quiet"] as Scenario[])
                 packet.events.some((e) => e.id === id),
               ),
             ).toBe(true);
-            if (!packet.comparisons.length)
+            if (packet.facts.some((f) => f.kind === "abstention"))
               expect(result.selectedFactIds).toContain("no-pattern");
             if (time === 5400)
               expect(result.narrative.watch).toContain("Full time");

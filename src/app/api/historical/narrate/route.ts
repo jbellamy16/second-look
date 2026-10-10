@@ -47,7 +47,12 @@ export async function POST(req: Request) {
       notice:
         "Local research evidence only; external AI requests are disabled for this fixture.",
     });
-  if (!packet.facts.some((f) => f.kind === "pattern" || f.kind === "moment"))
+  if (
+    !packet.facts.some(
+      (f) =>
+        f.kind === "pattern" || f.kind === "moment" || f.kind === "context",
+    )
+  )
     return json({
       source: "offline",
       narrative: null,
