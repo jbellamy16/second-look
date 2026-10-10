@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { Category, Mode } from "@/lib/intelligence";
 import type { TeamId } from "@/lib/match";
 import type { MatchData } from "@/lib/sources/model";
@@ -71,16 +71,17 @@ export function MatchSettings({
   prefs,
   setPrefs,
   onClose,
+  children,
 }: {
   match: MatchData;
   prefs: MatchPreferences;
   setPrefs: (p: MatchPreferences) => void;
   onClose: () => void;
+  children?: ReactNode;
 }) {
   const [appearance, setAppearance] = useAppearance();
   return (
     <>
-      <h2>Settings</h2>
       <p className="muted">Preferences are saved on this device.</p>
       <label className="setting-label appearance-setting">
         Appearance
@@ -176,6 +177,7 @@ export function MatchSettings({
       <p className="limitations">
         Team and player preferences prioritize observations.
       </p>
+      {children}
       <button className="primary-button" onClick={onClose}>
         Save my experience <Check size={16} />
       </button>

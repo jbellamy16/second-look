@@ -1,5 +1,6 @@
 "use client";
 import {
+  type ComponentProps,
   type ReactNode,
   useEffect,
   useLayoutEffect,
@@ -29,6 +30,83 @@ export function motionTiming(element: Element, token = "standard") {
     duration: parseFloat(style.getPropertyValue(`--motion-${token}`)) || 0,
     easing: style.getPropertyValue("--ease-out").trim() || "ease-out",
   };
+}
+
+/** Native keyboard/summary behavior, with reversible opening and closing motion. */
+export function AnimatedDetails({
+  children,
+  ...props
+}: ComponentProps<"details">) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  const transition = useRef<{
+    animation: Animation;
+    expanded: boolean;
+    overflow: string;
+  } | null>(null);
+  const reduced = useReducedMotion();
+  useEffect(
+    () => () => {
+      const el = ref.current;
+      const current = transition.current;
+      if (!el || !current) return;
+      current.animation.cancel();
+      el.open = current.expanded;
+      el.style.overflow = current.overflow;
+      el.removeAttribute("data-expanded");
+      el.querySelector(":scope > summary")?.removeAttribute("aria-expanded");
+      transition.current = null;
+    },
+    [reduced],
+  );
+  return (
+    <details
+      {...props}
+      ref={ref}
+      className={`animated-details ${props.className ?? ""}`}
+      onClick={(event) => {
+        props.onClick?.(event);
+        const el = event.currentTarget;
+        const target = event.target as Element;
+        const summary = target.closest("summary");
+        if (
+          event.defaultPrevented ||
+          summary?.parentElement !== el ||
+          target.closest("a, button, input, select")
+        )
+          return;
+        event.preventDefault();
+        const current = transition.current;
+        const expanded = !(current?.expanded ?? el.open);
+        const start = el.getBoundingClientRect().height;
+        const overflow = current?.overflow ?? el.style.overflow;
+        current?.animation.cancel();
+        transition.current = null;
+        el.open = expanded;
+        el.style.overflow = overflow;
+        if (reduced) return;
+        const end = el.getBoundingClientRect().height;
+        // Keep the content rendered until a closing transition has finished.
+        el.open = true;
+        el.style.overflow = "hidden";
+        el.dataset.expanded = String(expanded);
+        summary.setAttribute("aria-expanded", String(expanded));
+        const animation = el.animate(
+          [{ height: `${start}px` }, { height: `${end}px` }],
+          motionTiming(el, "panel"),
+        );
+        transition.current = { animation, expanded, overflow };
+        animation.onfinish = () => {
+          el.open = expanded;
+          el.style.overflow = overflow;
+          el.removeAttribute("data-expanded");
+          summary.removeAttribute("aria-expanded");
+          transition.current = null;
+        };
+      }}
+    >
+      {children}
+    </details>
+  );
 }
 
 export function Reveal({

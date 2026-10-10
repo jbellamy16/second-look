@@ -3,6 +3,15 @@ import AxeBuilder from "@axe-core/playwright";
 
 const shell = (page: Page) =>
   page.locator(".app-shell").filter({ visible: true });
+test.beforeEach(async ({ page }) => {
+  await page.goto("/");
+  test.skip(
+    !(await page
+      .getByRole("button", { name: "Recorded", exact: true })
+      .count()),
+    "Cross-source review requires RECORDED_MATCHES_VISIBLE=true.",
+  );
+});
 async function selectSource(page: Page, source: "Synthetic" | "Recorded") {
   await page.getByRole("button", { name: source, exact: true }).click();
   await expect(

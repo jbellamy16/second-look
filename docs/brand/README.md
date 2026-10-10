@@ -19,7 +19,7 @@ The mark brings three football field lines together around a center circle. A si
 
 Three directions were evaluated: a framed half-pitch (too detailed at favicon sizes), a BTL monogram (less football-specific), and the open halfway-line symbol (selected for legibility, balance, and direct football relevance). The chosen artwork is newly constructed vector geometry, not a crop or tracing of the concept board.
 
-The symbol uses a 96-unit square. Touchlines sit at x=16 and x=80, y=16–80. The halfway line sits at x=48, y=10–86, interrupted by an 18-unit-radius center circle at (48,48). Standard strokes are 3.5 units with round caps and joins. The route runs from (24,72) to (72,24), with one terminal arrow. The node is 7 units in diameter. Small-size marks remove the node and use 6-unit strokes. Do not add tactical crosses inside the logo; they belong in supporting compositions.
+The symbol uses a 96-unit square. Touchlines sit at x=16 and x=80, y=16–80. The halfway line sits at x=48, y=10–86, interrupted by an 18-unit-radius center circle at (48,48). Standard strokes are 3.5 units with round caps and joins. The route runs from (24,72) to (72,24), with one terminal arrow. The node is 7 units in diameter. Navigation marks retain the original construction. Browser icons use a dedicated 32-unit optical drawing with two touchlines, a center circle, and a diagonal route; the center stem is omitted to avoid crowding at 16px. App icons use a Midnight symbol on a Pitch Green tile, with a green knockout separating the route from the field lines. Do not add tactical crosses inside the logo; they belong in supporting compositions.
 
 Source of truth: [`scripts/generate-brand.mjs`](../../scripts/generate-brand.mjs). All exported typography is outlined; fonts need not be installed to render an SVG. Rebuild with `npm ci && npm run brand:build`. PNGs derive directly from those SVGs. The font licenses are included beside this guide.
 
@@ -38,7 +38,7 @@ Every family has dark-surface, light-surface, white, and black SVG and transpare
 
 Clear space: keep one quarter of the symbol width (24 construction units) around the mark or full lockup, measured from visible ink. On a 48px symbol, allow 12px on each side. The SVG viewport is not a substitute for layout padding. The maskable icon has its foreground within the central 80% safe circle; do not crop an ordinary icon into a maskable one.
 
-Never stretch, rotate, add shadows, add gradients, change stroke widths, alter spacing, place on a busy photograph, or recolor the route with a club color. Never use a low-contrast green wordmark on a green pitch. Never substitute an emoji, football clip art, shield, or icon-library glyph for the mark.
+Use the supplied optical variants for browser and install icons. Apple touch artwork is opaque and square so the operating system supplies its own corner mask; maskable artwork keeps the entire symbol within the central safe circle. Never stretch, rotate, add shadows, add gradients, alter export spacing, place on a busy photograph, or recolor the route with a club color. Never use a low-contrast green wordmark on a green pitch. Never substitute an emoji, football clip art, shield, or icon-library glyph for the mark.
 
 ## Color and semantic roles
 
@@ -105,9 +105,11 @@ Be confident about observations and cautious about interpretations. Lead with th
 | ----------- | --------------------------------------------------- | ----------------------------------------------- |
 | Open Graph  | [1200 × 630](../../public/opengraph-image.png)      | Logo and headline left; tactical pitch right    |
 | X / Twitter | [1200 × 675](../../public/twitter-image.png)        | Wide composition with extra vertical room       |
-| Square      | [1080 × 1080](../../public/brand/social-square.png) | Large stacked headline; lower pitch detail      |
+| Square      | [1080 × 1080](../../public/brand/social-square.png) | Stacked headline above a landscape tactical field |
 | Story       | [1080 × 1920](../../public/brand/social-story.png)  | Vertical headline, full tactical field below    |
 | Video title | [1920 × 1080](../../public/brand/video-title.png)   | Broadcast title / demo opening or closing frame |
+
+The refreshed family uses the established logo, a bold two-line campaign headline, the supporting line “See the pattern. Follow the play.”, and a contained tactical illustration. Pitch circles and route markers retain their proportions across formats. These routes are illustrative artwork, not match evidence. [Review the share and icon contact sheet](meta-assets-preview.png).
 
 Matching SVG sources live in `public/brand/`. Essential copy stays at least 64 units from wide-art edges and well inside the story edges. The story logo is decorative identity at the top; the main headline and supporting message sit away from overlay controls. Check platform crop previews when publishing. Supply meaningful alt text describing the headline and field route. Never add a real Premier League mark or imply affiliation beyond accurate hackathon wording.
 
@@ -115,7 +117,7 @@ Matching SVG sources live in `public/brand/`. Essential copy stays at least 64 u
 
 Primary action pairs meet WCAG AA 4.5:1 for ordinary text, covered by tests. Do not use Pitch Green with white body text. Both light and dark themes retain contrast, focus rings, descriptive labels, live score announcements, keyboard pitch controls, and reduced motion. A linked logo has the accessible name “Between the Lines home”; its image has the correct product alt text. Only one themed logo is visible at a time.
 
-Metadata is centralized in [`src/lib/brand.ts`](../../src/lib/brand.ts). It includes the full title, child title template, description, canonical, Open Graph, Twitter, icons, manifest and Apple install identity. Theme colors follow actual appearance. The existing public Workers origin remains the default; `NEXT_PUBLIC_SITE_URL`, then `APP_URL`, can override it. No new domain was invented. Preference keys, Redis keys, Worker service, npm package and GitHub repository remain stable.
+Metadata is centralized in [`src/lib/brand.ts`](../../src/lib/brand.ts). Icon and share URLs include the shared version from [`src/lib/brand-assets.ts`](../../src/lib/brand-assets.ts); bump it whenever replacing the artwork to give browsers and social crawlers a fresh asset URL. Existing social posts can still retain platform-side caches. It includes the full title, child title template, description, canonical, Open Graph, Twitter, icons, manifest and Apple install identity. Theme colors follow actual appearance. The existing public Workers origin remains the default; `NEXT_PUBLIC_SITE_URL`, then `APP_URL`, can override it. No new domain was invented. Preference keys, Redis keys, Worker service, npm package and GitHub repository remain stable.
 
 ## Review and delivery
 

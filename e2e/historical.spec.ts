@@ -2,6 +2,12 @@ import { expect, test, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 async function historical(page: Page) {
   await page.goto("/");
+  test.skip(
+    !(await page
+      .getByRole("button", { name: "Recorded", exact: true })
+      .count()),
+    "Recorded matches are hidden; enable RECORDED_MATCHES_VISIBLE to review them.",
+  );
   await page.getByRole("button", { name: "Recorded", exact: true }).click();
   await expect(page.locator(".historical-shell .scoreboard")).toBeVisible();
 }

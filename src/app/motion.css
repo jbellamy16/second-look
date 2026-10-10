@@ -372,6 +372,18 @@ select:not(:disabled) {
     padding-bottom: max(24px, env(safe-area-inset-bottom));
   }
 }
+.live-label.is-playing > span {
+  animation: playing-dot-pulse 1.8s ease-out infinite;
+}
+@keyframes playing-dot-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-green) 45%, transparent);
+  }
+  75%,
+  100% {
+    box-shadow: 0 0 0 5px transparent;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

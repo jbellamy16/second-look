@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { brandAsset } from "./brand-assets";
 
 const title = "Between the Lines | More than the score.";
 const description =
-  "Football insights that go deeper. Explore patterns, decisions, and stories behind the score through evidence-backed insights and interactive synthetic match replays.";
+  "See the pattern. Follow the play. Explore football insights, inspect the evidence, and replay the moments behind the score in an interactive synthetic match demo.";
 
 // Existing deployment, not a new brand domain. Operators can override per host.
 export const siteUrl =
@@ -24,19 +25,27 @@ export const brandMetadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "16x16 32x32 48x48" },
-      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: brandAsset("/favicon.ico"), sizes: "16x16 32x32 48x48" },
+      { url: brandAsset("/favicon.svg"), type: "image/svg+xml", sizes: "any" },
       ...[16, 32, 48].map((size) => ({
-        url: `/favicon-${size}x${size}.png`,
+        url: brandAsset(`/favicon-${size}x${size}.png`),
         sizes: `${size}x${size}`,
         type: "image/png",
       })),
     ],
     other: [
-      { rel: "mask-icon", url: "/safari-pinned-tab.svg", color: "#15803d" },
+      {
+        rel: "mask-icon",
+        url: brandAsset("/safari-pinned-tab.svg"),
+        color: "#15803d",
+      },
     ],
     apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      {
+        url: brandAsset("/apple-touch-icon.png"),
+        sizes: "180x180",
+        type: "image/png",
+      },
     ],
   },
   openGraph: {
@@ -48,10 +57,11 @@ export const brandMetadata: Metadata = {
     description,
     images: [
       {
-        url: "/opengraph-image.png",
+        url: brandAsset("/opengraph-image.png"),
+        type: "image/png",
         width: 1200,
         height: 630,
-        alt: "Between the Lines. More than the score. A tactical passing route crosses a football pitch.",
+        alt: "Between the Lines — More than the score. See the pattern. Follow the play. An illustrated passing route highlights a moment on a football pitch.",
       },
     ],
   },
@@ -61,7 +71,7 @@ export const brandMetadata: Metadata = {
     description,
     images: [
       {
-        url: "/twitter-image.png",
+        url: brandAsset("/twitter-image.png"),
         alt: "Between the Lines. More than the score. Football insights that go deeper.",
       },
     ],

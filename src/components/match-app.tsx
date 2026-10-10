@@ -19,8 +19,9 @@ import { SyntheticMatchSource } from "@/lib/sources/synthetic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppearance } from "./appearance";
 import { EvidenceReplay } from "./evidence-replay";
-import { ArrowUpRight, ChevronDown, Play, RotateCcw, X } from "./icons";
+import { ArrowUpRight, Play, RotateCcw } from "./icons";
 import { InsightNotice } from "./insight-notice";
+import { ModalHeader } from "./modal-header";
 import { MatchPeople } from "./match-people";
 import {
   InsightDetails,
@@ -437,7 +438,7 @@ export function MatchApp({
             dialogContent === "recap"
               ? "Catch me up"
               : dialogContent === "settings"
-                ? "Your experience"
+                ? "Settings"
                 : "About Between the Lines"
           }
           className={`modal ${dialogContent === "recap" ? "recap-modal" : ""}`}
@@ -475,15 +476,16 @@ export function MatchApp({
             }
           }}
         >
-          <div className="modal-header">
-            <button
-              className="icon-button"
-              aria-label="Close dialog"
-              onClick={() => setModal(null)}
-            >
-              <X size={20} />
-            </button>
-          </div>
+          <ModalHeader
+            title={
+              dialogContent === "recap"
+                ? "Catch me up"
+                : dialogContent === "settings"
+                  ? "Settings"
+                  : "About Between the Lines"
+            }
+            onClose={() => setModal(null)}
+          />
           {dialogContent === "recap" ? (
             <>
               <MatchRecap
@@ -545,7 +547,71 @@ export function MatchApp({
                 prefs={prefs}
                 setPrefs={setPrefs}
                 onClose={() => setModal(null)}
-              />
+              >
+                <section
+                  className="demo-settings"
+                  aria-labelledby="demo-settings-title"
+                >
+                  <h3 id="demo-settings-title">Demo controls</h3>
+                  <div className="demo-settings-content">
+                    <label className="setting-label">
+                      <span>Generator profile</span>
+                      <select
+                        aria-label="Generator profile"
+                        value={profile}
+                        onChange={(e) => {
+                          setProfile(e.target.value as "demo" | "balanced");
+                          setSeenEvidenceIds([]);
+                          setSelectedKey(null);
+                          seek(DEMO_TIME);
+                          setPitchView("pattern");
+                        }}
+                      >
+                        <option value="demo">Curated demo (default)</option>
+                        <option value="balanced">
+                          Balanced (experimental)
+                        </option>
+                      </select>
+                    </label>
+                    <p className="limitations">
+                      {profile === "demo"
+                        ? "Fictional teams and generated match events."
+                        : "An experimental generator with broader passing and faster pacing. Not a validated realism model."}
+                    </p>
+                    <button
+                      className="secondary-button"
+                      onClick={() => {
+                        setScenario("pressure");
+                        seek(60 * 60);
+                        setSelectedKey(null);
+                        setPrefs(defaultPrefs);
+                        setSeenEvidenceIds([]);
+                        setTab("visual");
+                        setSpeed(16);
+                        setPlaying(true);
+                        setSection("match");
+                        setModal(null);
+                      }}
+                    >
+                      <Play size={16} /> Watch the build-up
+                    </button>
+                    <button
+                      className="text-button"
+                      onClick={() => {
+                        changeScenario("pressure");
+                        setPrefs(defaultPrefs);
+                        setSeenEvidenceIds([]);
+                        setTab("visual");
+                        setSpeed(8);
+                        setSection("match");
+                        setModal(null);
+                      }}
+                    >
+                      Reset demo <RotateCcw size={16} />
+                    </button>
+                  </div>
+                </section>
+              </MatchSettings>
               <button
                 className="text-button about-settings"
                 onClick={() => setModal("about")}
@@ -555,7 +621,7 @@ export function MatchApp({
             </>
           ) : (
             <>
-              <h2 className="brand-headline">More than the score.</h2>
+              <h3 className="brand-headline">More than the score.</h3>
               <p className="recap-summary">
                 Football insights that go deeper. Between the Lines turns
                 football events into stories you can inspect. Follow a pattern,
@@ -798,64 +864,6 @@ export function MatchApp({
           setPrefs={setPrefs}
         />
       )}
-      <details className="demo-controls">
-        <summary>
-          Source details <ChevronDown size={16} />
-        </summary>
-        <div className="bottom-row">
-          <label className="scenario-picker">
-            <span>GENERATOR PROFILE</span>
-            <select
-              aria-label="Generator profile"
-              value={profile}
-              onChange={(e) => {
-                setProfile(e.target.value as "demo" | "balanced");
-                setSeenEvidenceIds([]);
-                setSelectedKey(null);
-                seek(DEMO_TIME);
-                setPitchView("pattern");
-              }}
-            >
-              <option value="demo">Curated demo (default)</option>
-              <option value="balanced">Balanced (experimental)</option>
-            </select>
-          </label>
-          <p className="limitations">
-            {profile === "demo"
-              ? "Generated events; comparisons can span the half boundary."
-              : "An experimental generator with broader passing and faster pacing. Not a validated realism model."}
-          </p>
-          <button
-            className="secondary-button"
-            onClick={() => {
-              setScenario("pressure");
-              seek(60 * 60);
-              setSelectedKey(null);
-              setPrefs(defaultPrefs);
-              setSeenEvidenceIds([]);
-              setTab("visual");
-              setSpeed(16);
-              setPlaying(true);
-              setSection("match");
-            }}
-          >
-            <Play size={16} /> Watch the build-up
-          </button>
-          <button
-            className="text-button"
-            onClick={() => {
-              changeScenario("pressure");
-              setPrefs(defaultPrefs);
-              setSeenEvidenceIds([]);
-              setTab("visual");
-              setSpeed(8);
-              setSection("match");
-            }}
-          >
-            Reset demo <RotateCcw size={16} />
-          </button>
-        </div>
-      </details>
     </MatchShell>
   );
 }

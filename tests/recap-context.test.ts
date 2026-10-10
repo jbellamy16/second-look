@@ -29,7 +29,9 @@ it.each(captured.rows)(
     expect(result.narrative.explanation).toContain("Arlo Hayes");
     expect(result.narrative.explanation).toContain("1–0");
     expect(result.narrative.explanation).toContain(
-      mode === "fan" ? "won the ball 4 times" : "4 high ball wins",
+      mode === "fan"
+        ? "won the ball 4 times"
+        : "4 ball wins in attacking third",
     );
     expect(statistics(eventsAt(events, captured.time)).harbor.goals).toBe(1);
     expect(

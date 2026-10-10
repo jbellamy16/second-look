@@ -136,7 +136,12 @@ AI can choose supporting observations, not write unconstrained football claims.
 
 ## Deployment and hackathon separation
 
-`HISTORICAL_MATCHES_ENABLED=false` **at build and runtime** hides the Real Match
+Recorded fixtures are hidden by default. Set `RECORDED_MATCHES_VISIBLE=true` at
+build time to restore the Synthetic / Recorded selector for internal review.
+The default experience loads only synthetic fixture choices; historical data
+and replay support are retained.
+
+`HISTORICAL_MATCHES_ENABLED=false` **at build and runtime** also hides the Recorded
 selector and returns 404 from both historical APIs. The home page is prerendered,
 so changing only the runtime setting does not remove an already-built selector.
 Rebuild for a synthetic-only submission. Existing synthetic controls and Foundry

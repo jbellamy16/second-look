@@ -1,4 +1,5 @@
 "use client";
+import { eventLabel } from "@/lib/event-label";
 import {
   type RefObject,
   useLayoutEffect,
@@ -209,7 +210,7 @@ export function Pitch({
           const label =
             group.events.length > 1
               ? `${group.events.length} actions ${density ? "in this area" : "at this location"}. Choose an action`
-              : `${formatTime(e.time)} ${e.type} by ${lookupPlayer(e.playerId).name}`;
+              : `${formatTime(e.time)} ${eventLabel(e.type)} by ${lookupPlayer(e.playerId).name}`;
           const choose = () => {
             if (group.events.length > 1)
               setOpenedGroup(openedGroup === group.id ? null : group.id);
@@ -409,7 +410,8 @@ export function Pitch({
                 onSelect(e);
               }}
             >
-              {formatTime(e.time)} · {lookupPlayer(e.playerId).name} · {e.type}
+              {formatTime(e.time)} · {lookupPlayer(e.playerId).name} ·{" "}
+              {eventLabel(e.type)}
             </button>
           ))}
         </div>

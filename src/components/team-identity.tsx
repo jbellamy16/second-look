@@ -11,9 +11,9 @@ export function Crest({
   return (
     <img
       className={`crest ${team}${small ? " small" : ""}`}
-      src={`/teams/${team}.svg`}
+      src={`/teams/${team}.png`}
       width="64"
-      height="72"
+      height="64"
       alt=""
       aria-hidden="true"
     />

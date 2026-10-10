@@ -1,5 +1,12 @@
 "use client";
 import {
+  playerHighlights,
+  eventMinute,
+  type PlayerHighlights,
+} from "@/lib/sources/player-highlights";
+import { Goal, Pass, Substitution } from "./icons";
+import { AnimatedDetails } from "./motion";
+import {
   activeMatchPlayers,
   eventClock,
   matchClock,
@@ -10,6 +17,59 @@ import { eventDescription } from "@/lib/sources/intelligence";
 import { type MatchPreferences } from "./match-settings";
 import { Crest } from "./team-identity";
 import { Pitch } from "./pitch";
+function PlayerBadges({
+  highlights,
+  match,
+  substitutionsOnly = false,
+}: {
+  highlights: PlayerHighlights;
+  match: MatchData;
+  substitutionsOnly?: boolean;
+}) {
+  return (
+    <span className="player-badges">
+      {!substitutionsOnly &&
+        highlights.goalEvents.map((event) => (
+          <span
+            key={event.id}
+            className="player-badge"
+            title={`Goal at ${eventClock(match, event)}`}
+          >
+            <Goal size={16} />
+            <span className="sr-only">Goal </span>
+            {eventMinute(match, event)}
+          </span>
+        ))}
+      {!substitutionsOnly &&
+        highlights.assistEvents.map((event) => (
+          <span
+            key={event.id}
+            className="player-badge"
+            title={`Assist at ${eventClock(match, event)}`}
+          >
+            <Pass size={16} />
+            <span className="sr-only">Assist </span>
+            {eventMinute(match, event)}
+          </span>
+        ))}
+      {highlights.substitutions.map(({ event, direction }) => {
+        const otherId = direction === "On" ? event.outgoingId : event.playerId;
+        const other = match.players.find((p) => p.id === otherId)?.name;
+        return (
+          <span
+            key={`${event.id}-${direction}`}
+            className="player-badge"
+            title={`Substituted ${direction.toLowerCase()} at ${eventClock(match, event)}`}
+          >
+            <Substitution size={16} />
+            {direction}
+            {other ? ` · ${other}` : ""} {eventMinute(match, event)}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
 export function MatchPeople({
   match,
   time,
@@ -34,6 +94,8 @@ export function MatchPeople({
   const active = activeMatchPlayers(match, time),
     visible = match.events.filter((e) => e.time <= time),
     who = match.players.find((p) => p.id === focusedPlayer) ?? match.players[0];
+  const highlights = playerHighlights(match, time);
+  const focusedHighlights = highlights.get(who.id)!;
   const contributions = visible.filter(
     (e) =>
       e.playerId === who.id &&
@@ -71,23 +133,40 @@ export function MatchPeople({
               {match.teams[team].formation ?? "Formation not supplied"}
             </span>
           </div>
-          {match.players
-            .filter((p) => p.team === team)
-            .map((p) => (
-              <button
-                className="player-row"
-                key={p.id}
-                onClick={() => onFocus(p.id)}
-              >
-                <span className={`number ${team}`}>{p.number ?? "—"}</span>
-                <strong>{p.name}</strong>
-                <span>{playerStatus(p.id)}</span>
-              </button>
-            ))}
+          {(["Starting XI", "Substitutes"] as const).map((group) => {
+            const players = match.players.filter(
+              (p) =>
+                p.team === team &&
+                match.teams[team].lineup.includes(p.id) ===
+                  (group === "Starting XI"),
+            );
+            if (!players.length) return null;
+            return (
+              <div className="lineup-group" key={group}>
+                <h3>{group}</h3>
+                {players.map((p) => (
+                  <button
+                    className="player-row"
+                    key={p.id}
+                    onClick={() => onFocus(p.id)}
+                  >
+                    <span className={`number ${team}`}>{p.number ?? "—"}</span>
+                    <span className="lineup-player-info">
+                      <strong>{p.name}</strong>
+                      <span className="sr-only">{playerStatus(p.id)}</span>
+                    </span>
+                    <PlayerBadges
+                      highlights={highlights.get(p.id)!}
+                      match={match}
+                    />
+                  </button>
+                ))}
+              </div>
+            );
+          })}
           <p className="limitations">
-            Roster and substitutions from match metadata; substitution times may
-            be approximate. Shirt numbers and formation are shown only when
-            supplied. This is not a tracking view.
+            Events through {matchClock(match, time)}. A ~ marks an approximate
+            time.
           </p>
         </section>
       ))}
@@ -114,10 +193,27 @@ export function MatchPeople({
         <span className={`number ${who.team}`}>{who.number ?? "—"}</span>
       </div>
       <p>
-        {who.role} · {match.teams[who.team].name} · {playerStatus(who.id)} at{" "}
-        {matchClock(match, time)}
+        {who.role} · {match.teams[who.team].name}
       </p>
+      <div className="player-status-line">
+        <span className="player-badge">{playerStatus(who.id)}</span>
+        <PlayerBadges
+          highlights={focusedHighlights}
+          match={match}
+          substitutionsOnly
+        />
+      </div>
       <div className="player-metrics">
+        <div>
+          <strong>{focusedHighlights.goals}</strong>
+          <span>Goals</span>
+        </div>
+        {focusedHighlights.assists !== null && (
+          <div>
+            <strong>{focusedHighlights.assists}</strong>
+            <span>Assists</span>
+          </div>
+        )}
         {(["pass", "shot", "touch"] as const).map((type) => (
           <div key={type}>
             <strong>
@@ -155,7 +251,7 @@ export function MatchPeople({
         Recorded event locations through {matchClock(match, time)}. Density
         counts actions, not time spent or off-ball influence.
       </p>
-      <details>
+      <AnimatedDetails>
         <summary>Inspect contributions ({contributions.length})</summary>
         <div className="event-feed-list">
           {contributions
@@ -170,7 +266,7 @@ export function MatchPeople({
             <p>No contributions recorded through this moment.</p>
           )}
         </div>
-      </details>
+      </AnimatedDetails>
     </section>
   );
 }

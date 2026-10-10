@@ -328,6 +328,12 @@ main {
   width: 24px;
   height: 27px;
 }
+/* Clip the supplied Harbor artwork to its outer rim, hiding the white canvas. */
+.crest.harbor {
+  height: auto;
+  aspect-ratio: 1;
+  clip-path: ellipse(45.4% 44.3% at 50% 48.9%);
+}
 .score {
   text-align: center;
   min-width: 84px;
@@ -392,7 +398,7 @@ main {
   color: var(--sl-muted);
 }
 .live-label.is-playing span {
-  background: #fa6b7c;
+  background: var(--sl-green);
 }
 .view-toolbar {
   display: flex;

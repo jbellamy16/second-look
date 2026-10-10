@@ -106,22 +106,35 @@ for (const [variant, ink, accent] of [
     );
   }
 }
-const icon = svg(
-  512,
-  512,
-  `<rect width="512" height="512" rx="108" fill="${C.night}"/><g transform="translate(16 16) scale(5)">${mark(C.white, C.green, true)}</g>`,
+// Install icons use a full-bleed brand tile. A knockout keeps the route distinct
+// when it crosses the field geometry; the navigation logo remains unchanged.
+function tileMark() {
+  const route = "M24 72C49 72 47 24 72 24M64 20L72 24L68 32";
+  return `<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"><path stroke="${C.night}" d="M16 16V80M80 16V80M48 10V30M48 66V86"/><circle stroke="${C.night}" cx="48" cy="48" r="18"/><path stroke="${C.green}" stroke-width="10" d="${route}"/><path stroke="${C.night}" d="${route}"/></g>`;
+}
+function appTile(rounded = true, scale = 4) {
+  const inset = (512 - 96 * scale) / 2;
+  return svg(
+    512,
+    512,
+    `<rect width="512" height="512" rx="${rounded ? 108 : 0}" fill="${C.green}"/><g transform="translate(${inset} ${inset}) scale(${scale})">${tileMark()}</g>`,
+  );
+}
+// Pixel-size geometry, with fewer crossings than the full application symbol.
+const favicon = svg(
+  32,
+  32,
+  `<rect width="32" height="32" rx="7" fill="${C.green}"/><g fill="none" stroke="${C.night}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8V24M26 8V24"/><circle cx="16" cy="16" r="6"/><path stroke="${C.green}" stroke-width="5" d="M10 24L22 8"/><path d="M10 24L22 8M17 8H22V13"/></g>`,
 );
-const maskable = svg(
-  512,
-  512,
-  `<path fill="${C.night}" d="M0 0H512V512H0Z"/><g transform="translate(112 112) scale(3)">${mark(C.white, C.green, true)}</g>`,
-);
+const icon = appTile();
+const maskable = appTile(false, 3.6);
+const appleIcon = appTile(false);
 await save("public/icon.svg", icon, 512, 512, "App icon");
 await save(
   "public/favicon.svg",
-  icon,
-  512,
-  512,
+  favicon,
+  32,
+  32,
   "Simplified small-size symbol",
 );
 await save(
@@ -134,14 +147,20 @@ await save(
 for (const size of [16, 32, 48])
   await raster(
     `public/favicon-${size}x${size}.png`,
-    icon,
+    favicon,
     size,
     size,
-    "Favicon",
+    "Optically simplified favicon",
   );
 for (const size of [64, 192, 256, 512, 1024])
   await raster(`public/icon-${size}.png`, icon, size, size, "Application icon");
-await raster("public/apple-touch-icon.png", icon, 180, 180, "Apple touch icon");
+await raster(
+  "public/apple-touch-icon.png",
+  appleIcon,
+  180,
+  180,
+  "Opaque Apple touch icon; OS supplies the corner mask",
+);
 await raster(
   "public/icon-maskable-512.png",
   maskable,
@@ -173,51 +192,130 @@ await save(
   48,
   "Multi-resolution ICO: 16, 32, 48",
 );
-function pitch(x, y, scale = 1) {
-  return `<g transform="translate(${x} ${y}) scale(${scale})"><g stroke="${C.slate}" stroke-width="2" fill="none"><rect width="440" height="600" rx="2"/><path d="M0 300H440M130 0V90H310V0M170 0V35H270V0M130 600V510H310V600M170 600V565H270V600"/><circle cx="220" cy="300" r="66"/></g><path d="M74 480L164 404L135 270L270 193L338 102" stroke="${C.green}" stroke-width="3" fill="none"/><path d="M325 109L338 102L336 117" fill="none" stroke="${C.green}" stroke-width="3"/>${[
-    [74, 480],
-    [164, 404],
-    [135, 270],
-    [270, 193],
-  ]
-    .map(
-      ([x, y], i) =>
-        `<circle cx="${x}" cy="${y}" r="${i === 2 ? 12 : 7}" fill="${i === 2 ? C.green : C.night}" stroke="${C.green}" stroke-width="3"/>`,
-    )
-    .join(
-      "",
-    )}<circle cx="135" cy="270" r="27" stroke="${C.green}" opacity=".25" fill="none"/>${[
-    [320, 390],
-    [290, 460],
-    [92, 180],
-    [345, 245],
-    [185, 135],
-  ]
-    .map(
-      ([x, y]) =>
-        `<path d="M${x - 5} ${y - 5}l10 10m0-10l-10 10" stroke="${C.muted}" stroke-width="2"/>`,
-    )
-    .join("")}</g>`;
+// A decorative tactical study, not a fabricated match statistic or screenshot.
+function tactical(x, y, width, height) {
+  const W = width,
+    H = height,
+    inset = 24;
+  const px = (v) => (v * W) / 440,
+    py = (v) => (v * H) / 400;
+  const landscape = W > H * 1.5;
+  const markings = landscape
+    ? `<path d="M${W / 2} ${inset}V${H - inset}M${inset} ${H * 0.26}H${W * 0.17}V${H * 0.74}H${inset}M${W - inset} ${H * 0.26}H${W * 0.83}V${H * 0.74}H${W - inset}"/>`
+    : `<path d="M${inset} ${H / 2}H${W - inset}M${W * 0.3} ${inset}V${H * 0.22}H${W * 0.7}V${inset}M${W * 0.3} ${H - inset}V${H * 0.78}H${W * 0.7}V${H - inset}"/>`;
+  return `<g transform="translate(${x} ${y})">
+    <defs><clipPath id="field-crop"><rect width="${W}" height="${H}" rx="20"/></clipPath></defs>
+    <g clip-path="url(#field-crop)"><rect width="${W}" height="${H}" fill="#14241E"/>
+    <path d="M${W / 4} 0H${W / 2}V${H}H${W / 4}ZM${W * 0.75} 0H${W}V${H}H${W * 0.75}Z" fill="#193126"/></g>
+    <g fill="none" stroke="#42644F" stroke-width="1.5">
+      <rect x="${inset}" y="${inset}" width="${W - inset * 2}" height="${H - inset * 2}" rx="2"/>
+      ${markings}<circle cx="${W / 2}" cy="${H / 2}" r="${Math.min(W, H) * 0.13}"/>
+    </g>
+    <path d="M${inset} ${py(132)}H${W - inset}" stroke="${C.green}" stroke-dasharray="4 7" opacity=".4"/>
+    <g fill="${C.mist}" opacity=".65">${[
+      [90, 95],
+      [177, 140],
+      [290, 150],
+      [342, 223],
+      [107, 231],
+      [249, 303],
+    ]
+      .map(
+        ([x, y]) =>
+          `<rect x="${px(x) - 4}" y="${py(y) - 4}" width="8" height="8" rx="1"/>`,
+      )
+      .join("")}</g>
+    <path d="${[
+      [87, 321],
+      [155, 256],
+      [242, 210],
+      [272, 115],
+      [350, 66],
+    ]
+      .map(([x, y], i) => `${i ? "L" : "M"}${px(x)} ${py(y)}`)
+      .join(
+        "",
+      )}" stroke="${C.green}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M${px(350) - 19} ${py(66) - 1}L${px(350)} ${py(66)}L${px(350) - 5} ${py(66) + 18}" stroke="${C.green}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    ${[
+      [87, 321],
+      [155, 256],
+      [242, 210],
+    ]
+      .map(
+        ([x, y]) =>
+          `<circle cx="${px(x)}" cy="${py(y)}" r="7" fill="${C.night}" stroke="${C.green}" stroke-width="3"/>`,
+      )
+      .join("")}
+    <circle cx="${px(272)}" cy="${py(115)}" r="23" fill="none" stroke="${C.green}" opacity=".25"/>
+    <circle cx="${px(272)}" cy="${py(115)}" r="11" fill="${C.green}"/>
+  </g>`;
 }
 function social(w, h) {
-  const tall = h > w;
-  const s = w / 1200;
-  const W = 1200,
-    H = h / s;
-  const body =
-    `<rect width="${W}" height="${H}" fill="${C.night}"/><path d="M64 0V${H}M1136 0V${H}" stroke="${C.slate}" opacity=".45"/><g transform="translate(96 64) scale(.74)">${logo("horizontal", C.white, C.green)[2]}</g>` +
-    (tall ? pitch(280, 900, 1.5) : pitch(730, -45, 1.03)) +
-    text("MORE THAN", 96, tall ? 420 : 285, tall ? 124 : 104, C.white, 2) +
-    text("THE SCORE.", 96, tall ? 558 : 401, tall ? 124 : 104, C.green, 2) +
-    `<path d="M96 ${tall ? 616 : 445}H160" stroke="${C.green}" stroke-width="4"/>` +
-    text("Football insights", 96, tall ? 696 : 496, 26, C.mist, 0, ui) +
-    text("that go deeper.", 96, tall ? 737 : 535, 26, C.mist, 0, ui) +
-    text("MATCHES / PATTERNS / STORIES", 96, H - 46, 14, C.muted, 2, ui);
+  const square = w === h;
+  const portrait = h > w;
+  const scale = w / 1200;
+  const H = h / scale;
+  let body = `<rect width="1200" height="${H}" fill="${C.night}"/><path d="M64 0H1136" stroke="${C.green}" stroke-width="8"/>`;
+  body += `<g transform="translate(64 ${portrait ? 156 : 48}) scale(.72)">${logo("horizontal", C.white, C.green)[2]}</g>`;
+  if (!square && !portrait) {
+    body += `<rect x="840" y="54" width="296" height="34" rx="17" fill="#193126"/>`;
+    body += text("FOOTBALL INTELLIGENCE", 862, 77, 13, C.green, 1.1, ui);
+    body += text("MORE THAN", 64, 270, 112, C.white, 1);
+    body += text("THE SCORE.", 64, 382, 112, C.green, 1);
+    body += text(
+      "See the pattern. Follow the play.",
+      68,
+      441,
+      23,
+      C.mist,
+      0,
+      ui,
+    );
+    body += tactical(700, 151, 436, 396);
+    body += `<path d="M64 ${H - 56}H1136" stroke="${C.slate}"/>`;
+    body += text(
+      "FOOTBALL INSIGHTS THAT GO DEEPER.",
+      64,
+      H - 26,
+      13,
+      C.mist,
+      1.1,
+      ui,
+    );
+    body += text("BETWEEN THE LINES", 955, H - 26, 13, C.muted, 1, ui);
+  } else {
+    const top = portrait ? 460 : 325;
+    body += text("MORE THAN", 64, top, 154, C.white, 1);
+    body += text("THE SCORE.", 64, top + 155, 154, C.green, 1);
+    body += text(
+      "See the pattern. Follow the play.",
+      68,
+      top + 220,
+      30,
+      C.mist,
+      0,
+      ui,
+    );
+    const fieldY = top + (portrait ? 335 : 270);
+    const fieldH = portrait ? 840 : 465;
+    body += tactical(64, fieldY, 1072, fieldH);
+    const footer = portrait ? H - 180 : H - 48;
+    body += text(
+      "FOOTBALL INSIGHTS THAT GO DEEPER.",
+      64,
+      footer,
+      20,
+      C.mist,
+      1,
+      ui,
+    );
+  }
   return svg(
     w,
     h,
-    `<g transform="scale(${s})">${body}</g>`,
-    "Between the Lines. More than the score. Football insights that go deeper.",
+    `<g transform="scale(${scale})">${body}</g>`,
+    "Between the Lines. More than the score. See the pattern. Follow the play.",
   );
 }
 for (const [name, w, h] of [
@@ -226,22 +324,15 @@ for (const [name, w, h] of [
   ["social-square", 1080, 1080],
   ["social-story", 1080, 1920],
   ["video-title", 1920, 1080],
+  ["hackathon-cover", 1920, 1080],
 ]) {
-  // Square uses a deliberately stacked composition, with pitch as a lower-right detail.
-  let art = social(w, h);
-  if (name === "social-square")
-    art = svg(
-      w,
-      h,
-      `<rect width="1080" height="1080" fill="${C.night}"/><g transform="translate(80 65) scale(.85)">${logo("horizontal", C.white, C.green)[2]}</g>${pitch(670, 610, 0.82)}${text("MORE THAN", 80, 405, 142, C.white, 2)}${text("THE SCORE.", 80, 555, 142, C.green, 2)}<path d="M80 618H152" stroke="${C.green}" stroke-width="4"/>${text("Football insights that go deeper.", 80, 684, 28, C.mist, 0, ui)}${text("SEE THE GAME DIFFERENTLY", 80, 1000, 16, C.muted, 2, ui)}`,
-    );
-  const source = `public/brand/${name}.svg`;
+  const art = social(w, h);
   await save(
-    source,
+    `public/brand/${name}.svg`,
     art,
     w,
     h,
-    "Original broadcast composition; outlined text",
+    "BTL editorial share composition; outlined lettering and illustrative tactical route",
   );
   await raster(
     name.includes("image") ? `public/${name}.png` : `public/brand/${name}.png`,
@@ -251,6 +342,53 @@ for (const [name, w, h] of [
     "Social / presentation export",
   );
 }
+// Review each export at its intended scale, including actual-size browser icons.
+const innerSvg = (art) =>
+  art.replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "");
+const metaPreview = svg(
+  1280,
+  1080,
+  `<rect width="1280" height="1080" fill="${C.night}"/>` +
+    text("BETWEEN THE LINES / SHARE + APP ASSETS", 64, 48, 20, C.mist, 2) +
+    `<g transform="translate(64 88) scale(.96)">${innerSvg(social(1200, 630))}</g>` +
+    `<path d="M64 730H1216" stroke="${C.slate}"/>` +
+    `<g transform="translate(64 780) scale(.28125)">${innerSvg(icon)}</g>` +
+    `<g transform="translate(284 780) scale(.28125)">${innerSvg(appleIcon)}</g>` +
+    `<defs><clipPath id="launcher-circle"><circle cx="576" cy="852" r="72"/></clipPath></defs>` +
+    `<g clip-path="url(#launcher-circle)"><g transform="translate(504 780) scale(.28125)">${innerSvg(maskable)}</g></g>` +
+    text("APP ICON", 64, 966, 16, C.mist, 1, ui) +
+    text("APPLE TOUCH", 284, 966, 16, C.mist, 1, ui) +
+    text("MASKABLE", 504, 966, 16, C.mist, 1, ui) +
+    [16, 32, 48]
+      .map(
+        (n, i) =>
+          `<g transform="translate(${760 + i * 150} ${852 - n / 2}) scale(${n / 32})">${innerSvg(favicon)}</g>${text(n + " PX", 760 + i * 150, 966, 16, C.mist, 1, ui)}`,
+      )
+      .join("") +
+    text(
+      "One brand. Purpose-built for every size.",
+      64,
+      1040,
+      20,
+      C.muted,
+      0,
+      ui,
+    ),
+);
+await save(
+  "docs/brand/meta-assets-preview.svg",
+  metaPreview,
+  1280,
+  1080,
+  "Share and icon contact sheet; favicons shown at actual size",
+);
+await raster(
+  "docs/brand/meta-assets-preview.png",
+  metaPreview,
+  1280,
+  1080,
+  "Share and icon visual review",
+);
 const swatches = Object.entries(C)
   .filter(([name]) => name !== "muted")
   .map(

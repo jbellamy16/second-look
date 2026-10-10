@@ -3,6 +3,10 @@ import type { Insight, Mode } from "@/lib/intelligence";
 import { clock } from "@/lib/match";
 import { EMPTY_MATCH_CONTEXT } from "@/lib/match-context";
 import { matchContext } from "@/lib/sources/context";
+import {
+  playerHighlights,
+  scorelineNames,
+} from "@/lib/sources/player-highlights";
 import { eventDescription } from "@/lib/sources/intelligence";
 import {
   eventClock,
@@ -30,9 +34,10 @@ import {
   RotateCcw,
 } from "./icons";
 import { PitchViewControl, type PitchView } from "./match-shell";
-import { Metric, SelectionGroup } from "./motion";
+import { AnimatedDetails, Metric, SelectionGroup } from "./motion";
 import { Pitch } from "./pitch";
 import { Crest } from "./team-identity";
+import { TimelineEvent } from "./timeline-event";
 
 export const displayClock = (match: MatchData, time: number) =>
   match.kind === "synthetic" ? clock(time) : matchClock(match, time);
@@ -83,7 +88,41 @@ export function MatchHeader({
       })}`,
     );
   }, [match.id]);
-  const score = recordedScore(match.events.filter((e) => e.time <= time));
+  const visible = match.events.filter((e) => e.time <= time);
+  const score = recordedScore(visible);
+  const goals = visible.filter((e) => e.scoringTeam && e.period !== "PS");
+  const highlights = playerHighlights(match, time);
+  const halfTime =
+    time >= match.secondHalfStart
+      ? recordedScore(visible.filter((e) => e.period === "1H"))
+      : null;
+  const scorerEntries = (team: "harbor" | "riverside") =>
+    scorelineNames(
+      match,
+      goals
+        .filter((e) => e.scoringTeam === team)
+        .map((event) => ({ playerId: event.playerId, event })),
+    );
+  const assistEntries = (team: "harbor" | "riverside") =>
+    scorelineNames(
+      match,
+      match.players
+        .filter((p) => p.team === team)
+        .flatMap((p) =>
+          (highlights.get(p.id)?.assistEvents ?? []).map((event) => ({
+            playerId: p.id,
+            event,
+          })),
+        ),
+    );
+  const homeAssists = assistEntries("harbor"),
+    awayAssists = assistEntries("riverside");
+  const names = (entries: { id: string; label: string }[]) =>
+    entries.length ? (
+      entries.map((entry) => <span key={entry.id}>{entry.label}</span>)
+    ) : (
+      <span className="no-score-event">—</span>
+    );
   return (
     <div className="match-header">
       <section
@@ -107,6 +146,14 @@ export function MatchHeader({
             )}
           </div>
           <div className="score">
+            <span className={`live-label ${playing ? "is-playing" : ""}`}>
+              <span />
+              {playing
+                ? "PLAYING"
+                : time >= match.duration
+                  ? "FULL TIME"
+                  : "PAUSED"}
+            </span>
             <strong data-testid="score" aria-live="polite" aria-atomic="true">
               <Metric value={score.harbor} important />
               <span className="score-separator">:</span>
@@ -137,14 +184,40 @@ export function MatchHeader({
             </span>
           </div>
         </div>
-        <span className={`live-label ${playing ? "is-playing" : ""}`}>
-          <span />
-          {playing
-            ? "PLAYING"
-            : time >= match.duration
-              ? "FULL TIME"
-              : "PAUSED"}
-        </span>
+        {goals.length > 0 && (
+          <div className="score-contributions" aria-label="Goals and assists">
+            <div className="score-contribution-row score-goals">
+              <div
+                className="home-scorers"
+                aria-label={`${match.teams.harbor.name} scorers`}
+              >
+                {names(scorerEntries("harbor"))}
+              </div>
+              <span className="score-contribution-label">
+                {halfTime
+                  ? `HT ${halfTime.harbor}–${halfTime.riverside}`
+                  : "Goals"}
+              </span>
+              <div
+                className="away-scorers"
+                aria-label={`${match.teams.riverside.name} scorers`}
+              >
+                {names(scorerEntries("riverside"))}
+              </div>
+            </div>
+            {(homeAssists.length > 0 || awayAssists.length > 0) && (
+              <div className="score-contribution-row score-assists">
+                <div aria-label={`${match.teams.harbor.name} assists`}>
+                  {names(homeAssists)}
+                </div>
+                <span className="score-contribution-label">Assists</span>
+                <div aria-label={`${match.teams.riverside.name} assists`}>
+                  {names(awayAssists)}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </section>
       <div className="match-controls">
         <div className="playback">
@@ -164,19 +237,12 @@ export function MatchHeader({
                     (e.scoringTeam || e.type === "substitution"),
                 )
                 .map((e) => (
-                  <button
+                  <TimelineEvent
                     key={e.id}
-                    className={e.scoringTeam ? "goal-tick" : "sub-tick"}
-                    style={{ left: `${(e.time / match.duration) * 100}%` }}
-                    aria-label={`Seek to ${displayClock(match, e.time)} ${e.scoringTeam ? "goal" : "substitution"}`}
-                    onClick={() => onSeek(e.time)}
-                  >
-                    {e.scoringTeam ? (
-                      <Goal size={16} />
-                    ) : (
-                      <Substitution size={16} />
-                    )}
-                  </button>
+                    match={match}
+                    event={e}
+                    onSeek={onSeek}
+                  />
                 ))}
             </div>
             <input
@@ -221,12 +287,6 @@ export function MatchHeader({
           </button>
         </div>
       </div>
-      <span className="fixture-meta">
-        {match.competition}
-        {match.kind === "synthetic"
-          ? fixtureDate && ` · ${fixtureDate}`
-          : `${match.season && !match.competition.includes(match.season) ? ` · ${match.season}` : ""}${match.date ? ` · ${new Date(match.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}` : ""}`}
-      </span>
       <div className="view-toolbar">
         <SelectionGroup
           className="mode-switch"
@@ -244,6 +304,17 @@ export function MatchHeader({
             </button>
           ))}
         </SelectionGroup>
+        <div className="fixture-details">
+          <span className="fixture-meta">
+            {match.competition}
+            {match.kind === "synthetic"
+              ? fixtureDate && ` · ${fixtureDate}`
+              : `${match.season && !match.competition.includes(match.season) ? ` · ${match.season}` : ""}${match.date ? ` · ${new Date(match.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}` : ""}`}
+          </span>
+          {match.kind === "synthetic" && (
+            <span className="synthetic-badge">Synthetic demo</span>
+          )}
+        </div>
         <button className="catchup-button" onClick={onRecap}>
           <ListVideo size={20} />
           Catch me up
@@ -266,16 +337,16 @@ export function InsightComparison({
       className="measured-change"
       aria-label={`${insight.metric}: ${insight.current} versus ${insight.previous}`}
     >
+      <p className="metric-label">{insight.metric}</p>
       <div className="change-total">
-        <strong>
-          {insight.current}
-          <small>{insight.metric}</small>
-        </strong>
-        <span className="change-delta">
-          {insight.current - insight.previous > 0 ? "+" : ""}
-          {insight.current - insight.previous}
+        <strong>{insight.current}</strong>
+        <div className="change-comparison">
+          <span className="change-delta">
+            {insight.current - insight.previous > 0 ? "+" : ""}
+            {insight.current - insight.previous}
+          </span>
           <small>vs previous 15 min</small>
-        </span>
+        </div>
       </div>
       {[
         [insight.current, insight.start, insight.end],
@@ -328,11 +399,13 @@ export function InsightCard({
       className={`observation-card insight-card ${lead ? "lead-observation" : ""}`}
       onClick={onSelect}
     >
-      <span className="observation-team">
-        <i className={`team-marker ${insight.team}`} />
-        {match.teams[insight.team].name}
+      <span className="insight-badges">
+        <span className="observation-team">
+          <i className={`team-marker ${insight.team}`} />
+          {match.teams[insight.team].name}
+        </span>
+        <span className="context-label">Analytical insight</span>
       </span>
-      <span className="context-label">Analytical insight</span>
       <h3>
         <InsightGlyph insight={insight} />
         {insight.headline}
@@ -395,7 +468,7 @@ export function MatchContext({
               )}
             </time>
           )}
-          <details className="context-evidence">
+          <AnimatedDetails className="context-evidence">
             <summary>
               View {item.evidenceIds.length} recorded{" "}
               {item.evidenceIds.length === 1 ? "action" : "actions"}
@@ -417,7 +490,7 @@ export function MatchContext({
                   </button>
                 ))}
             </div>
-          </details>
+          </AnimatedDetails>
         </article>
       ))}
     </div>
@@ -503,11 +576,13 @@ export function InsightDetails({
       {insight ? (
         <>
           <div className="selected-observation">
-            <span className="observation-team">
-              <i className={`team-marker ${insight.team}`} />
-              {match.teams[insight.team].name}
-            </span>
-            <span className="context-label">Analytical insight</span>
+            <div className="insight-badges">
+              <span className="observation-team">
+                <i className={`team-marker ${insight.team}`} />
+                {match.teams[insight.team].name}
+              </span>
+              <span className="context-label">Analytical insight</span>
+            </div>
             <h2>
               <InsightGlyph insight={insight} />
               {insight.headline}
@@ -595,8 +670,11 @@ export function InsightDetails({
             {children}
           </div>
           {insights.length > 1 && (
-            <details className="more-observations">
-              <summary>More observations ({insights.length - 1})</summary>
+            <AnimatedDetails className="more-observations">
+              <summary>
+                More observations{" "}
+                <span className="disclosure-count">{insights.length - 1}</span>
+              </summary>
               {insights
                 .filter((i) => i.id !== insight.id)
                 .map((i) => (
@@ -607,7 +685,7 @@ export function InsightDetails({
                     onSelect={() => onSelect(i)}
                   />
                 ))}
-            </details>
+            </AnimatedDetails>
           )}
         </>
       ) : (
@@ -751,7 +829,7 @@ export function MatchPitch({
           </div>
         </>
       )}
-      <details className="pitch-notes">
+      <AnimatedDetails className="pitch-notes">
         <summary>About this view</summary>
         <p>
           Home attacks right; away attacks left. This is a normalized schematic,
@@ -763,7 +841,7 @@ export function MatchPitch({
             ? "Generated event locations. Replay motion connects generated endpoints; it is not player tracking."
             : "Recorded event locations. No possession or motion between sparse events is inferred."}
         </p>
-      </details>
+      </AnimatedDetails>
     </section>
   );
 }
@@ -781,9 +859,9 @@ export function MatchEventFeed({
     .slice(-50)
     .reverse();
   return (
-    <details className="panel match-event-feed">
+    <AnimatedDetails className="panel match-event-feed">
       <summary>
-        Recent events <span>{events.length}</span>
+        Recent events <span className="disclosure-count">{events.length}</span>
       </summary>
       <div className="event-feed-list" tabIndex={0} aria-label="Recent events">
         {events.map((e) => (
@@ -801,7 +879,7 @@ export function MatchEventFeed({
         ))}
         {!events.length && <p>No events yet.</p>}
       </div>
-    </details>
+    </AnimatedDetails>
   );
 }
 export function MatchRecap({
@@ -824,7 +902,6 @@ export function MatchRecap({
   const score = recordedScore(match.events.filter((e) => e.time <= time));
   return (
     <div className="recap-body">
-      <h2>Catch me up</h2>
       <p className="recap-cutoff">Through {displayClock(match, time)}</p>
       <div className="recap-score">
         <span>{match.teams.harbor.name}</span>

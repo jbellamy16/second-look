@@ -54,6 +54,8 @@ export const normalizedEventSchema = z.object({
   xg: z.number().min(0).max(1).optional(),
   recipientId: id.optional(),
   outgoingId: id.optional(),
+  assistPlayerId: id.optional(),
+  assistEventId: id.optional(),
   possessionId: z.number().int().nonnegative().nullable(),
   scoringTeam: side.optional(),
   ownGoal: z.boolean().optional(),
@@ -162,6 +164,7 @@ export const matchSchema = z.object({
     lineups: z.boolean(),
     substitutions: z.boolean(),
     passRecipients: z.boolean(),
+    assists: z.boolean().optional(),
     physicalDirection: z.literal(false),
   }),
   limitations: z.array(z.string()),
@@ -246,6 +249,7 @@ export function validateMatch(input: unknown): MatchData {
       e.playerId === "0" ? null : e.playerId,
       e.recipientId,
       e.outgoingId,
+      e.assistPlayerId,
     ])
       if (pid && playerMap.get(pid)?.team !== e.team)
         fail("Invalid player/team association");
@@ -259,6 +263,28 @@ export function validateMatch(input: unknown): MatchData {
       fail("Invalid period timestamp");
     if (e.relatedEvents.some((ref) => !eventMap.has(ref)))
       fail("Unknown related event");
+    if (e.assistPlayerId || e.assistEventId) {
+      const pass = e.assistEventId ? eventMap.get(e.assistEventId) : undefined;
+      if (
+        !e.scoringTeam ||
+        e.ownGoal ||
+        e.period === "PS" ||
+        !e.assistPlayerId ||
+        e.assistPlayerId === e.playerId ||
+        !pass ||
+        pass.type !== "pass" ||
+        !pass.success ||
+        pass.playerId !== e.assistPlayerId ||
+        pass.recipientId !== e.playerId ||
+        pass.team !== e.team ||
+        pass.period !== e.period ||
+        pass.time > e.time ||
+        pass.order >= e.order ||
+        pass.possessionId === null ||
+        pass.possessionId !== e.possessionId
+      )
+        fail("Invalid goal assist");
+    }
     if (
       e.type === "substitution" &&
       (!e.outgoingId || !e.actorId || e.outgoingId === e.playerId)

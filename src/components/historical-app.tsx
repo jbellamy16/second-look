@@ -1,4 +1,5 @@
 "use client";
+import { ModalHeader } from "./modal-header";
 import type { Provenance } from "@/lib/ai/service";
 import type { Narrative } from "@/lib/foundry";
 import type { Mode } from "@/lib/intelligence";
@@ -21,7 +22,7 @@ import {
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAppearance } from "./appearance";
 import { EvidenceReplay } from "./evidence-replay";
-import { ArrowRight, Play, X } from "./icons";
+import { ArrowRight, Play } from "./icons";
 import { InsightNotice } from "./insight-notice";
 import { MatchPeople } from "./match-people";
 import {
@@ -36,7 +37,7 @@ import {
 import { MatchSettings, useMatchPreferences } from "./match-settings";
 import { MatchShell, type SectionProps } from "./match-shell";
 import { MatchStatistics } from "./match-statistics";
-import { usePageVisibility } from "./motion";
+import { AnimatedDetails, usePageVisibility } from "./motion";
 import { providerLabel } from "./provenance";
 import { useMatchPlayback } from "./use-match-playback";
 
@@ -98,18 +99,10 @@ export function HistoricalApp({
         <dialog
           ref={settingsDialog}
           className="modal"
-          aria-label="Your experience"
+          aria-label="Settings"
           onCancel={() => setSettings(false)}
         >
-          <div className="modal-header">
-            <button
-              className="icon-button"
-              aria-label="Close dialog"
-              onClick={() => setSettings(false)}
-            >
-              <X size={20} />
-            </button>
-          </div>
+          <ModalHeader title="Settings" onClose={() => setSettings(false)} />
           <label className="checkbox-label">
             <input
               type="checkbox"
@@ -382,7 +375,7 @@ function HistoricalReplay({
       </button>
       {notice && <p role="status">{notice}</p>}
       {
-        <details className="provenance">
+        <AnimatedDetails className="provenance">
           <summary>How Between the Lines knows</summary>
           <div
             className="provenance-content"
@@ -428,7 +421,7 @@ function HistoricalReplay({
                 "No completed AI tool activity."}
             </p>
           </div>
-        </details>
+        </AnimatedDetails>
       }
     </>
   );
@@ -594,7 +587,7 @@ function HistoricalReplay({
         />
       )}
       <footer className="match-attribution">
-        <details>
+        <AnimatedDetails>
           <summary>Source details · {match.provenance.provider}</summary>
           <p>
             <a
@@ -619,7 +612,7 @@ function HistoricalReplay({
           {match.limitations.map((l) => (
             <p key={l}>{l}</p>
           ))}
-        </details>
+        </AnimatedDetails>
       </footer>
       <dialog
         ref={dialog}
@@ -630,18 +623,13 @@ function HistoricalReplay({
           setRecapOpen(false);
         }}
       >
-        <div className="modal-header">
-          <button
-            className="icon-button"
-            aria-label="Close dialog"
-            onClick={() => {
-              invalidate();
-              setRecapOpen(false);
-            }}
-          >
-            <X size={20} />
-          </button>
-        </div>
+        <ModalHeader
+          title="Catch me up"
+          onClose={() => {
+            invalidate();
+            setRecapOpen(false);
+          }}
+        />
         {recapOpen && (
           <MatchRecap
             match={match}

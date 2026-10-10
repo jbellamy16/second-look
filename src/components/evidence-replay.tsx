@@ -1,4 +1,5 @@
 "use client";
+import { eventLabel } from "@/lib/event-label";
 import { useLayoutEffect, useRef, useState, useId, useEffect } from "react";
 import { clock, player, type MatchEvent } from "@/lib/match";
 import { playbackTime, type PlaybackSample } from "@/lib/playback";
@@ -130,7 +131,7 @@ export function EvidenceReplay({
             {formatTime(active.time)}{" "}
             {describe
               ? describe(active)
-              : `${player(active.playerId).name}: ${active.type}`}
+              : `${player(active.playerId).name}: ${eventLabel(active.type)}`}
             {active.outcome
               ? ` (${active.outcome})`
               : active.type === "pass"
@@ -160,7 +161,7 @@ export function EvidenceReplay({
         >
           {events.map((event) => (
             <option key={event.id} value={event.id}>
-              {formatTime(event.time)} {event.type} by{" "}
+              {formatTime(event.time)} {eventLabel(event.type)} by{" "}
               {(identities?.player ?? player)(event.playerId).name}
             </option>
           ))}

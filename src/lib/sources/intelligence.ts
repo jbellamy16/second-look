@@ -1,4 +1,5 @@
 import { contextFacts } from "../ai/context";
+import { eventLabel } from "../event-label";
 import { matchContext } from "./context";
 import { evidenceEvent } from "./evidence-view";
 import { calculateStatistics } from "./analytics";
@@ -40,7 +41,7 @@ export function eventDescription(match: MatchData, e: NormalizedEvent) {
     return `${who} on for ${match.players.find((p) => p.id === e.outgoingId)?.name ?? "unidentified player"}${e.source.precision === "minute" ? " (minute precision)" : ""}`;
   if (e.scoringTeam)
     return `${e.ownGoal ? "Own goal" : "Goal"} by ${who} · ${match.teams[e.scoringTeam].name}`;
-  return `${e.source.eventType} · ${who}`;
+  return `${eventLabel(e.source.eventType)} · ${who}`;
 }
 /** A contiguous recorded passage, deliberately not labelled a possession. */
 export function historicalSequence(

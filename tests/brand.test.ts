@@ -22,7 +22,8 @@ it("all raster exports have their intended dimensions", async () => {
   }
 });
 it("every manifest icon references an existing export", async () => {
-  for (const icon of manifest().icons ?? []) await access(`public${icon.src}`);
+  for (const icon of manifest().icons ?? [])
+    await access(`public${new URL(icon.src, "https://example.test").pathname}`);
 });
 
 it("publishes the complete BTL identity and canonical metadata", async () => {

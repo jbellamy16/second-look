@@ -152,7 +152,7 @@ test("reduced motion removes decoration while replay and keyboard selection work
   if (await choices.isVisible())
     await choices
       .locator("button")
-      .filter({ hasText: /recovery/ })
+      .filter({ hasText: /Recovery/ })
       .first()
       .click();
   await expect(page.getByText("REPLAY PAUSED", { exact: true })).toBeVisible();
@@ -204,7 +204,7 @@ test("320px touch controls, dialog focus trap and motion remain accessible", asy
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveAttribute(
     "aria-label",
-    "Your experience",
+    "Settings",
   );
   await page.getByRole("button", { name: "Save my experience" }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();

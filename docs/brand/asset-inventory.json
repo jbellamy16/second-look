@@ -228,14 +228,14 @@
     "width": 512,
     "height": 512,
     "role": "App icon",
-    "bytes": 505
+    "bytes": 594
   },
   {
     "file": "public/favicon.svg",
-    "width": 512,
-    "height": 512,
+    "width": 32,
+    "height": 32,
     "role": "Simplified small-size symbol",
-    "bytes": 505
+    "bytes": 435
   },
   {
     "file": "public/safari-pinned-tab.svg",
@@ -248,148 +248,176 @@
     "file": "public/favicon-16x16.png",
     "width": 16,
     "height": 16,
-    "role": "Favicon",
-    "bytes": 425
+    "role": "Optically simplified favicon",
+    "bytes": 419
   },
   {
     "file": "public/favicon-32x32.png",
     "width": 32,
     "height": 32,
-    "role": "Favicon",
-    "bytes": 849
+    "role": "Optically simplified favicon",
+    "bytes": 782
   },
   {
     "file": "public/favicon-48x48.png",
     "width": 48,
     "height": 48,
-    "role": "Favicon",
-    "bytes": 1251
+    "role": "Optically simplified favicon",
+    "bytes": 1053
   },
   {
     "file": "public/icon-64.png",
     "width": 64,
     "height": 64,
     "role": "Application icon",
-    "bytes": 1665
+    "bytes": 1383
   },
   {
     "file": "public/icon-192.png",
     "width": 192,
     "height": 192,
     "role": "Application icon",
-    "bytes": 5504
+    "bytes": 4355
   },
   {
     "file": "public/icon-256.png",
     "width": 256,
     "height": 256,
     "role": "Application icon",
-    "bytes": 7558
+    "bytes": 6228
   },
   {
     "file": "public/icon-512.png",
     "width": 512,
     "height": 512,
     "role": "Application icon",
-    "bytes": 18041
+    "bytes": 14868
   },
   {
     "file": "public/icon-1024.png",
     "width": 1024,
     "height": 1024,
     "role": "Application icon",
-    "bytes": 42544
+    "bytes": 34303
   },
   {
     "file": "public/apple-touch-icon.png",
     "width": 180,
     "height": 180,
-    "role": "Apple touch icon",
-    "bytes": 5414
+    "role": "Opaque Apple touch icon; OS supplies the corner mask",
+    "bytes": 3195
   },
   {
     "file": "public/icon-maskable-512.png",
     "width": 512,
     "height": 512,
     "role": "Maskable; all foreground inside 80% safe circle",
-    "bytes": 9270
+    "bytes": 10665
   },
   {
     "file": "public/favicon.ico",
     "width": 48,
     "height": 48,
     "role": "Multi-resolution ICO: 16, 32, 48",
-    "bytes": 2579
+    "bytes": 2308
   },
   {
     "file": "public/brand/opengraph-image.svg",
     "width": 1200,
     "height": 630,
-    "role": "Original broadcast composition; outlined text",
-    "bytes": 39675
+    "role": "BTL editorial share composition; outlined lettering and illustrative tactical route",
+    "bytes": 50937
   },
   {
     "file": "public/opengraph-image.png",
     "width": 1200,
     "height": 630,
     "role": "Social / presentation export",
-    "bytes": 48278
+    "bytes": 49311
   },
   {
     "file": "public/brand/twitter-image.svg",
     "width": 1200,
     "height": 675,
-    "role": "Original broadcast composition; outlined text",
-    "bytes": 39675
+    "role": "BTL editorial share composition; outlined lettering and illustrative tactical route",
+    "bytes": 50937
   },
   {
     "file": "public/twitter-image.png",
     "width": 1200,
     "height": 675,
     "role": "Social / presentation export",
-    "bytes": 48815
+    "bytes": 49712
   },
   {
     "file": "public/brand/social-square.svg",
     "width": 1080,
     "height": 1080,
-    "role": "Original broadcast composition; outlined text",
-    "bytes": 36496
+    "role": "BTL editorial share composition; outlined lettering and illustrative tactical route",
+    "bytes": 39999
   },
   {
     "file": "public/brand/social-square.png",
     "width": 1080,
     "height": 1080,
     "role": "Social / presentation export",
-    "bytes": 51277
+    "bytes": 53821
   },
   {
     "file": "public/brand/social-story.svg",
     "width": 1080,
     "height": 1920,
-    "role": "Original broadcast composition; outlined text",
-    "bytes": 39751
+    "role": "BTL editorial share composition; outlined lettering and illustrative tactical route",
+    "bytes": 39988
   },
   {
     "file": "public/brand/social-story.png",
     "width": 1080,
     "height": 1920,
     "role": "Social / presentation export",
-    "bytes": 65266
+    "bytes": 68266
   },
   {
     "file": "public/brand/video-title.svg",
     "width": 1920,
     "height": 1080,
-    "role": "Original broadcast composition; outlined text",
-    "bytes": 39679
+    "role": "BTL editorial share composition; outlined lettering and illustrative tactical route",
+    "bytes": 50941
   },
   {
     "file": "public/brand/video-title.png",
     "width": 1920,
     "height": 1080,
     "role": "Social / presentation export",
-    "bytes": 83816
+    "bytes": 86188
+  },
+  {
+    "file": "public/brand/hackathon-cover.svg",
+    "width": 1920,
+    "height": 1080,
+    "role": "BTL editorial share composition; outlined lettering and illustrative tactical route",
+    "bytes": 50941
+  },
+  {
+    "file": "public/brand/hackathon-cover.png",
+    "width": 1920,
+    "height": 1080,
+    "role": "Social / presentation export",
+    "bytes": 86188
+  },
+  {
+    "file": "docs/brand/meta-assets-preview.svg",
+    "width": 1280,
+    "height": 1080,
+    "role": "Share and icon contact sheet; favicons shown at actual size",
+    "bytes": 99550
+  },
+  {
+    "file": "docs/brand/meta-assets-preview.png",
+    "width": 1280,
+    "height": 1080,
+    "role": "Share and icon visual review",
+    "bytes": 77954
   },
   {
     "file": "docs/brand/identity-preview.svg",

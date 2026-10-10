@@ -36,8 +36,14 @@ export function MatchStatistics({
         <span>Computed through {matchClock(match, time)}</span>
       </div>
       <div className="stats-team-header">
-        <span>{match.teams.harbor.name}</span>
-        <span>{match.teams.riverside.name}</span>
+        <span>
+          <i className="team-dot harbor" aria-hidden="true" />
+          {match.teams.harbor.name}
+        </span>
+        <span>
+          {match.teams.riverside.name}
+          <i className="team-dot riverside" aria-hidden="true" />
+        </span>
       </div>
       {rows.map(([key, label]) => {
         const a = stats.harbor[key],

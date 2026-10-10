@@ -50,9 +50,9 @@ These are design judgments, not a ranking of library quality. Lucide's published
 
 ## Original identities
 
-**Harbor Athletic:** a geometric harbor-gate H above a short water line. **Riverside FC:** a cut R above a rising river line. Both use a common shield envelope, inset color field, midnight monogram and consistent optical weight. There are no tiny dates, stars, borrowed heraldry, real club marks, or photographs.
+**Harbor Athletic:** the user-supplied circular lighthouse, football and anchor crest, with navy and blue lettering and an “EST. 2024” inscription, stored unchanged in `public/teams/harbor.png`. **Riverside FC:** the user-supplied red shield with bridge, river, sunset and football, prepared with the built-in image editor to remove the exterior white background in `public/teams/riverside.png`.
 
-Crests render at 48 × 54px in desktop scores, 32 × 36px on phones, and 24 × 27px in lists/identity cards. Paths are self-contained and do not depend on installed fonts. The fictional player card combines club code, crest, squad number and role. Lineups keep concise numbered tiles in the same club palette.
+Crests use 144px square boxes in desktop scores and responsive 88–110px square boxes on phones, with club names underneath. A prominent score and centered playback status balance the crests. Competition details share the secondary control row on desktop. Harbor uses an elliptical CSS clip aligned to its outer rim, hiding the supplied image's white canvas without changing the artwork. Riverside retains its shield proportions and transparent exterior. Compact identity cards use a 24px-wide mark. The fictional player card combines club code, crest, squad number and role. Lineups keep concise numbered tiles in the same club palette.
 
 The pitch uses blue circles for Harbor and coral rounded squares for Riverside. A matching legend, team codes in the event feed, and visible player names reinforce color. Selection adds a white ring without changing the team's identity. Sequence paths and arrowheads inherit the event team's color; dash patterns distinguish action types.
 
@@ -89,7 +89,7 @@ The current product identity uses original Between the Lines vector exports. See
 
 - Lucide: [ISC, plus MIT for Feather-derived portions](https://lucide.dev/license). Both full notices from the installed package are preserved in `public/icon-licenses.txt`, distributed by the app and linked from About. Keep this file when distributing the assets. No mandatory visible attribution banner is specified by these licenses; the About credit is also provided.
 - Evaluated alternatives: Phosphor, Iconoir and Tabler publish MIT licenses in their linked official repositories. None of their assets were copied or installed.
-- Seven football glyphs and two club marks: original project-authored vector artwork in `src/components/icons.tsx` and `public/teams/`. No external source assets or additional third-party attribution.
+- Seven football glyphs: original project-authored vector artwork in `src/components/icons.tsx`. Club crests use the supplied Harbor PNG and the background-edited Riverside PNG in `public/teams/`.
 - Between the Lines logo exports: original project-authored vector assets described in the current brand guide. No Premier League marks, real club crests or player photos are used.
 
 ## Verification

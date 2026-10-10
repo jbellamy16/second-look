@@ -105,7 +105,7 @@ export function detectInsights(
         `${name} have won the ball ${h.length} times in the attacking third in the last 15 minutes, up from ${b.length} in the previous 15.`,
         "Winning the ball closer to goal can leave less ground to cover before a chance. It does not guarantee a shot.",
         `Watch whether ${name} turn these recoveries into attempts on goal.`,
-        "High ball wins",
+        "Ball wins in attacking third",
         h.length - b.length + 2,
       );
     const shots = own.filter((e) => e.type === "shot"),

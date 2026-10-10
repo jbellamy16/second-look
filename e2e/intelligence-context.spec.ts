@@ -27,7 +27,15 @@ for (const { source, match } of fixtures) {
     });
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
-    await page.getByRole("button", { name: source, exact: true }).click();
+    const sourceButton = page.getByRole("button", {
+      name: source,
+      exact: true,
+    });
+    test.skip(
+      source === "Recorded" && !(await sourceButton.count()),
+      "Recorded matches are hidden.",
+    );
+    if (await sourceButton.count()) await sourceButton.click();
     const shell = page.locator(".app-shell").filter({ visible: true });
     const timeline = shell.getByRole("slider", { name: "Match timeline" });
     await expect(timeline).toBeVisible();

@@ -1,3 +1,5 @@
+import { eventLabel } from "@/lib/event-label";
+import { AnimatedDetails } from "./motion";
 import type { Provenance } from "@/lib/ai/service";
 import { clock, player, type MatchEvent } from "@/lib/match";
 import type { Insight } from "@/lib/intelligence";
@@ -21,7 +23,7 @@ export function ProvenanceDetails({
     (e) => ids.has(e.id) && e.time <= provenance.cutoff,
   );
   return (
-    <details className="provenance">
+    <AnimatedDetails className="provenance">
       <summary>How Between the Lines knows</summary>
       <div
         className="provenance-content"
@@ -70,7 +72,7 @@ export function ProvenanceDetails({
         >
           {evidence.map((e) => (
             <li key={e.id}>
-              {clock(e.time)} {e.type} by {player(e.playerId).name}{" "}
+              {clock(e.time)} {eventLabel(e.type)} by {player(e.playerId).name}{" "}
               <small>{e.id}</small>
             </li>
           ))}
@@ -104,6 +106,6 @@ export function ProvenanceDetails({
           ))}
         </ul>
       </div>
-    </details>
+    </AnimatedDetails>
   );
 }

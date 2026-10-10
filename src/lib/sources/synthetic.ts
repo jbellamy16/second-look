@@ -65,7 +65,9 @@ export class SyntheticMatchSource implements MatchSource {
           lineup: PLAYERS.filter((p) => p.team === "harbor")
             .slice(0, 11)
             .map((p) => p.id),
-          bench: ["harbor-12"],
+          bench: PLAYERS.filter((p) => p.team === "harbor")
+            .slice(11)
+            .map((p) => p.id),
         },
         riverside: {
           ...TEAMS.riverside,
@@ -73,7 +75,9 @@ export class SyntheticMatchSource implements MatchSource {
           lineup: PLAYERS.filter((p) => p.team === "riverside")
             .slice(0, 11)
             .map((p) => p.id),
-          bench: ["riverside-12"],
+          bench: PLAYERS.filter((p) => p.team === "riverside")
+            .slice(11)
+            .map((p) => p.id),
         },
       },
       players: PLAYERS.map((p) => ({ ...p, sourceId: p.id })),
@@ -84,6 +88,7 @@ export class SyntheticMatchSource implements MatchSource {
         order,
         teamId: e.team,
         actorId: e.outgoingId ?? e.playerId,
+        ...(e.assistEventId ? { assistEventId: eventId(e.assistEventId) } : {}),
         qualifiers: {},
         statistics: e.xg === undefined ? {} : { xg: e.xg },
         relatedEvents:
@@ -131,6 +136,7 @@ export class SyntheticMatchSource implements MatchSource {
         lineups: true,
         substitutions: true,
         passRecipients: true,
+        assists: true,
         physicalDirection: false,
         tracking: false,
         xg: true,

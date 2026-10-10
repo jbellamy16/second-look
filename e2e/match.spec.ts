@@ -21,14 +21,14 @@ test("playback, evidence, modes, recap, and rewind stay synchronized", async ({
   await expect(page.getByText("Measurement notes")).not.toBeVisible();
   await page.locator(".detail-panel .provenance summary").click();
   await expect(page.getByText("Measurement notes")).toBeVisible();
-  await page.getByRole("button", { name: /Catch me up/ }).click();
+  await page.getByRole("button", { name: "Catch me up", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.locator(".recap-cutoff")).toContainText("63:24");
   await page.getByRole("button", { name: "Close dialog" }).click();
   await page.getByRole("button", { name: "Restart match" }).click();
   await expect(page.getByTestId("score")).toHaveText("0:0");
   await expect(page.getByTestId("clock")).toContainText("00:00");
-  await page.getByRole("button", { name: /Catch me up/ }).click();
+  await page.getByRole("button", { name: "Catch me up", exact: true }).click();
   await expect(page.getByRole("dialog").locator(".recap-summary")).toHaveText(
     "No match developments to highlight yet.",
   );
@@ -43,8 +43,6 @@ test("scenarios, navigation, player preferences and mobile layout work", async (
 }, testInfo) => {
   await page.goto("/");
   await expect(page.getByLabel("Fixture")).toBeVisible();
-  await page.locator(".demo-controls > summary").focus();
-  await page.keyboard.press("Enter");
   await page.getByLabel("Fixture").selectOption("quiet");
   await expect(
     page.getByRole("heading", { name: "Match context", exact: true }),
@@ -95,6 +93,11 @@ test("scenarios, navigation, player preferences and mobile layout work", async (
 test("explanation provenance, category preferences, and arbitrary seeking are truthful", async ({
   page,
 }) => {
+  await page.route("**/api/insights", (route) =>
+    route.request().method() === "GET"
+      ? route.fulfill({ json: { mode: "offline" } })
+      : route.fulfill({ json: { source: "offline" } }),
+  );
   await page.goto("/");
   await page.getByRole("button", { name: "Explore the explanation" }).click();
   await expect(page.locator(".explanation-text")).toBeVisible();
@@ -154,7 +157,11 @@ test("the demo shows a pattern emerging and reset clears custom filters", async 
 }) => {
   await page.clock.install();
   await page.goto("/");
-  await page.locator(".demo-controls > summary").click();
+  await expect(page.getByText("Synthetic demo", { exact: true })).toBeVisible();
+  await expect(page.locator(".demo-controls")).toHaveCount(0);
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.getByLabel("Generator profile").selectOption("balanced");
+  await page.getByLabel("Generator profile").selectOption("demo");
   await page.getByRole("button", { name: "Watch the build-up" }).click();
   await expect(
     page.getByRole("heading", { name: "Match context", exact: true }),
@@ -168,7 +175,9 @@ test("the demo shows a pattern emerging and reset clears custom filters", async 
   for (const name of ["Pressure", "Chances", "Rhythm"])
     await page.getByRole("checkbox", { name }).uncheck();
   await page.getByRole("button", { name: "Save my experience" }).click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
   await page.getByRole("button", { name: "Reset demo" }).click();
+  await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(page.getByTestId("clock")).toContainText("63:24");
   await expect(
     page.getByRole("heading", { name: "Harbor are winning it higher" }),
@@ -319,7 +328,7 @@ test("explainability is readable in both modes and captures the evidence drawer"
   const details = page.locator(".detail-panel .provenance");
   await details.locator("summary").click();
   await expect(details).toContainText("Deterministic offline");
-  await expect(details).toContainText("High ball wins: 4 vs 0");
+  await expect(details).toContainText("Ball wins in attacking third: 4 vs 0");
   await expect(details).toContainText("No completed AI tool activity");
   await expect(details).toContainText("Known limitations");
   await page.evaluate(() => window.scrollTo(0, 0));

@@ -45,6 +45,8 @@ export type MatchEvent = {
   outcome?: "saved" | "wide" | "goal";
   xg?: number;
   outgoingId?: string;
+  assistPlayerId?: string;
+  assistEventId?: string;
   possessionId: number | null;
 };
 export const TEAMS = {
@@ -77,6 +79,14 @@ const names = {
     "Leon Costa",
     "Arlo Hayes",
     "Nico Wells",
+    "Toby Mercer",
+    "Callum Pike",
+    "Eli Brooks",
+    "Rory Blake",
+    "Seth Palmer",
+    "Owen Ellis",
+    "Luca Bennett",
+    "Jasper Ford",
   ],
   riverside: [
     "Ruben Moss",
@@ -91,6 +101,14 @@ const names = {
     "Ben Rivers",
     "Ivo Cruz",
     "Asa Quinn",
+    "Dylan Ward",
+    "Reece Shaw",
+    "Joel Nash",
+    "Kian Holt",
+    "Lewis Gray",
+    "Micah Stone",
+    "Elliot Mason",
+    "Rafael Reid",
   ],
 };
 export const PLAYERS: Player[] = (Object.keys(TEAMS) as TeamId[]).flatMap(
@@ -99,13 +117,15 @@ export const PLAYERS: Player[] = (Object.keys(TEAMS) as TeamId[]).flatMap(
       id: `${team}-${i + 1}`,
       name,
       team,
-      number: [1, 2, 4, 5, 3, 6, 8, 10, 9, 11, 7, 17][i],
+      number: [
+        1, 2, 4, 5, 3, 6, 8, 10, 9, 11, 7, 17, 13, 12, 14, 15, 16, 18, 19, 20,
+      ][i],
       role:
-        i === 0
+        i === 0 || i === 12
           ? "Goalkeeper"
-          : i < 5
+          : i < 5 || (i >= 13 && i <= 15)
             ? "Defender"
-            : i < 8
+            : i < 8 || (i >= 16 && i <= 17)
               ? "Midfielder"
               : "Forward",
     })),
@@ -330,7 +350,25 @@ export function generateMatch(
         outcome,
       });
       if (outcome === "goal") {
-        emit("goal", carrier, point(99, 50));
+        // This successful pass feeds the scorer's short carry and shot directly.
+        // Record the credit on the goal so the earlier pass cannot reveal it.
+        const assisted =
+          last.team === team &&
+          last.recipientId === carrier &&
+          last.playerId !== carrier &&
+          last.possessionId === possessionId &&
+          last.time < 2700 === time < 2700;
+        emit(
+          "goal",
+          carrier,
+          point(99, 50),
+          assisted
+            ? {
+                assistPlayerId: last.playerId,
+                assistEventId: last.id,
+              }
+            : {},
+        );
       } else if (outcome === "saved") {
         cornerNext = random() < 0.3;
       }

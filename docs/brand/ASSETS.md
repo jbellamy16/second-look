@@ -36,30 +36,34 @@ Generated with `npm run brand:build`. SVG type is outlined. Transparent PNG logo
 | [public/brand/btl-mark-black.png](../../public/brand/btl-mark-black.png) | 384 × 384 | 7528 | mark; transparent high-resolution PNG |
 | [public/brand/btl-compact-black.svg](../../public/brand/btl-compact-black.svg) | 224 × 96 | 1687 | compact; black ink/surface variant; outlined type |
 | [public/brand/btl-compact-black.png](../../public/brand/btl-compact-black.png) | 896 × 384 | 12019 | compact; transparent high-resolution PNG |
-| [public/icon.svg](../../public/icon.svg) | 512 × 512 | 505 | App icon |
-| [public/favicon.svg](../../public/favicon.svg) | 512 × 512 | 505 | Simplified small-size symbol |
+| [public/icon.svg](../../public/icon.svg) | 512 × 512 | 594 | App icon |
+| [public/favicon.svg](../../public/favicon.svg) | 32 × 32 | 435 | Simplified small-size symbol |
 | [public/safari-pinned-tab.svg](../../public/safari-pinned-tab.svg) | 96 × 96 | 391 | Monochrome browser mask |
-| [public/favicon-16x16.png](../../public/favicon-16x16.png) | 16 × 16 | 425 | Favicon |
-| [public/favicon-32x32.png](../../public/favicon-32x32.png) | 32 × 32 | 849 | Favicon |
-| [public/favicon-48x48.png](../../public/favicon-48x48.png) | 48 × 48 | 1251 | Favicon |
-| [public/icon-64.png](../../public/icon-64.png) | 64 × 64 | 1665 | Application icon |
-| [public/icon-192.png](../../public/icon-192.png) | 192 × 192 | 5504 | Application icon |
-| [public/icon-256.png](../../public/icon-256.png) | 256 × 256 | 7558 | Application icon |
-| [public/icon-512.png](../../public/icon-512.png) | 512 × 512 | 18041 | Application icon |
-| [public/icon-1024.png](../../public/icon-1024.png) | 1024 × 1024 | 42544 | Application icon |
-| [public/apple-touch-icon.png](../../public/apple-touch-icon.png) | 180 × 180 | 5414 | Apple touch icon |
-| [public/icon-maskable-512.png](../../public/icon-maskable-512.png) | 512 × 512 | 9270 | Maskable; all foreground inside 80% safe circle |
-| [public/favicon.ico](../../public/favicon.ico) | 48 × 48 | 2579 | Multi-resolution ICO: 16, 32, 48 |
-| [public/brand/opengraph-image.svg](../../public/brand/opengraph-image.svg) | 1200 × 630 | 39675 | Original broadcast composition; outlined text |
-| [public/opengraph-image.png](../../public/opengraph-image.png) | 1200 × 630 | 48278 | Social / presentation export |
-| [public/brand/twitter-image.svg](../../public/brand/twitter-image.svg) | 1200 × 675 | 39675 | Original broadcast composition; outlined text |
-| [public/twitter-image.png](../../public/twitter-image.png) | 1200 × 675 | 48815 | Social / presentation export |
-| [public/brand/social-square.svg](../../public/brand/social-square.svg) | 1080 × 1080 | 36496 | Original broadcast composition; outlined text |
-| [public/brand/social-square.png](../../public/brand/social-square.png) | 1080 × 1080 | 51277 | Social / presentation export |
-| [public/brand/social-story.svg](../../public/brand/social-story.svg) | 1080 × 1920 | 39751 | Original broadcast composition; outlined text |
-| [public/brand/social-story.png](../../public/brand/social-story.png) | 1080 × 1920 | 65266 | Social / presentation export |
-| [public/brand/video-title.svg](../../public/brand/video-title.svg) | 1920 × 1080 | 39679 | Original broadcast composition; outlined text |
-| [public/brand/video-title.png](../../public/brand/video-title.png) | 1920 × 1080 | 83816 | Social / presentation export |
+| [public/favicon-16x16.png](../../public/favicon-16x16.png) | 16 × 16 | 419 | Optically simplified favicon |
+| [public/favicon-32x32.png](../../public/favicon-32x32.png) | 32 × 32 | 782 | Optically simplified favicon |
+| [public/favicon-48x48.png](../../public/favicon-48x48.png) | 48 × 48 | 1053 | Optically simplified favicon |
+| [public/icon-64.png](../../public/icon-64.png) | 64 × 64 | 1383 | Application icon |
+| [public/icon-192.png](../../public/icon-192.png) | 192 × 192 | 4355 | Application icon |
+| [public/icon-256.png](../../public/icon-256.png) | 256 × 256 | 6228 | Application icon |
+| [public/icon-512.png](../../public/icon-512.png) | 512 × 512 | 14868 | Application icon |
+| [public/icon-1024.png](../../public/icon-1024.png) | 1024 × 1024 | 34303 | Application icon |
+| [public/apple-touch-icon.png](../../public/apple-touch-icon.png) | 180 × 180 | 3195 | Opaque Apple touch icon; OS supplies the corner mask |
+| [public/icon-maskable-512.png](../../public/icon-maskable-512.png) | 512 × 512 | 10665 | Maskable; all foreground inside 80% safe circle |
+| [public/favicon.ico](../../public/favicon.ico) | 48 × 48 | 2308 | Multi-resolution ICO: 16, 32, 48 |
+| [public/brand/opengraph-image.svg](../../public/brand/opengraph-image.svg) | 1200 × 630 | 50937 | BTL editorial share composition; outlined lettering and illustrative tactical route |
+| [public/opengraph-image.png](../../public/opengraph-image.png) | 1200 × 630 | 49311 | Social / presentation export |
+| [public/brand/twitter-image.svg](../../public/brand/twitter-image.svg) | 1200 × 675 | 50937 | BTL editorial share composition; outlined lettering and illustrative tactical route |
+| [public/twitter-image.png](../../public/twitter-image.png) | 1200 × 675 | 49712 | Social / presentation export |
+| [public/brand/social-square.svg](../../public/brand/social-square.svg) | 1080 × 1080 | 39999 | BTL editorial share composition; outlined lettering and illustrative tactical route |
+| [public/brand/social-square.png](../../public/brand/social-square.png) | 1080 × 1080 | 53821 | Social / presentation export |
+| [public/brand/social-story.svg](../../public/brand/social-story.svg) | 1080 × 1920 | 39988 | BTL editorial share composition; outlined lettering and illustrative tactical route |
+| [public/brand/social-story.png](../../public/brand/social-story.png) | 1080 × 1920 | 68266 | Social / presentation export |
+| [public/brand/video-title.svg](../../public/brand/video-title.svg) | 1920 × 1080 | 50941 | BTL editorial share composition; outlined lettering and illustrative tactical route |
+| [public/brand/video-title.png](../../public/brand/video-title.png) | 1920 × 1080 | 86188 | Social / presentation export |
+| [public/brand/hackathon-cover.svg](../../public/brand/hackathon-cover.svg) | 1920 × 1080 | 50941 | BTL editorial share composition; outlined lettering and illustrative tactical route |
+| [public/brand/hackathon-cover.png](../../public/brand/hackathon-cover.png) | 1920 × 1080 | 86188 | Social / presentation export |
+| [docs/brand/meta-assets-preview.svg](meta-assets-preview.svg) | 1280 × 1080 | 99550 | Share and icon contact sheet; favicons shown at actual size |
+| [docs/brand/meta-assets-preview.png](meta-assets-preview.png) | 1280 × 1080 | 77954 | Share and icon visual review |
 | [docs/brand/identity-preview.svg](identity-preview.svg) | 1280 × 1080 | 121402 | Identity overview |
 | [docs/brand/identity-preview.png](identity-preview.png) | 1280 × 1080 | 81109 | Identity overview preview |
 
