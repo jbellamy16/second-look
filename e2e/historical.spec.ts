@@ -256,3 +256,41 @@ test("historical replay supports dark appearance, reduced motion and a 320px scr
     fullPage: true,
   });
 });
+
+test("public historical records use the canonical contract and exclude restricted research fixtures", async ({
+  page,
+  request,
+}) => {
+  const response = await request.get("/api/historical/2499719");
+  expect(response.status()).toBe(200);
+  const match = await response.json();
+  expect(match.schemaVersion).toBe("1.0.0");
+  expect(match.provenance.license).toBe("CC BY 4.0");
+  expect(match.capabilities.tracking).toBe(false);
+  expect(
+    match.events.every(
+      (event: { matchId: string; order: number }, index: number) =>
+        event.matchId === match.id && event.order === index,
+    ),
+  ).toBe(true);
+  expect((await request.get("/api/historical/statsbomb-8658")).status()).toBe(
+    404,
+  );
+  expect(
+    (
+      await request.post("/api/historical/narrate", {
+        data: { matchId: "statsbomb-8658", time: 0, mode: "fan" },
+      })
+    ).status(),
+  ).toBe(404);
+  await historical(page);
+  await expect(
+    page.getByLabel("Historical match").locator("option"),
+  ).toHaveCount(3);
+  await expect(
+    page
+      .locator(".historical-attribution a")
+      .filter({ hasText: "CC BY 4.0" })
+      .last(),
+  ).toHaveAttribute("href", "https://creativecommons.org/licenses/by/4.0/");
+});

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { other, TEAMS, type TeamId } from "../match";
 import {
+  CANONICAL_PITCH,
   recordedScore,
   validateMatch,
   type MatchData,
@@ -92,7 +93,7 @@ export function normalizeHistorical(input: unknown): MatchData {
       ),
     ) + 1,
   );
-  const events: NormalizedEvent[] = raw.events.map((e) => {
+  const events: NormalizedEvent[] = raw.events.map((e, order) => {
     if (String(e.matchId) !== id) throw new Error("Mismatched match ID");
     const tags = e.tags.map((t) => t.id),
       team = side(e.teamId);
@@ -127,6 +128,27 @@ export function normalizeHistorical(input: unknown): MatchData {
       e.positions.length > 0;
     return {
       id: `wyscout-${id}-${e.id}`,
+      matchId: id,
+      order,
+      teamId: String(e.teamId),
+      actorId: e.playerId === 0 ? null : String(e.playerId),
+      qualifiers: {
+        ...(tags.includes(1401) ? { interception: true } : {}),
+        ...(tags.includes(1701)
+          ? { card: "Red Card" }
+          : tags.includes(1702)
+            ? { card: "Yellow Card" }
+            : tags.includes(1703)
+              ? { card: "Second Yellow" }
+              : {}),
+      },
+      relatedEvents: [],
+      statistics: {},
+      ...(tags.includes(1801)
+        ? { result: "complete" }
+        : tags.includes(1802)
+          ? { result: "incomplete" }
+          : {}),
       time: (e.matchPeriod === "2H" ? secondHalfStart : 0) + e.eventSec,
       period: e.matchPeriod,
       periodSeconds: e.eventSec,
@@ -156,6 +178,18 @@ export function normalizeHistorical(input: unknown): MatchData {
         eventType: `${e.eventName} / ${e.subEventName}`,
         tags,
         precision: "second",
+        coordinates: {
+          ...(e.positions[0]
+            ? { start: [e.positions[0].x, e.positions[0].y] }
+            : {}),
+          ...(e.positions[1]
+            ? { end: [e.positions[1].x, e.positions[1].y] }
+            : {}),
+          transform: "identity-percent-v1",
+        },
+        raw: {
+          ...(input as { events: Record<string, unknown>[] }).events[order],
+        },
       },
     };
   });
@@ -166,6 +200,13 @@ export function normalizeHistorical(input: unknown): MatchData {
       const ref = `teamsData.${t.teamId}.formation.substitutions.${i}`;
       events.push({
         id: `wyscout-${id}-${ref}`,
+        matchId: id,
+        order: 0,
+        teamId: String(t.teamId),
+        actorId: String(s.playerOut),
+        qualifiers: {},
+        relatedEvents: [],
+        statistics: {},
         time: (period === "2H" ? secondHalfStart : 0) + periodSeconds,
         period,
         periodSeconds,
@@ -184,11 +225,16 @@ export function normalizeHistorical(input: unknown): MatchData {
           eventType: "Metadata substitution",
           tags: [],
           precision: "minute",
+          coordinates: { transform: "none" },
+          raw: { ...s },
           reportedMinute: s.minute,
         },
       });
     }
   events.sort((a, b) => a.time - b.time);
+  events.forEach((e, i) => {
+    e.order = i;
+  });
   const teams = Object.fromEntries(
     entries.map((t) => {
       const identity = raw.teams.find((x) => x.wyId === t.teamId);
@@ -197,6 +243,8 @@ export function normalizeHistorical(input: unknown): MatchData {
         side(t.teamId),
         {
           id: String(t.teamId),
+          lineup: t.formation.lineup.map((p) => String(p.playerId)),
+          bench: t.formation.bench.map((p) => String(p.playerId)),
           name: identity.name,
           short: identity.name,
           color: TEAMS[side(t.teamId)].color,
@@ -233,6 +281,30 @@ export function normalizeHistorical(input: unknown): MatchData {
     });
   });
   return validateMatch({
+    schemaVersion: "1.0.0",
+    pitch: CANONICAL_PITCH,
+    season: "2017–18",
+    venue: null,
+    status: "finished",
+    periods: [
+      { id: "1H", start: 0, end: secondHalfStart - 1, clockStart: 0 },
+      {
+        id: "2H",
+        start: secondHalfStart,
+        end: Math.ceil(events.at(-1)!.time),
+        clockStart: 2700,
+      },
+    ],
+    provenance: {
+      provider: "wyscout",
+      sourceMatchId: id,
+      adapterVersion: "1.0.0",
+      revision: "figshare-4415000-pinned",
+      license: "CC BY 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+      redistribution: "permitted-with-attribution",
+      raw: { match: (input as { match: unknown }).match },
+    },
     id,
     kind: "historical",
     title: `${teams.harbor.name} vs ${teams.riverside.name}`,
@@ -247,6 +319,13 @@ export function normalizeHistorical(input: unknown): MatchData {
     attribution: "Wyscout · Pappalardo & Massucco (2019) · CC BY 4.0",
     sourceUrl: "https://doi.org/10.6084/m9.figshare.c.4415000",
     capabilities: {
+      recoveries: false,
+      shotOutcomes: false,
+      comparisonScope: "period",
+      lineups: true,
+      substitutions: true,
+      passRecipients: false,
+      physicalDirection: false,
       tracking: false,
       xg: false,
       ballRecoveries: false,
@@ -262,3 +341,9 @@ export class HistoricalMatchSource implements MatchSource {
     return normalizeHistorical(await this.read(id));
   }
 }
+
+/** Explicit provider name; HistoricalMatchSource is retained for existing callers. */
+export {
+  HistoricalMatchSource as WyscoutMatchSource,
+  normalizeHistorical as normalizeWyscout,
+};

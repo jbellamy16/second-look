@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { generateMatch } from "@/lib/match";
+import { SyntheticMatchSource } from "@/lib/sources/synthetic";
+import { pitchEvents } from "@/lib/sources/model";
 import { detectInsights } from "@/lib/intelligence";
 import { buildEvidence, matchRequestSchema } from "@/lib/ai/evidence";
 import { configuredProvider } from "@/lib/ai/providers";
@@ -27,7 +28,9 @@ export async function POST(req: Request) {
   } catch {
     return json({ error: "Invalid match request" }, 400);
   }
-  const events = generateMatch(input.scenario);
+  const events = pitchEvents(
+    new SyntheticMatchSource().read(input.scenario).events,
+  );
   const insight = detectInsights(events, input.time).find(
     (i) => i.team === input.team && i.category === input.category,
   );

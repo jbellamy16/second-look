@@ -10,7 +10,7 @@ import {
 export const runtime = "nodejs";
 const schema = z
   .object({
-    matchId: z.enum(["2499719", "2499943", "2499841"]),
+    matchId: z.string().regex(/^(2499719|2499943|2499841|statsbomb-8658)$/),
     time: z.number().finite().nonnegative().max(7200),
     mode: z.enum(["fan", "analyst"]),
     insightId: z.string().max(80).optional(),
@@ -25,7 +25,12 @@ export async function POST(req: Request) {
   } catch {
     return json({ error: "Invalid historical match request" }, 400);
   }
-  const match = await loadHistorical(input.matchId);
+  let match;
+  try {
+    match = await loadHistorical(input.matchId);
+  } catch {
+    return json({ error: "Historical match unavailable" }, 404);
+  }
   if (input.time > match.duration)
     return json({ error: "Timestamp is outside this replay" }, 400);
   let packet;
@@ -34,6 +39,14 @@ export async function POST(req: Request) {
   } catch {
     return json({ error: "No verified pattern at this timestamp" }, 404);
   }
+  if (match.provenance.redistribution === "restricted")
+    return json({
+      source: "offline",
+      narrative: null,
+      provenance: offlineProvenance(packet),
+      notice:
+        "Local research evidence only; external AI requests are disabled for this fixture.",
+    });
   if (!packet.facts.some((f) => f.kind === "pattern" || f.kind === "moment"))
     return json({
       source: "offline",

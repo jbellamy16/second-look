@@ -244,6 +244,10 @@ export const EVENT_ICONS = {
   touch: Possession,
   interruption: Foul,
   save: Recovery,
+  free_kick: Pass,
+  card: Foul,
+  period_start: Possession,
+  period_end: Possession,
   other: Possession,
 } satisfies Record<EventType, (props: IconProps) => ReactNode>;
 export function EventIcon({ type, ...props }: IconProps & { type: EventType }) {

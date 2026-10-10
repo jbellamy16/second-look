@@ -170,3 +170,15 @@ recorded-action pitch views, evidence-backed observations and Catch Me Up.
 
 No paid AI request is needed for offline replay. Historical inference is optional
 and uses the existing server-only, bounded and validated provider adapters.
+
+## Unified football data foundation
+
+All match sources now validate against canonical schema 1.0.0. The synthetic
+hackathon scenarios remain the default; Real Match retains three licensed
+Wyscout Premier League fixtures. A StatsBomb adapter is available for local
+research only, with production access disabled.
+
+- [Canonical model, coordinates and source integration](docs/CANONICAL-FOOTBALL.md)
+- [Per-file dataset rights and attribution review](docs/DATA-RIGHTS.md)
+- [Synthetic realism benchmark](docs/foundation/BENCHMARK.md)
+- [Validation and review evidence](docs/foundation/README.md)

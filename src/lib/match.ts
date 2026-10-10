@@ -1,3 +1,4 @@
+import { calculateStatistics } from "./sources/analytics";
 export type TeamId = "harbor" | "riverside";
 export type Scenario = "pressure" | "substitution" | "quiet";
 export type EventType =
@@ -18,6 +19,10 @@ export type EventType =
   | "touch"
   | "interruption"
   | "save"
+  | "free_kick"
+  | "card"
+  | "period_start"
+  | "period_end"
   | "other";
 export type Point = { x: number; y: number };
 export type Player = {
@@ -152,6 +157,7 @@ function seeded(seed: number) {
 export function generateMatch(
   scenario: Scenario,
   seed = SCENARIOS[scenario].seed,
+  profile: "demo" | "balanced" = "demo",
 ): MatchEvent[] {
   const random = seeded(seed),
     events: MatchEvent[] = [];
@@ -191,7 +197,10 @@ export function generateMatch(
     });
   };
   while (time < DURATION - 75) {
-    time += 9 + Math.floor(random() * 15);
+    time +=
+      profile === "balanced"
+        ? 4 + Math.floor(random() * 7)
+        : 9 + Math.floor(random() * 15);
     if (!substituted && time >= 55 * 60) {
       const prior: TeamId = team;
       team = "harbor";
@@ -244,20 +253,36 @@ export function generateMatch(
       );
     const passes = 3 + Math.floor(random() * 5);
     for (let i = 0; i < passes; i++) {
-      time += (scenario === "quiet" ? 9 : 5) + Math.floor(random() * 7);
+      time +=
+        profile === "balanced"
+          ? (scenario === "quiet" ? 5 : 2) + Math.floor(random() * 5)
+          : (scenario === "quiet" ? 9 : 5) + Math.floor(random() * 7);
       const end =
         cornerRestart && i === 0
           ? point(82 + random() * 10, 35 + random() * 30)
           : point(
-              position.x + (random() - 0.2) * (scenario === "quiet" ? 11 : 22),
+              position.x +
+                (random() - (profile === "balanced" ? 0.35 : 0.2)) *
+                  (profile === "balanced"
+                    ? 52
+                    : scenario === "quiet"
+                      ? 11
+                      : 22),
               surge > 0.4 && random() < 0.65
                 ? 12 + random() * 24
-                : Math.max(8, Math.min(92, position.y + (random() - 0.5) * 45)),
+                : Math.max(
+                    8,
+                    Math.min(
+                      92,
+                      position.y +
+                        (random() - 0.5) * (profile === "balanced" ? 72 : 45),
+                    ),
+                  ),
             );
       let receiver = choose(team, end.x);
       if (receiver === carrier) receiver = team + "-6";
       if (receiver === carrier) receiver = team + "-8";
-      const success = random() < 0.88;
+      const success = random() < (profile === "balanced" ? 0.84 : 0.88);
       emit("pass", carrier, position, { end, recipientId: receiver, success });
       position = end;
       carrier = receiver;
@@ -269,7 +294,12 @@ export function generateMatch(
       last?.type === "pass" &&
       last.success &&
       position.x >= 64 &&
-      random() < (scenario === "quiet" ? 0.18 : 0.3 + surge * 0.4)
+      random() <
+        (scenario === "quiet"
+          ? 0.18
+          : profile === "balanced"
+            ? 0.24 + surge * 0.2
+            : 0.3 + surge * 0.4)
     ) {
       // A short recorded carry connects the pass to the attempt without teleporting.
       const shotPosition = point(
@@ -319,52 +349,8 @@ export function generateMatch(
 export function eventsAt(events: MatchEvent[], time: number) {
   return events.filter((e) => e.time <= time);
 }
-export function statistics(events: MatchEvent[]) {
-  return Object.fromEntries(
-    (Object.keys(TEAMS) as TeamId[]).map((team) => {
-      const own = events.filter((e) => e.team === team),
-        passes = own.filter((e) => e.type === "pass");
-      const shots = own.filter((e) => e.type === "shot");
-      return [
-        team,
-        {
-          goals: own.filter((e) => e.type === "goal").length,
-          shots: shots.length,
-          onTarget: shots.filter(
-            (e) => e.outcome === "saved" || e.outcome === "goal",
-          ).length,
-          xg: Number(shots.reduce((sum, e) => sum + (e.xg ?? 0), 0).toFixed(2)),
-          passes: passes.length,
-          completed: passes.filter((e) => e.success).length,
-          accuracy: passes.length
-            ? Math.round(
-                (100 * passes.filter((e) => e.success).length) / passes.length,
-              )
-            : 0,
-          recoveries: own.filter((e) => e.type === "recovery").length,
-          highRecoveries: own.filter(
-            (e) =>
-              ["recovery", "interception", "tackle"].includes(e.type) &&
-              e.position.x >= 66.7,
-          ).length,
-        },
-      ];
-    }),
-  ) as Record<
-    TeamId,
-    {
-      goals: number;
-      shots: number;
-      onTarget: number;
-      xg: number;
-      passes: number;
-      completed: number;
-      accuracy: number;
-      recoveries: number;
-      highRecoveries: number;
-    }
-  >;
-}
+/** Compatibility entrypoint; all sources use the same calculation engine. */
+export const statistics = calculateStatistics;
 export function sequenceFor(events: MatchEvent[], event: MatchEvent) {
   if (event.possessionId === null) return [event];
   return events.filter(

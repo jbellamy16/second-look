@@ -173,6 +173,14 @@ test("320px touch controls, dialog focus trap and motion remain accessible", asy
       await page.evaluate(() => !!document.activeElement?.closest("dialog")),
     ).toBe(true);
   }
+  // Contrast is assessed after the dialog entrance, not at a transient opacity frame.
+  await page.getByRole("dialog").evaluate(async (dialog) => {
+    await Promise.all(
+      dialog
+        .getAnimations({ subtree: true })
+        .map((animation) => animation.finished.catch(() => {})),
+    );
+  });
   expect(
     (
       await new AxeBuilder({ page })
@@ -181,9 +189,7 @@ test("320px touch controls, dialog focus trap and motion remain accessible", asy
     ).violations,
   ).toEqual([]);
   await page.keyboard.press("Escape");
-  await page
-    .getByRole("button", { name: "Settings", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveAttribute(
     "aria-label",
     "Your experience",

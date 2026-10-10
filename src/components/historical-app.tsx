@@ -1,4 +1,5 @@
 "use client";
+import { useMatchPlayback } from "./use-match-playback";
 import {
   useEffect,
   useMemo,
@@ -23,8 +24,10 @@ import {
   X,
 } from "./icons";
 import { providerLabel } from "./provenance";
-import { HISTORICAL_MATCHES } from "@/lib/sources/catalog";
+import { type Fixture } from "@/lib/sources/catalog";
 import {
+  periodAt,
+  validateMatch,
   eventClock,
   matchClock,
   pitchEvents,
@@ -45,11 +48,13 @@ import type { Provenance } from "@/lib/ai/service";
 
 export function HistoricalApp({
   sourceSelector,
+  fixtures,
 }: {
   sourceSelector: ReactNode;
+  fixtures: readonly Fixture[];
 }) {
   useAppearance();
-  const [id, setId] = useState<string>(HISTORICAL_MATCHES[0].id);
+  const [id, setId] = useState<string>(fixtures[0].id);
   const [match, setMatch] = useState<MatchData | null>(null),
     [error, setError] = useState("");
   const [spoilers, setSpoilers] = useState(false);
@@ -63,7 +68,7 @@ export function HistoricalApp({
         return r.json();
       })
       .then((data) => {
-        if (!controller.signal.aborted) setMatch(data);
+        if (!controller.signal.aborted) setMatch(validateMatch(data));
       })
       .catch(() => {
         if (!controller.signal.aborted)
@@ -73,6 +78,7 @@ export function HistoricalApp({
       });
     return () => controller.abort();
   }, [id]);
+  const fixture = fixtures.find((f) => f.id === id)!;
   return (
     <div className="app-shell historical-shell">
       <aside className="sidebar" aria-label="Application navigation">
@@ -108,7 +114,7 @@ export function HistoricalApp({
           <div className="breadcrumb">
             Match centre <span>Historical replay</span>
           </div>
-          <span className="engine-badge">Wyscout · CC BY 4.0</span>
+          <span className="engine-badge">{fixture.provider}</span>
         </header>
         <main>
           {sourceSelector}
@@ -120,7 +126,7 @@ export function HistoricalApp({
                 value={id}
                 onChange={(e) => setId(e.target.value)}
               >
-                {HISTORICAL_MATCHES.map((m) => (
+                {fixtures.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.title} · {m.date}
                   </option>
@@ -128,7 +134,7 @@ export function HistoricalApp({
               </select>
             </label>
             <div className="historical-availability">
-              <span>Premier League · 2017–18</span>
+              <span>{fixture.competition}</span>
               <small>Complete event replay · Both halves</small>
             </div>
             <label className="checkbox-label">
@@ -186,17 +192,13 @@ function HistoricalReplay({ match }: { match: MatchData }) {
       .catch(() => {});
     return () => request.current?.abort();
   }, []);
-  useEffect(() => {
-    if (!playing || !visiblePage || recapOpen) return;
-    let last = performance.now();
-    const timer = setInterval(() => {
-      const now = performance.now();
-      const elapsed = (now - last) / 1000;
-      last = now;
-      setTime((t) => Math.min(match.duration, t + elapsed * speed));
-    }, 250);
-    return () => clearInterval(timer);
-  }, [playing, speed, visiblePage, recapOpen, match.duration]);
+  useMatchPlayback(
+    time,
+    setTime,
+    playing && visiblePage && !recapOpen,
+    speed,
+    match.duration,
+  );
   useEffect(() => {
     if (time >= match.duration) setPlaying(false);
   }, [time, match.duration]);
@@ -239,7 +241,7 @@ function HistoricalReplay({ match }: { match: MatchData }) {
         .filter(
           (e) =>
             (!playerFilter || e.playerId === playerFilter) &&
-            e.period === (time >= match.secondHalfStart ? "2H" : "1H"),
+            e.period === periodAt(match, time).id,
         )
         .slice(-10),
     );
@@ -406,11 +408,7 @@ function HistoricalReplay({ match }: { match: MatchData }) {
             <span className="match-clock" data-testid="clock">
               <time>{matchClock(match, time)}</time>
               <span>
-                {time >= match.duration
-                  ? "END"
-                  : time < match.secondHalfStart
-                    ? "1ST"
-                    : "2ND"}
+                {time >= match.duration ? "END" : periodAt(match, time).id}
               </span>
             </span>
           </div>
@@ -780,7 +778,7 @@ function HistoricalReplay({ match }: { match: MatchData }) {
                       "Forward / backward passes",
                       `${s.forward} / ${s.backward}`,
                     ],
-                    ["Interception-tagged actions", s.interceptions],
+                    ["Interceptions / tagged actions", s.interceptions],
                   ].map(([label, value]) => (
                     <div key={label}>
                       <dt>{label}</dt>
@@ -790,7 +788,7 @@ function HistoricalReplay({ match }: { match: MatchData }) {
                 </dl>
                 {mode === "analyst" && (
                   <p>
-                    {s.unknownPassOutcomes} passes lack an accuracy tag.
+                    {s.unknownPassOutcomes} passes lack a recorded outcome.
                     Attacking-third actions count passes, shots and touches;
                     interception tags do not prove a sustained recovery.
                   </p>
@@ -805,8 +803,9 @@ function HistoricalReplay({ match }: { match: MatchData }) {
             Recorded counts through this moment. Unequal period lengths are not
             rate comparisons.
           </p>
-          {(["1H", "2H"] as const)
-            .filter((p) => p === "1H" || time >= match.secondHalfStart)
+          {match.periods
+            .filter((p) => p.start <= time)
+            .map((p) => p.id)
             .map((p) => (
               <p key={p}>
                 {p}:{" "}
@@ -823,15 +822,17 @@ function HistoricalReplay({ match }: { match: MatchData }) {
             ))}
         </details>
         <p className="limitations">
-          xG, possession percentage, pressing intensity and continuous player
-          tracking: unavailable from this source. Pass direction is relative to
-          the team's attacking goal, not a physical change of ends.
+          {match.capabilities.xg
+            ? "Source xG is available where recorded. "
+            : "xG is unavailable. "}
+          Possession percentage, pressing intensity and continuous tracking are
+          unavailable. Pass direction is relative to the attacking goal.
         </p>
       </section>
       <footer className="historical-attribution">
         <p>
           <a
-            href="https://figshare.com/collections/Soccer_match_event_dataset/4415000"
+            href={match.sourceUrl ?? undefined}
             target="_blank"
             rel="noreferrer"
           >
@@ -841,19 +842,11 @@ function HistoricalReplay({ match }: { match: MatchData }) {
         <p>
           Adapted from the published event and match records.{" "}
           <a
-            href="https://www.nature.com/articles/s41597-019-0247-7"
+            href={match.provenance.licenseUrl ?? undefined}
             target="_blank"
             rel="noreferrer"
           >
-            Pappalardo et al., Scientific Data 6, 236 (2019)
-          </a>
-          .{" "}
-          <a
-            href="https://creativecommons.org/licenses/by/4.0/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            License
+            {match.provenance.license}
           </a>
           . No endorsement implied.
         </p>

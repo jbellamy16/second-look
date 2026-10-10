@@ -1,5 +1,6 @@
 import "server-only";
 import { HistoricalMatchSource } from "./historical";
+import { loadResearchMatch } from "./local-research";
 import type { MatchData } from "./model";
 const source = new HistoricalMatchSource(async (id) => {
   switch (id) {
@@ -15,6 +16,7 @@ const source = new HistoricalMatchSource(async (id) => {
 });
 const loaded = new Map<string, Promise<MatchData>>();
 export function loadHistorical(id: string) {
+  if (id.startsWith("statsbomb-")) return loadResearchMatch(id);
   let result = loaded.get(id);
   if (!result) {
     result = source.load(id).catch((e) => {
