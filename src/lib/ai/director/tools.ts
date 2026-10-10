@@ -41,7 +41,7 @@ export function toolDefinitions(matchId: string, cutoff: number) {
     type: "function",
     name,
     strict: true,
-    description: `${name.replaceAll("_", " ")}. Read-only, at or before ${cutoff}. Windows are (start,end]. compare_time_windows compares this interval with the immediately preceding equal interval in one period. get_recorded_sequence requires eventId; get_player_involvement requires playerId. Null means no filter. Results capped at 40 events, with full aggregate counts and explicit truncation.`,
+    description: `${name.replaceAll("_", " ")}. Read-only, at or before ${cutoff}. Choose a window of at most 1800 seconds. Windows are (start,end]. compare_time_windows compares this interval with the immediately preceding equal interval in one period. get_recorded_sequence requires eventId; get_player_involvement requires playerId. Null means no filter. Results capped at 40 events, with full aggregate counts and explicit truncation.`,
     parameters: {
       type: "object",
       additionalProperties: false,

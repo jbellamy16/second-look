@@ -55,6 +55,11 @@ export async function investigate(
     toolInvocations: 0,
   },
 ): Promise<DirectorResult> {
+  // Always pass a signal, including evaluation callers, so each transport turn uses
+  // the director's 18-second timeout and the whole workflow stays inside its lease.
+  signal = signal
+    ? AbortSignal.any([signal, AbortSignal.timeout(55000)])
+    : AbortSignal.timeout(55000);
   const start = Date.now(),
     session = createInvestigation(match, cutoff, mode, preferences);
   const packet = matchEvidence(match, cutoff, mode);
