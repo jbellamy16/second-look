@@ -47,17 +47,24 @@ test("both sources share the layout and evidence flow at the same viewport", asy
     geometry[source] = await shell(page)
       .locator(".fixture-selector,.scoreboard,.playback,.pitch-panel")
       .evaluateAll((els) => {
-        // Recorded goal/assist credits legitimately give scoreboards different heights.
-        // Compare the shared layout below that content, rather than forcing equal scoresheets.
-        const scoreHeight = els
+        // The synthetic badge can add a row on phones; scorer credits also vary.
+        // Compare spacing from each preceding block, without forcing source content
+        // to have identical heights or hiding a gap/overlap regression.
+        const fixture = els
+          .find((el) => el.classList.contains("fixture-selector"))!
+          .getBoundingClientRect();
+        const scoreboard = els
           .find((el) => el.classList.contains("scoreboard"))!
-          .getBoundingClientRect().height;
+          .getBoundingClientRect();
         return els.flatMap((el) => {
           const b = el.getBoundingClientRect();
-          // Source labels can wrap on narrow screens; the pitch must align with its grid.
           const y = el.matches(".pitch-panel")
             ? b.y - el.closest(".match-grid")!.getBoundingClientRect().top
-            : b.y - (el.matches(".playback") ? scoreHeight : 0);
+            : el.matches(".scoreboard")
+              ? b.y - fixture.bottom
+              : el.matches(".playback")
+                ? b.y - scoreboard.bottom
+                : b.y;
           return [b.x, y, b.width];
         });
       });
