@@ -6,6 +6,8 @@ import { buildEvidence } from "../src/lib/ai/evidence";
 import { configuredProvider } from "../src/lib/ai/providers";
 import { usageStoreReady } from "../src/lib/ai/controls";
 import { narratePacket } from "../src/lib/ai/service";
+import { loadHistorical } from "../src/lib/sources/repository";
+import { historicalEvidence } from "../src/lib/sources/intelligence";
 import { estimateCost } from "../src/lib/ai/cost";
 const rows: unknown[] = [];
 const attempts: {
@@ -74,7 +76,10 @@ for (const mode of ["fan", "analyst"] as const)
     Object.assign(process.env, localAiConfig(process.cwd()));
     expect(configuredProvider()).not.toBe("offline");
     expect(usageStoreReady()).toBe(true);
-    const packet = buildEvidence(generateMatch("pressure"), DEMO_TIME, mode);
+    const historicalId = process.env.SECOND_LOOK_LIVE_MATCH_ID;
+    const packet = historicalId
+      ? historicalEvidence(await loadHistorical(historicalId), 1800, mode)
+      : buildEvidence(generateMatch("pressure"), DEMO_TIME, mode);
     const start = Date.now();
     const result = await narratePacket(packet);
     const provenance = result.provenance;
@@ -88,6 +93,7 @@ for (const mode of ["fan", "analyst"] as const)
         : null;
     rows.push({
       mode,
+      matchId: historicalId ?? "synthetic-pressure",
       result,
       verifiedFacts: packet.facts,
       comparisons: packet.comparisons,

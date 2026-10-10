@@ -3555,3 +3555,354 @@ main {
   align-items: center;
   gap: 6px;
 }
+
+/* Historical mode uses the same brand, surfaces and motion primitives. */
+.match-source-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.match-source-bar p {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.source-switch {
+  flex-shrink: 0;
+}
+.historical-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  margin-bottom: 28px;
+}
+.historical-picker > label:first-child {
+  flex: 1;
+  min-width: 240px;
+}
+.historical-picker select {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+}
+.historical-availability {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+}
+.historical-availability small,
+.historical-provider,
+.historical-sidebar-note {
+  color: var(--muted);
+}
+.historical-sidebar-note {
+  margin-top: auto;
+  font-size: 12px;
+  line-height: 1.7;
+  padding: 8px;
+}
+.historical-scoreboard .competition {
+  display: grid;
+  gap: 5px;
+}
+.historical-scoreboard .team-name {
+  min-width: 0;
+}
+.historical-scoreboard .team-name span {
+  overflow-wrap: anywhere;
+}
+.historical-feed,
+.historical-intelligence,
+.historical-statistics {
+  padding: 22px;
+}
+.historical-feed {
+  margin-top: 20px;
+}
+.historical-feed > label {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 18px 0;
+  font-size: 13px;
+}
+.historical-feed select {
+  min-width: 0;
+  max-width: 65%;
+}
+.historical-feed .event-feed-list {
+  max-height: 300px;
+  overflow: auto;
+}
+.historical-feed .event-feed-list button {
+  display: flex;
+  width: 100%;
+  text-align: left;
+  gap: 14px;
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.historical-feed time {
+  min-width: 58px;
+  color: var(--muted);
+}
+.historical-intelligence {
+  align-self: start;
+}
+.historical-provider {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 12px 0;
+}
+.historical-insights {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+}
+.historical-insights .insight-card {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  text-align: left;
+}
+.historical-insights h3 {
+  font-size: 18px;
+  margin: 10px 0;
+}
+.historical-insights p,
+.historical-insight-detail p,
+.historical-narrative p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.historical-count {
+  display: block;
+  font-size: 28px;
+  color: var(--text);
+  margin-top: 12px;
+}
+.historical-count small {
+  font-size: 11px;
+  color: var(--muted);
+}
+.historical-insight-detail h3,
+.historical-narrative h3 {
+  font-size: 13px;
+  margin: 20px 0 8px;
+}
+.historical-empty {
+  padding: 24px 0;
+  color: var(--muted);
+  line-height: 1.7;
+  font-size: 14px;
+}
+.historical-timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.historical-shell .timeline input {
+  width: 100%;
+  accent-color: var(--blue);
+}
+.historical-shell .event-inspector small {
+  font-size: 10px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.historical-shell .pitch-topline > span {
+  max-width: 48%;
+}
+.historical-evidence-list {
+  max-height: 250px;
+  overflow: auto;
+}
+.historical-evidence-list button {
+  width: 100%;
+  display: block;
+  text-align: left;
+  font-size: 12px;
+  padding: 10px 0;
+}
+.historical-evidence-list small {
+  display: block;
+  color: var(--muted);
+}
+.historical-statistics {
+  margin-top: 24px;
+  scroll-margin-top: 20px;
+}
+.historical-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+.historical-stat-grid h3 {
+  font-size: 16px;
+  margin: 20px 0;
+}
+.historical-stat-grid dl {
+  margin: 0;
+}
+.historical-stat-grid dl > div {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.historical-stat-grid dt {
+  color: var(--muted);
+}
+.historical-stat-grid dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.historical-stat-grid p,
+.historical-periods p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.historical-periods {
+  margin: 20px 0;
+  font-size: 13px;
+}
+.historical-attribution {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin-top: 24px;
+}
+.historical-attribution a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.historical-attribution details {
+  margin-top: 10px;
+}
+.historical-recap {
+  width: min(680px, calc(100vw - 24px));
+  max-height: 85dvh;
+  overflow: auto;
+  padding: 28px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+.historical-recap::backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
+.historical-recap h3 {
+  font-size: 14px;
+  margin: 22px 0 12px;
+}
+.historical-recap p {
+  font-size: 13px;
+  line-height: 1.8;
+}
+.historical-recap-facts p {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.historical-recap .recap-timeline {
+  display: grid;
+  gap: 10px;
+}
+.historical-recap .recap-timeline button {
+  text-align: left;
+  padding: 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  background: var(--sl-surface);
+}
+.insight-notice {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 30;
+  max-width: min(420px, calc(100vw - 32px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 8px 32px #0003;
+}
+.insight-notice .eyebrow {
+  display: block;
+  margin-bottom: 5px;
+}
+.insight-notice .text-button {
+  text-align: left;
+}
+@media (max-width: 760px) {
+  .match-source-bar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .historical-picker {
+    padding: 16px;
+    gap: 16px;
+  }
+  .historical-picker > label:first-child {
+    min-width: 0;
+    flex-basis: 100%;
+  }
+  .historical-availability {
+    flex-basis: 100%;
+  }
+  .historical-stat-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .historical-scoreboard .team-name {
+    font-size: 14px;
+  }
+  .historical-scoreboard .team-name small {
+    font-size: 8px;
+  }
+  .historical-shell .pitch-topline {
+    font-size: 10px;
+    gap: 6px;
+  }
+  .historical-shell .playback {
+    gap: 8px;
+  }
+  .historical-timeline-labels span:last-child {
+    display: none;
+  }
+  .historical-feed,
+  .historical-intelligence,
+  .historical-statistics {
+    padding: 16px;
+  }
+  .historical-recap {
+    padding: 20px;
+  }
+  .historical-sidebar-note {
+    display: none;
+  }
+  .insight-notice {
+    bottom: 82px;
+    right: 16px;
+  }
+}

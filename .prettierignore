@@ -4,3 +4,6 @@ package-lock.json
 artifacts
 test-results
 playwright-report
+
+# Compact, checksum-derived match selections are written by the importer.
+data/historical/249*.json

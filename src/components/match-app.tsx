@@ -40,7 +40,6 @@ import {
   DEMO_TIME,
   DURATION,
   eventsAt,
-  generateMatch,
   MatchEvent,
   PLAYERS,
   player,
@@ -64,6 +63,9 @@ import { buildEvidence } from "@/lib/ai/evidence";
 import type { Provenance } from "@/lib/ai/service";
 import { ProvenanceDetails, providerLabel } from "./provenance";
 import { Pitch } from "./pitch";
+import { InsightNotice } from "./insight-notice";
+import { SyntheticMatchSource } from "@/lib/sources/synthetic";
+import { pitchEvents as toLegacyEvents } from "@/lib/sources/model";
 import { EvidenceReplay } from "./evidence-replay";
 import { Metric, Reveal, SelectionGroup, usePageVisibility } from "./motion";
 type Section = "match" | "insights" | "stats" | "lineups" | "players";
@@ -98,7 +100,9 @@ function InsightIcon({
     </span>
   );
 }
-export function MatchApp() {
+export function MatchApp({
+  sourceSelector,
+}: { sourceSelector?: React.ReactNode } = {}) {
   const [appearance, setAppearance] = useAppearance();
   const [scenario, setScenario] = useState<Scenario>("pressure");
   const [time, setTime] = useState(DEMO_TIME),
@@ -138,7 +142,10 @@ export function MatchApp() {
   const visiblePage = usePageVisibility();
   const matchTime = useRef(time);
   matchTime.current = time;
-  const events = useMemo(() => generateMatch(scenario), [scenario]);
+  const events = useMemo(
+    () => toLegacyEvents(new SyntheticMatchSource().read(scenario).events),
+    [scenario],
+  );
   const visible = useMemo(() => eventsAt(events, time), [events, time]);
   const stats = useMemo(() => statistics(visible), [visible]);
   const allInsights = useMemo(
@@ -545,6 +552,18 @@ export function MatchApp() {
           </div>
         </header>
         <main>
+          {sourceSelector}
+          <InsightNotice
+            key={scenario}
+            insights={allInsights}
+            playing={playing}
+            onSelect={(i) => {
+              setPlaying(false);
+              setSelectedKey(`${i.team}-${i.category}`);
+              setSelectedEvent(null);
+              setReplay(null);
+            }}
+          />
           <div className="page-heading">
             <div>
               {section === "match" && (

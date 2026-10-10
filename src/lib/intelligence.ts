@@ -28,22 +28,34 @@ export type Insight = {
   unit: string;
   strength: number;
 };
-export function detectInsights(all: MatchEvent[], time: number): Insight[] {
-  const visible = eventsAt(all, time),
+export type DetectionEvent = Pick<
+  MatchEvent,
+  "id" | "time" | "team" | "playerId"
+> & { type: string; position: MatchEvent["position"] | null };
+export function detectInsights(
+  all: DetectionEvent[],
+  time: number,
+  context?: {
+    teams: Record<TeamId, { short: string }>;
+    periodStart: number;
+    ballRecoveries: boolean;
+  },
+): Insight[] {
+  const visible = all.filter((e) => e.time <= time),
     start = Math.max(0, time - 900),
     priorStart = Math.max(0, start - 900);
-  if (time < 1800) return [];
+  if (time - (context?.periodStart ?? 0) < 1800) return [];
   const recent = visible.filter((e) => e.time > start),
     previous = visible.filter((e) => e.time > priorStart && e.time <= start);
   const insights: Insight[] = [];
   for (const team of Object.keys(TEAMS) as TeamId[]) {
     const own = recent.filter((e) => e.team === team),
       prior = previous.filter((e) => e.team === team),
-      name = TEAMS[team].short;
+      name = (context?.teams ?? TEAMS)[team].short;
     const add = (
       category: Category,
-      evidence: MatchEvent[],
-      baseline: MatchEvent[],
+      evidence: DetectionEvent[],
+      baseline: DetectionEvent[],
       headline: string,
       explanation: string,
       why: string,
@@ -70,15 +82,20 @@ export function detectInsights(all: MatchEvent[], time: number): Insight[] {
         unit: "events / 15 min",
         strength,
       });
-    const high = (ev: MatchEvent[]) =>
+    const high = (ev: DetectionEvent[]) =>
       ev.filter(
         (e) =>
           ["recovery", "interception", "tackle"].includes(e.type) &&
-          e.position.x >= 66.7,
+          (e.position?.x ?? -1) >= 66.7,
       );
     const h = high(own),
       b = high(prior);
-    if (h.length >= 3 && h.length - b.length >= 2 && h.length >= b.length * 1.6)
+    if (
+      (context?.ballRecoveries ?? true) &&
+      h.length >= 3 &&
+      h.length - b.length >= 2 &&
+      h.length >= b.length * 1.6
+    )
       add(
         "pressure",
         h,
@@ -169,7 +186,7 @@ export type StoryPreferences = {
 /** Transparent editorial ranking, not a probability or significance score. */
 export function rankInsights(
   insights: Insight[],
-  events: MatchEvent[],
+  events: DetectionEvent[],
   mode: Mode,
   prefs: StoryPreferences = {},
 ) {

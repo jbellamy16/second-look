@@ -1,4 +1,5 @@
-import { MatchApp } from "@/components/match-app";
+import { MatchExperience } from "@/components/match-experience";
+import { historicalEnabled } from "@/lib/sources/repository";
 export default function Page() {
-  return <MatchApp />;
+  return <MatchExperience historicalEnabled={historicalEnabled()} />;
 }
