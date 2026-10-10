@@ -77,7 +77,7 @@ for (const mode of ["fan", "analyst"] as const)
       { factIds: packet.facts.slice(0, 4).map((f) => f.id) },
       packet,
     );
-    const result = await directMatch(match, cutoff, mode, { team: "harbor" });
+    const result = await directMatch(match, cutoff, mode);
     rows.push({
       match: match.id,
       cutoff,

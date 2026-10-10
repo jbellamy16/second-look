@@ -539,6 +539,7 @@ function HistoricalReplay({
               preferences={prefs}
               active={sourceActive && !recapOpen && section === "match"}
               playing={playing}
+              onExplore={() => setPlaying(false)}
             />
           }
           match={match}

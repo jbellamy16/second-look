@@ -803,6 +803,7 @@ export function MatchApp({
                 }}
                 active={active && !modal && section === "match"}
                 playing={playing}
+                onExplore={() => setPlaying(false)}
               />
             }
             match={canonicalMatch}

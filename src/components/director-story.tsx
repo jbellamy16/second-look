@@ -88,6 +88,7 @@ export function DirectorStory({
   preferences = {},
   active,
   playing,
+  onExplore,
 }: {
   match: MatchData;
   time: number;
@@ -95,6 +96,7 @@ export function DirectorStory({
   preferences?: StoryPreferences;
   active: boolean;
   playing: boolean;
+  onExplore: () => void;
 }) {
   const [answer, setAnswer] = useState<DirectorResult | null>(null),
     [busy, setBusy] = useState(false),
@@ -249,13 +251,22 @@ export function DirectorStory({
         {story.evidenceEventIds.length} supporting actions
       </small>
       <div className="director-actions">
-        <button className="text-button" onClick={() => setReplay((v) => !v)}>
+        <button
+          className="text-button"
+          onClick={() => {
+            if (!replay) onExplore();
+            setReplay((v) => !v);
+          }}
+        >
           {replay ? "Close story replay" : "Replay story evidence"}
         </button>
         <button
           className="text-button"
           disabled={busy}
-          onClick={() => void investigate()}
+          onClick={() => {
+            onExplore();
+            void investigate();
+          }}
         >
           {busy ? "Checking evidence…" : "Investigate this passage"}
         </button>
