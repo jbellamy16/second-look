@@ -50,7 +50,7 @@ test("replay pause, speed, rewind and cancellation share one clock", async ({
   await expect(page.getByTestId("score")).toHaveText("0:0");
 });
 
-test("dialogs and section changes suspend replay, preserve focus and resume without jumps", async ({
+test("dialogs and section changes pause replay, preserve focus and allow manual resume without jumps", async ({
   page,
 }) => {
   await startReplay(page);
@@ -64,6 +64,10 @@ test("dialogs and section changes suspend replay, preserve focus and resume with
   await expect(
     page.getByRole("button", { name: "Catch me up", exact: true }),
   ).toBeFocused();
+  await expect(
+    page.getByRole("button", { name: "Play replay", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Play replay", exact: true }).click();
   await page.clock.runFor(500);
   const advanced = Number(
     await page.getByLabel("Replay timeline").inputValue(),
@@ -80,6 +84,7 @@ test("dialogs and section changes suspend replay, preserve focus and resume with
     .getByRole("navigation")
     .getByRole("button", { name: "Match centre" })
     .click();
+  await page.getByRole("button", { name: "Play replay", exact: true }).click();
   await page.clock.runFor(500);
   expect(
     Number(await page.getByLabel("Replay timeline").inputValue()) -
@@ -143,6 +148,13 @@ test("reduced motion removes decoration while replay and keyboard selection work
   await page.keyboard.press("Escape");
   await page.locator(".replay-pitch .event-marker").first().focus();
   await page.keyboard.press("Enter");
+  const choices = page.locator(".pitch-event-choices");
+  if (await choices.isVisible())
+    await choices
+      .locator("button")
+      .filter({ hasText: /recovery/ })
+      .first()
+      .click();
   await expect(page.getByText("REPLAY PAUSED", { exact: true })).toBeVisible();
   expect(await range.inputValue()).toBe(await range.getAttribute("min"));
 });
@@ -234,7 +246,11 @@ test("an existing insight keeps keyboard focus across match-minute updates", asy
   await page.clock.install();
   await page.goto("/");
   await page.getByRole("button", { name: "Play match", exact: true }).click();
-  const card = page.locator(".insight-card").first();
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Insights", exact: true })
+    .click();
+  const card = page.locator(".observations-page .insight-card").first();
   await card.focus();
   await page.clock.runFor(6000);
   await expect(page.getByTestId("clock")).toContainText("64:12");

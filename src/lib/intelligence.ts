@@ -1,3 +1,4 @@
+import { EMPTY_MATCH_CONTEXT, recordedContext } from "./match-context";
 import {
   eventsAt,
   DURATION,
@@ -146,34 +147,25 @@ export function recap(events: MatchEvent[], time: number, mode: Mode) {
   const visible = eventsAt(events, time),
     stats = statistics(visible),
     insights = detectInsights(visible, time);
-  const goals = visible.filter((e) => e.type === "goal");
+  const context = recordedContext(visible, time, {
+    teams: TEAMS,
+    player: (id) => player(id).name,
+  });
+  const fallback =
+    context.items.map((item) => `${item.headline}. ${item.text}`).join(" ") ||
+    EMPTY_MATCH_CONTEXT;
   return {
     score: `${TEAMS.harbor.short} ${stats.harbor.goals} – ${stats.riverside.goals} ${TEAMS.riverside.short}`,
-    summary:
-      mode === "fan"
-        ? `${goals.length ? `${goals.length} goal${goals.length === 1 ? "" : "s"} so far.` : "Still waiting for the breakthrough."} ${insights[0]?.explanation ?? "No strong recent change has met our evidence threshold. This match is still taking shape."}`
-        : `Shots: ${stats.harbor.shots}–${stats.riverside.shots}. Event-model xG: ${stats.harbor.xg.toFixed(2)}–${stats.riverside.xg.toFixed(2)}. Pass completion: ${stats.harbor.accuracy}%–${stats.riverside.accuracy}%. ${insights[0]?.analyst ?? "No recent pattern meets the detection thresholds."}`,
-    moments: visible
-      .filter(
-        (e) =>
-          ["goal", "substitution"].includes(e.type) ||
-          (e.type === "shot" && e.outcome !== "goal" && (e.xg ?? 0) >= 0.2),
-      )
-      .slice(-6)
-      .map((e) => ({
-        event: e,
-        label:
-          e.type === "goal"
-            ? `Goal by ${player(e.playerId).name}`
-            : e.type === "substitution"
-              ? `${player(e.playerId).name} comes on`
-              : `Chance for ${player(e.playerId).name}`,
-      })),
+    summary: insights[0]
+      ? mode === "fan"
+        ? insights[0].explanation
+        : insights[0].analyst
+      : fallback,
+    moments: context.moments,
     watch:
       time >= DURATION
         ? "Full time. Revisit a key moment to see how the match unfolded."
-        : (insights[0]?.watch ??
-          "Watch for the first sustained change in ball wins or shot frequency."),
+        : (insights[0]?.watch ?? ""),
   };
 }
 

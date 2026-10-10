@@ -39,20 +39,20 @@ export function ProvenanceDetails({
             ? "AI chose supporting observations; Between the Lines supplied required match context."
             : "Computed directly from recorded events."}
         </p>
-        <h4>Detected observations</h4>
+        <h3>Detected observations</h3>
         {provenance.facts.map((f) => (
           <p key={f.id}>{f.text}</p>
         ))}
         {!!insights.length && (
           <>
-            <h4>Measurement notes</h4>
+            <h3>Measurement notes</h3>
             <p>
               Equal-duration windows and descriptive thresholds, not a
               statistical significance test. Coordinates are normalized to the
               attacking team. Recorded actions do not show off-ball positioning
               or establish cause and effect.
             </p>
-            <h4>Statistical comparisons</h4>
+            <h3>Statistical comparisons</h3>
             {insights.map((i) => (
               <p key={i.id}>
                 {i.metric}: {i.current} vs {i.previous}. Windows{" "}
@@ -62,7 +62,7 @@ export function ProvenanceDetails({
             ))}
           </>
         )}
-        <h4>Supporting events ({evidence.length})</h4>
+        <h3>Supporting events ({evidence.length})</h3>
         <ul
           className="provenance-events"
           tabIndex={0}
@@ -81,13 +81,13 @@ export function ProvenanceDetails({
             scoreless opening.
           </p>
         )}
-        <h4>Evidence validation</h4>
+        <h3>Evidence validation</h3>
         <ul>
           {provenance.validation.map((v) => (
             <li key={v}>{v}</li>
           ))}
         </ul>
-        <h4>Tool activity</h4>
+        <h3>Tool activity</h3>
         {provenance.activity.length ? (
           <ul>
             {provenance.activity.map((a) => (
@@ -97,7 +97,7 @@ export function ProvenanceDetails({
         ) : (
           <p>No completed AI tool activity is recorded for this explanation.</p>
         )}
-        <h4>Known limitations</h4>
+        <h3>Known limitations</h3>
         <ul>
           {provenance.limitations.map((l) => (
             <li key={l}>{l}</li>

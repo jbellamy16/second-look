@@ -55,7 +55,7 @@ export class SyntheticMatchSource implements MatchSource {
       kind: this.kind,
       title: "Harbor Athletic vs Riverside FC",
       date: null,
-      competition: "Between the Lines Invitational",
+      competition: "Coastal League",
       duration: DURATION,
       secondHalfStart: 2700,
       teams: {

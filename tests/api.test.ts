@@ -69,3 +69,45 @@ it("does not produce an insight at kickoff", async () => {
     ).status,
   ).toBe(404);
 });
+it("uses the requested balanced profile rather than silently narrating the curated demo", async () => {
+  const { SyntheticMatchSource } = await import("../src/lib/sources/synthetic");
+  const { historicalInsights } =
+    await import("../src/lib/sources/intelligence");
+  const match = new SyntheticMatchSource().read("pressure", {
+    profile: "balanced",
+  });
+  const insight = historicalInsights(match, 3804)[0];
+  expect(insight).toBeDefined();
+  const response = await POST(
+    request({
+      scenario: "pressure",
+      profile: "balanced",
+      time: 3804,
+      mode: "fan",
+      team: insight.team,
+      category: insight.category,
+    }),
+  );
+  expect(response.status).toBe(200);
+  const data = await response.json();
+  expect(data.insight.evidenceIds).toEqual(insight.evidenceIds);
+  expect(
+    data.insight.evidenceIds.every((id: string) =>
+      id.startsWith("synthetic-pressure-"),
+    ),
+  ).toBe(true);
+  expect(
+    (
+      await POST(
+        request({
+          scenario: "pressure",
+          profile: "invented",
+          time: 3804,
+          mode: "fan",
+          team: "harbor",
+          category: "pressure",
+        }),
+      )
+    ).status,
+  ).toBe(400);
+});

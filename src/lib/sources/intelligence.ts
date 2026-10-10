@@ -1,3 +1,5 @@
+import { contextFacts } from "../ai/context";
+import { matchContext } from "./context";
 import { evidenceEvent } from "./evidence-view";
 import { calculateStatistics } from "./analytics";
 import {
@@ -68,16 +70,12 @@ export function historicalSequence(
   );
   const index = preceding.findIndex((e) => e.id === selected.id);
   if (index < 0) return [];
+  // Chronological context may include both teams and stoppages. It is not a possession.
   const passage = [selected];
-  for (let i = index - 1; i >= 0 && passage.length < 8; i--) {
-    const e = preceding[i];
-    if (
-      e.team !== selected.team ||
-      !["pass", "shot", "touch", "corner"].includes(e.type) ||
-      passage[0].time - e.time > 15
-    )
-      break;
-    passage.unshift(e);
+  for (let i = index - 1; i >= 0 && passage.length < 12; i--) {
+    const event = preceding[i];
+    if (selected.time - event.time > 30) break;
+    passage.unshift(event);
   }
   return passage;
 }
@@ -122,48 +120,11 @@ export function historicalEvidence(
       why: "Scoring actions reconcile with the published match result; failed saves are not counted as additional goals.",
       watch: "Watch how the next recorded passage develops.",
     });
-    const moments = visible
-      .filter(
-        (e) => e.scoringTeam || e.type === "substitution" || e.type === "shot",
-      )
-      .slice(-8);
-    const latestGoal = goals.at(-1);
-    if (latestGoal && !moments.includes(latestGoal))
-      moments.unshift(latestGoal);
-    for (const e of moments)
-      facts.push({
-        id: `moment-${e.id}`,
-        kind: "moment",
-        priority: e.scoringTeam ? 9 : 5,
-        text: `${eventClock(match, e)}: ${eventDescription(match, e)}.`,
-        evidenceIds: [e.id],
-        why: e.scoringTeam
-          ? "A recorded scoring action changed the score."
-          : e.type === "shot"
-            ? e.xg === undefined
-              ? "A recorded attempt; no chance probability is available for this event."
-              : "A recorded attempt with a source-supplied chance estimate; it does not establish tactical cause."
-            : "A personnel change is recorded, but its tactical effect is not established.",
-        watch: "Watch whether subsequent attacks produce further attempts.",
-      });
-    if (!comparisons.length)
-      facts.push({
-        id: "no-pattern",
-        kind: "abstention",
-        priority: 7,
-        text:
-          time -
-            (match.capabilities.comparisonScope === "continuous"
-              ? 0
-              : periodAt(match, time).start) <
-          1800
-            ? "Two complete comparison windows within this half are not yet available."
-            : "No recent change meets the evidence thresholds. There is no supported tactical shift to call.",
-        evidenceIds: [],
-        why: "Avoiding a weak claim is more useful than inventing a trend.",
-        watch:
-          "Watch for a sustained change in passing activity or shot frequency.",
-      });
+    facts.push(
+      ...contextFacts(matchContext(match, time), (event) =>
+        eventClock(match, event),
+      ).filter((f) => (comparisons.length ? f.kind !== "abstention" : true)),
+    );
   }
   // Descriptive context derived at the same cutoff. No full-match totals enter an AI packet.
   const recent = visible.filter((e) => e.time > time - 900);
@@ -180,7 +141,7 @@ export function historicalEvidence(
   if (leader)
     facts.push({
       id: "contributor",
-      kind: "pattern",
+      kind: "context",
       priority: 5,
       text: `${match.players.find((p) => p.id === leader[0])?.name ?? "Unidentified player"} contributed ${leader[1].length} ${selected ? selected.metric.toLowerCase() : "shots"} in this sample.`,
       evidenceIds: leader[1].map((e) => e.id),

@@ -1,0 +1,865 @@
+"use client";
+import type { Insight, Mode } from "@/lib/intelligence";
+import { clock } from "@/lib/match";
+import { EMPTY_MATCH_CONTEXT } from "@/lib/match-context";
+import { matchContext } from "@/lib/sources/context";
+import { eventDescription } from "@/lib/sources/intelligence";
+import {
+  eventClock,
+  matchClock,
+  periodAt,
+  pitchEvents,
+  recordedScore,
+  type MatchData,
+  type NormalizedEvent,
+} from "@/lib/sources/model";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  EventIcon,
+  Goal,
+  Substitution,
+  ArrowLeft,
+  BarChart3,
+  HighBallWins,
+  Shot,
+  Pass,
+  ArrowRight,
+  ListVideo,
+  Pause,
+  Play,
+  RotateCcw,
+} from "./icons";
+import { PitchViewControl, type PitchView } from "./match-shell";
+import { Metric, SelectionGroup } from "./motion";
+import { Pitch } from "./pitch";
+import { Crest } from "./team-identity";
+
+export const displayClock = (match: MatchData, time: number) =>
+  match.kind === "synthetic" ? clock(time) : matchClock(match, time);
+const identitiesFor = (match: MatchData) => ({
+  teams: match.teams,
+  player: (id: string) =>
+    match.players.find((p) => p.id === id) ?? {
+      name: "Unidentified player",
+      number: null,
+    },
+});
+
+export function MatchHeader({
+  match,
+  time,
+  playing,
+  speed,
+  onPlay,
+  onSeek,
+  onSpeed,
+  mode,
+  onMode,
+  onRecap,
+}: {
+  match: MatchData;
+  time: number;
+  playing: boolean;
+  speed: number;
+  onPlay: () => void;
+  onSeek: (time: number) => void;
+  onSpeed: (speed: number) => void;
+  mode: Mode;
+  onMode: (mode: Mode) => void;
+  onRecap: () => void;
+}) {
+  const [fixtureDate, setFixtureDate] = useState<string | null>(null);
+  useEffect(() => {
+    // Presentation-only fixture date; never part of deterministic events or AI evidence.
+    const now = new Date();
+    const seasonStart =
+      now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
+    const season = `${seasonStart}–${String(seasonStart + 1).slice(-2)}`;
+    setFixtureDate(
+      `${season} · ${now.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })}`,
+    );
+  }, [match.id]);
+  const score = recordedScore(match.events.filter((e) => e.time <= time));
+  return (
+    <div className="match-header">
+      <section
+        className="scoreboard"
+        aria-label="Match scoreboard"
+        data-match-id={match.id}
+      >
+        <h1 className="sr-only">{match.title}</h1>
+        <div className="score-match">
+          <div className="team-name home">
+            <span>
+              {match.teams.harbor.name}
+              <small>Home</small>
+            </span>
+            {match.kind === "synthetic" ? (
+              <Crest team="harbor" />
+            ) : (
+              <span className="club-monogram harbor" aria-hidden="true">
+                {match.teams.harbor.short.slice(0, 3).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div className="score">
+            <strong data-testid="score" aria-live="polite" aria-atomic="true">
+              <Metric value={score.harbor} important />
+              <span className="score-separator">:</span>
+              <Metric value={score.riverside} important />
+            </strong>
+            <span className="match-clock" data-testid="clock">
+              <time>{displayClock(match, time)}</time>
+              <span>
+                {time >= match.duration
+                  ? "FT"
+                  : periodAt(match, time).id === "1H"
+                    ? "1ST"
+                    : "2ND"}
+              </span>
+            </span>
+          </div>
+          <div className="team-name">
+            {match.kind === "synthetic" ? (
+              <Crest team="riverside" />
+            ) : (
+              <span className="club-monogram riverside" aria-hidden="true">
+                {match.teams.riverside.short.slice(0, 3).toUpperCase()}
+              </span>
+            )}
+            <span>
+              {match.teams.riverside.name}
+              <small>Away</small>
+            </span>
+          </div>
+        </div>
+        <span className={`live-label ${playing ? "is-playing" : ""}`}>
+          <span />
+          {playing
+            ? "PLAYING"
+            : time >= match.duration
+              ? "FULL TIME"
+              : "PAUSED"}
+        </span>
+      </section>
+      <div className="match-controls">
+        <div className="playback">
+          <button
+            className="play-button"
+            aria-label={playing ? "Pause match" : "Play match"}
+            onClick={onPlay}
+          >
+            {playing ? <Pause size={20} /> : <Play size={20} />}
+          </button>
+          <div className="timeline">
+            <div className="timeline-events">
+              {match.events
+                .filter(
+                  (e) =>
+                    e.time <= time &&
+                    (e.scoringTeam || e.type === "substitution"),
+                )
+                .map((e) => (
+                  <button
+                    key={e.id}
+                    className={e.scoringTeam ? "goal-tick" : "sub-tick"}
+                    style={{ left: `${(e.time / match.duration) * 100}%` }}
+                    aria-label={`Seek to ${displayClock(match, e.time)} ${e.scoringTeam ? "goal" : "substitution"}`}
+                    onClick={() => onSeek(e.time)}
+                  >
+                    {e.scoringTeam ? (
+                      <Goal size={16} />
+                    ) : (
+                      <Substitution size={16} />
+                    )}
+                  </button>
+                ))}
+            </div>
+            <input
+              type="range"
+              aria-label="Match timeline"
+              aria-valuetext={displayClock(match, time)}
+              min={0}
+              max={match.duration}
+              step={1}
+              value={time}
+              onChange={(e) => onSeek(Number(e.target.value))}
+              style={
+                {
+                  "--progress": `${(time / match.duration) * 100}%`,
+                } as CSSProperties
+              }
+            />
+            <div className="timeline-labels">
+              <span>Kickoff</span>
+              <span>Half-time</span>
+              <span>Full-time</span>
+            </div>
+          </div>
+          <select
+            className="speed-select"
+            aria-label="Playback speed"
+            value={speed}
+            onChange={(e) => onSpeed(Number(e.target.value))}
+          >
+            {[1, 4, 8, 16, 32].map((n) => (
+              <option key={n} value={n}>
+                {n}×
+              </option>
+            ))}
+          </select>
+          <button
+            className="icon-button"
+            aria-label="Restart match"
+            onClick={() => onSeek(0)}
+          >
+            <RotateCcw size={16} />
+          </button>
+        </div>
+      </div>
+      <span className="fixture-meta">
+        {match.competition}
+        {match.kind === "synthetic"
+          ? fixtureDate && ` · ${fixtureDate}`
+          : `${match.season && !match.competition.includes(match.season) ? ` · ${match.season}` : ""}${match.date ? ` · ${new Date(match.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}` : ""}`}
+      </span>
+      <div className="view-toolbar">
+        <SelectionGroup
+          className="mode-switch"
+          label="Viewing mode"
+          value={mode}
+        >
+          {(["fan", "analyst"] as const).map((m) => (
+            <button
+              key={m}
+              className={mode === m ? "selected" : ""}
+              aria-pressed={mode === m}
+              onClick={() => onMode(m)}
+            >
+              {m === "fan" ? "Fan mode" : "Analyst mode"}
+            </button>
+          ))}
+        </SelectionGroup>
+        <button className="catchup-button" onClick={onRecap}>
+          <ListVideo size={20} />
+          Catch me up
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function InsightComparison({
+  insight,
+  match,
+}: {
+  insight: Insight;
+  match: MatchData;
+}) {
+  const max = Math.max(insight.current, insight.previous, 1);
+  return (
+    <div
+      className="measured-change"
+      aria-label={`${insight.metric}: ${insight.current} versus ${insight.previous}`}
+    >
+      <div className="change-total">
+        <strong>
+          {insight.current}
+          <small>{insight.metric}</small>
+        </strong>
+        <span className="change-delta">
+          {insight.current - insight.previous > 0 ? "+" : ""}
+          {insight.current - insight.previous}
+          <small>vs previous 15 min</small>
+        </span>
+      </div>
+      {[
+        [insight.current, insight.start, insight.end],
+        [insight.previous, insight.start - 900, insight.start],
+      ].map(([value, start, end], n) => (
+        <div className={`window-row ${n ? "baseline" : ""}`} key={n}>
+          <span>
+            {displayClock(match, start)}–{displayClock(match, end)}
+          </span>
+          <span className="window-track">
+            <i style={{ width: `${(value / max) * 100}%` }} />
+          </span>
+          <b>{value}</b>
+        </div>
+      ))}
+    </div>
+  );
+}
+function RecordedIcon({ event }: { event: NormalizedEvent }) {
+  return event.scoringTeam ? (
+    <Goal size={20} />
+  ) : (
+    <EventIcon type={event.type} size={20} />
+  );
+}
+function InsightGlyph({ insight }: { insight: Insight }) {
+  const Glyph =
+    insight.category === "pressure"
+      ? HighBallWins
+      : insight.category === "chances"
+        ? Shot
+        : Pass;
+  return <Glyph size={20} />;
+}
+export function InsightCard({
+  insight,
+  match,
+  onSelect,
+  lead = false,
+  mode = "fan",
+}: {
+  insight: Insight;
+  match: MatchData;
+  onSelect: () => void;
+  lead?: boolean;
+  mode?: Mode;
+}) {
+  return (
+    <button
+      className={`observation-card insight-card ${lead ? "lead-observation" : ""}`}
+      onClick={onSelect}
+    >
+      <span className="observation-team">
+        <i className={`team-marker ${insight.team}`} />
+        {match.teams[insight.team].name}
+      </span>
+      <span className="context-label">Analytical insight</span>
+      <h3>
+        <InsightGlyph insight={insight} />
+        {insight.headline}
+      </h3>
+      {lead ? (
+        <InsightComparison insight={insight} match={match} />
+      ) : (
+        <p>
+          <strong>{insight.current}</strong> {insight.metric.toLowerCase()}{" "}
+          <span>
+            vs {insight.previous} · {displayClock(match, insight.start)}–
+            {displayClock(match, insight.end)}
+          </span>
+        </p>
+      )}
+      {mode === "analyst" && <p>{insight.analyst}</p>}
+      <span className="explore-evidence">
+        {insight.evidenceIds.length} supporting actions <ArrowRight size={16} />
+      </span>
+    </button>
+  );
+}
+/** Recorded context occupies the existing intelligence space, without trend styling. */
+export function MatchContext({
+  match,
+  time,
+  onEvent,
+}: {
+  match: MatchData;
+  time: number;
+  onEvent: (id: string) => void;
+}) {
+  const { items } = matchContext(match, time);
+  if (!items.length)
+    return <p className="empty-observation">{EMPTY_MATCH_CONTEXT}</p>;
+  return (
+    <div className="match-context" data-testid="match-context">
+      <h2>Match context</h2>
+      {items.map((item) => (
+        <article className="context-item" key={item.id}>
+          <span className="context-label">
+            {item.kind === "event" ? "Recorded event" : "Match statistics"}
+          </span>
+          <h3>
+            {item.kind === "event" ? (
+              <RecordedIcon
+                event={match.events.find((e) => e.id === item.eventId)!}
+              />
+            ) : (
+              <BarChart3 size={20} />
+            )}
+            {item.headline}
+          </h3>
+          <p>{item.text}</p>
+          {item.kind === "event" && (
+            <time>
+              {eventClock(
+                match,
+                match.events.find((e) => e.id === item.eventId)!,
+              )}
+            </time>
+          )}
+          <details className="context-evidence">
+            <summary>
+              View {item.evidenceIds.length} recorded{" "}
+              {item.evidenceIds.length === 1 ? "action" : "actions"}
+            </summary>
+            <div
+              className="evidence-list"
+              tabIndex={0}
+              aria-label={`${item.headline} evidence`}
+            >
+              {match.events
+                .filter(
+                  (e) => e.time <= time && item.evidenceIds.includes(e.id),
+                )
+                .map((e) => (
+                  <button key={e.id} onClick={() => onEvent(e.id)}>
+                    <time>{eventClock(match, e)}</time>
+                    <span>{eventDescription(match, e)}</span>
+                    <Play size={16} />
+                  </button>
+                ))}
+            </div>
+          </details>
+        </article>
+      ))}
+    </div>
+  );
+}
+export function InsightOverview({
+  match,
+  insights,
+  onSelect,
+  mode,
+  empty,
+}: {
+  match: MatchData;
+  insights: Insight[];
+  onSelect: (i: Insight) => void;
+  mode: Mode;
+  empty: ReactNode;
+}) {
+  return (
+    <section className="observations-page" aria-label="Insights">
+      <h2 className="sr-only">Insights</h2>
+      {insights.length ? (
+        <>
+          <InsightCard
+            insight={insights[0]}
+            match={match}
+            lead
+            mode={mode}
+            onSelect={() => onSelect(insights[0])}
+          />
+          <div className="supporting-observations">
+            {insights.slice(1).map((i) => (
+              <InsightCard
+                key={`${i.team}-${i.category}`}
+                insight={i}
+                match={match}
+                mode={mode}
+                onSelect={() => onSelect(i)}
+              />
+            ))}
+          </div>
+        </>
+      ) : (
+        empty
+      )}
+    </section>
+  );
+}
+export function InsightDetails({
+  match,
+  insight,
+  insights,
+  onSelect,
+  onEvent,
+  onReplay,
+  tab,
+  onTab,
+  mode,
+  explanation,
+  children,
+  empty,
+}: {
+  match: MatchData;
+  insight?: Insight;
+  insights: Insight[];
+  onSelect: (i: Insight) => void;
+  onEvent: (id: string) => void;
+  onReplay: () => void;
+  tab: "visual" | "evidence" | "explanation";
+  onTab: (tab: "visual" | "evidence" | "explanation") => void;
+  mode: Mode;
+  explanation?: ReactNode;
+  children: ReactNode;
+  empty: ReactNode;
+}) {
+  const evidence = insight
+    ? match.events.filter(
+        (e) => e.time <= insight.end && insight.evidenceIds.includes(e.id),
+      )
+    : [];
+  return (
+    <aside className="panel detail-panel" aria-label="Match intelligence">
+      {insight ? (
+        <>
+          <div className="selected-observation">
+            <span className="observation-team">
+              <i className={`team-marker ${insight.team}`} />
+              {match.teams[insight.team].name}
+            </span>
+            <span className="context-label">Analytical insight</span>
+            <h2>
+              <InsightGlyph insight={insight} />
+              {insight.headline}
+            </h2>
+            {mode === "analyst" && <p>{insight.analyst}</p>}
+            <InsightComparison insight={insight} match={match} />
+          </div>
+          <SelectionGroup
+            className="detail-tabs"
+            label="Insight details"
+            value={tab}
+          >
+            {(["visual", "evidence", "explanation"] as const).map((t) => (
+              <button
+                key={t}
+                className={tab === t ? "selected" : ""}
+                aria-pressed={tab === t}
+                onClick={() => onTab(t)}
+              >
+                {t === "evidence"
+                  ? `Evidence (${evidence.length})`
+                  : t[0].toUpperCase() + t.slice(1)}
+              </button>
+            ))}
+          </SelectionGroup>
+          <div className="detail-content">
+            {tab === "visual" && (
+              <>
+                <div className="comparison-pitches">
+                  {[insight.evidenceIds, insight.baselineIds].map((ids, n) => (
+                    <div key={n}>
+                      <Pitch
+                        compact
+                        aggregate={ids.length > 24}
+                        events={pitchEvents(
+                          match.events.filter(
+                            (e) => e.time <= insight.end && ids.includes(e.id),
+                          ),
+                        )}
+                        identities={identitiesFor(match)}
+                      />
+                      <span>
+                        {n ? "Previous 15 minutes" : "Last 15 minutes"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <p className="metric-note">
+                  {insight.metric} locations · attacking direction normalized.
+                </p>
+              </>
+            )}
+            {tab === "evidence" && (
+              <div
+                className="evidence-list"
+                tabIndex={0}
+                aria-label="Supporting actions"
+              >
+                {evidence.map((e) => (
+                  <button key={e.id} onClick={() => onEvent(e.id)}>
+                    <time>{displayClock(match, e.time)}</time>
+                    <span className={`event-glyph ${e.team}`}>
+                      <EventIcon type={e.type} />
+                    </span>
+                    <span>
+                      {eventDescription(match, e)}
+                      <small>{match.teams[e.team].short}</small>
+                    </span>
+                    <Play size={16} />
+                  </button>
+                ))}
+              </div>
+            )}
+            {tab === "explanation" &&
+              (explanation ?? (
+                <>
+                  <p>{insight.explanation}</p>
+                  <p>{insight.why}</p>
+                  <p>{insight.watch}</p>
+                </>
+              ))}
+            <button className="sequence-button" onClick={onReplay}>
+              Show me the sequence <ArrowRight size={20} />
+            </button>
+            {children}
+          </div>
+          {insights.length > 1 && (
+            <details className="more-observations">
+              <summary>More observations ({insights.length - 1})</summary>
+              {insights
+                .filter((i) => i.id !== insight.id)
+                .map((i) => (
+                  <InsightCard
+                    key={`${i.team}-${i.category}`}
+                    insight={i}
+                    match={match}
+                    onSelect={() => onSelect(i)}
+                  />
+                ))}
+            </details>
+          )}
+        </>
+      ) : (
+        empty
+      )}
+    </aside>
+  );
+}
+export function MatchPitch({
+  match,
+  time,
+  events,
+  selected,
+  onSelect,
+  view,
+  onView,
+  hasPattern,
+  hasPassage,
+  replay,
+  onClear,
+  onSeek,
+}: {
+  match: MatchData;
+  time: number;
+  events: NormalizedEvent[];
+  selected?: string;
+  onSelect: (id: string) => void;
+  view: PitchView;
+  onView: (view: PitchView) => void;
+  hasPattern: boolean;
+  hasPassage: boolean;
+  replay?: ReactNode;
+  onClear: () => void;
+  onSeek: (time: number) => void;
+}) {
+  const actions = events.filter(
+    (e) => !["possession", "substitution"].includes(e.type),
+  );
+  const active = actions.find((e) => e.id === selected) ?? actions.at(-1);
+  return (
+    <section className="panel pitch-panel">
+      <div className="panel-header">
+        <h2>
+          {view === "passage"
+            ? "Passage replay"
+            : view === "pattern"
+              ? "Where it happened"
+              : "Recent actions"}
+        </h2>
+        {view === "passage" && (
+          <button className="text-button" onClick={onClear}>
+            Clear selection
+          </button>
+        )}
+      </div>
+      <PitchViewControl
+        value={view}
+        onChange={onView}
+        hasPattern={hasPattern}
+        hasPassage={hasPassage}
+      />
+      <div className="pitch-topline">
+        <span>
+          <i className="team-marker harbor" />
+          {match.teams.harbor.short} <ArrowRight size={16} />
+        </span>
+        <span>
+          <ArrowLeft size={16} /> {match.teams.riverside.short}
+          <i className="team-marker riverside" />
+        </span>
+      </div>
+      {replay ?? (
+        <>
+          <Pitch
+            events={pitchEvents(actions)}
+            selected={selected}
+            onSelect={(e) => onSelect(e.id)}
+            sequence={view !== "pattern"}
+            aggregate={view === "pattern" && actions.length > 24}
+            includeAllActions
+            identities={identitiesFor(match)}
+            formatTime={(t) => displayClock(match, t)}
+          />
+          <div className="event-inspector action-picker">
+            <div>
+              <p>
+                {active
+                  ? `${displayClock(match, active.time)} · ${eventDescription(match, active)}`
+                  : "No actions in this window."}
+              </p>
+            </div>
+            {actions.length > 0 && (
+              <select
+                aria-label="Recorded event"
+                value={active?.id ?? ""}
+                onChange={(e) => onSelect(e.target.value)}
+              >
+                {actions.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {displayClock(match, e.time)} · {eventDescription(match, e)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+          <div className="event-steps">
+            <button
+              className="text-button"
+              disabled={
+                !match.events.some(
+                  (e) => e.time < time && e.type !== "possession",
+                )
+              }
+              onClick={() =>
+                onSeek(
+                  match.events.findLast(
+                    (e) => e.time < time && e.type !== "possession",
+                  )?.time ?? 0,
+                )
+              }
+            >
+              Previous action
+            </button>
+            <button
+              className="text-button"
+              disabled={
+                !match.events.some(
+                  (e) => e.time > time && e.type !== "possession",
+                )
+              }
+              onClick={() =>
+                onSeek(
+                  match.events.find(
+                    (e) => e.time > time && e.type !== "possession",
+                  )?.time ?? match.duration,
+                )
+              }
+            >
+              Next action
+            </button>
+          </div>
+        </>
+      )}
+      <details className="pitch-notes">
+        <summary>About this view</summary>
+        <p>
+          Home attacks right; away attacks left. This is a normalized schematic,
+          not actual stadium orientation. Markers show actions, not player
+          positions. Area counts count actions, not time spent.
+        </p>
+        <p>
+          {match.kind === "synthetic"
+            ? "Generated event locations. Replay motion connects generated endpoints; it is not player tracking."
+            : "Recorded event locations. No possession or motion between sparse events is inferred."}
+        </p>
+      </details>
+    </section>
+  );
+}
+export function MatchEventFeed({
+  match,
+  time,
+  onEvent,
+}: {
+  match: MatchData;
+  time: number;
+  onEvent: (id: string) => void;
+}) {
+  const events = match.events
+    .filter((e) => e.time <= time && e.type !== "possession")
+    .slice(-50)
+    .reverse();
+  return (
+    <details className="panel match-event-feed">
+      <summary>
+        Recent events <span>{events.length}</span>
+      </summary>
+      <div className="event-feed-list" tabIndex={0} aria-label="Recent events">
+        {events.map((e) => (
+          <button key={e.id} onClick={() => onEvent(e.id)}>
+            <time>{displayClock(match, e.time)}</time>
+            <span className={`event-glyph ${e.team}`}>
+              <EventIcon type={e.type} />
+            </span>
+            <span>
+              {eventDescription(match, e)}
+              <small>{match.teams[e.team].short}</small>
+            </span>
+            <Play size={16} />
+          </button>
+        ))}
+        {!events.length && <p>No events yet.</p>}
+      </div>
+    </details>
+  );
+}
+export function MatchRecap({
+  match,
+  time,
+  summary,
+  moments,
+  watch,
+  onMoment,
+  children,
+}: {
+  match: MatchData;
+  time: number;
+  summary: ReactNode;
+  moments: { id: string; time: number; label: string }[];
+  watch: string;
+  onMoment: (id: string) => void;
+  children: ReactNode;
+}) {
+  const score = recordedScore(match.events.filter((e) => e.time <= time));
+  return (
+    <div className="recap-body">
+      <h2>Catch me up</h2>
+      <p className="recap-cutoff">Through {displayClock(match, time)}</p>
+      <div className="recap-score">
+        <span>{match.teams.harbor.name}</span>
+        <strong>
+          {score.harbor}–{score.riverside}
+        </strong>
+        <span>{match.teams.riverside.name}</span>
+      </div>
+      <div className="recap-summary">{summary || EMPTY_MATCH_CONTEXT}</div>
+      <div className="recap-timeline">
+        {moments.length
+          ? moments.map((m) => (
+              <button key={m.id} onClick={() => onMoment(m.id)}>
+                <time>
+                  {eventClock(
+                    match,
+                    match.events.find((e) => e.id === m.id)!,
+                  )}
+                </time>
+                <RecordedIcon
+                  event={match.events.find((e) => e.id === m.id)!}
+                />
+                <span>{m.label}</span>
+                <ArrowRight size={16} />
+              </button>
+            ))
+          : null}
+      </div>
+      {watch && (
+        <div className="watch-next">
+          <span>{time >= match.duration ? "Full time" : "Watch next"}</span>
+          <p>{watch}</p>
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}

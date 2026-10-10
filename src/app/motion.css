@@ -10,13 +10,19 @@
 button,
 select,
 summary,
-a {
+a[href],
+input[type="range"],
+input[type="checkbox"],
+.checkbox-label {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   transition:
     background-color var(--motion-micro) var(--ease-state),
     color var(--motion-micro) var(--ease-state),
     border-color var(--motion-micro) var(--ease-state),
+    opacity var(--motion-micro) var(--ease-state),
+    filter var(--motion-micro) var(--ease-state),
+    accent-color var(--motion-micro) var(--ease-state),
     transform var(--motion-micro) var(--ease-out);
 }
 button:hover {
@@ -28,17 +34,66 @@ button:active:not(:disabled) {
 button:disabled {
   cursor: default;
 }
-@media (hover: hover) {
-  :is(.icon-button, .text-button, .narrate-button, .help-button):hover {
+/* Hover changes the existing surface, without moving or outlining controls. */
+@media (hover: hover) and (pointer: fine) {
+  :is(
+      .icon-button,
+      .text-button,
+      .narrate-button,
+      .help-button,
+      .nav-item:not(.active),
+      .mode-switch button:not(.selected),
+      .insight-card,
+      .player-row,
+      .wide-insight,
+      .evidence-list button,
+      .event-feed-list button,
+      .recap-timeline button,
+      .settings-modes button:not(.selected)
+    ):hover:not(:disabled) {
     background-color: var(--sl-hover);
   }
-  :is(.insight-card, .player-row, .evidence-list button):hover {
-    border-color: var(--sl-muted);
-    background-color: var(--sl-hover);
+  :is(.catchup-button, .secondary-button, .play-button, select):hover:not(
+      :disabled
+    ) {
+    background-color: color-mix(in srgb, var(--sl-text) 8%, var(--sl-surface));
   }
-  :is(.primary-button, .sequence-button):hover {
-    background-color: var(--sl-primary-hover);
+  :is(.primary-button, .sequence-button):hover:not(:disabled) {
+    background-color: var(--btl-action-hover);
   }
+  :is(
+    .detail-tabs button,
+    .nav-item.active,
+    .mode-switch button.selected,
+    .settings-modes button.selected
+  ):hover,
+  summary:hover,
+  .checkbox-label:has(input:not(:disabled)):hover,
+  .asset-license-link:hover {
+    color: var(--sl-blue-light);
+  }
+  :is(.brand, .mobile-brand):hover {
+    opacity: 0.75;
+  }
+  .timeline-events button:hover {
+    background-color: var(--sl-blue-light);
+  }
+  input[type="range"]:hover:not(:disabled) {
+    filter: brightness(1.2);
+  }
+  .checkbox-label:has(input:not(:disabled)):hover input {
+    accent-color: var(--btl-action-hover);
+  }
+  .replay-pitch .event-marker:hover {
+    opacity: 1;
+  }
+}
+.checkbox-label:has(input:not(:disabled)),
+select:not(:disabled) {
+  cursor: pointer;
+}
+.event-marker :is(.marker-dot, .marker-square) {
+  transition: stroke var(--motion-micro) var(--ease-state);
 }
 :focus-visible {
   outline: 2px solid var(--sl-blue-light);

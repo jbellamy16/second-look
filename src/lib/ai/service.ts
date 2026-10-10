@@ -56,7 +56,7 @@ export async function narratePacket(packet: EvidencePacket) {
         "AI is configured, but shared usage controls are unavailable. Showing the verified offline explanation.",
     };
   // Hash all evidence, preferences/ranking, mode, provider, model and prompt version. Never round time into the future.
-  const identity = { version: 2, provider, model: modelFor(provider), packet };
+  const identity = { version: 3, provider, model: modelFor(provider), packet };
   const key = createHash("sha256")
     .update(JSON.stringify(identity))
     .digest("hex");

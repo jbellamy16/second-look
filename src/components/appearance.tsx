@@ -25,7 +25,12 @@ export function useAppearance() {
         setAppearance(readAppearance());
     };
     window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
+    const localSync = () => setAppearance(readAppearance());
+    window.addEventListener("match-appearance", localSync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("match-appearance", localSync);
+    };
   }, []);
 
   useEffect(() => {
@@ -52,6 +57,7 @@ export function useAppearance() {
     setAppearance(value);
     try {
       localStorage.setItem(storageKey, value);
+      window.dispatchEvent(new Event("match-appearance"));
     } catch {}
   };
 

@@ -214,7 +214,8 @@ describe("historical intelligence and AI", () => {
               (e) =>
                 e.time <= t &&
                 e.period === selected.period &&
-                e.team === selected.team,
+                e.order <= selected.order &&
+                selected.time - e.time <= 30,
             ),
           ).toBe(true);
         expect(historicalSequence(m, m.events.at(-1)!, 0)).toEqual([]);

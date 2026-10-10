@@ -19,7 +19,8 @@ export async function POST(req: Request) {
     return json({ error: "Invalid match request" }, 400);
   }
   const events = pitchEvents(
-    new SyntheticMatchSource().read(input.scenario).events,
+    new SyntheticMatchSource().read(input.scenario, { profile: input.profile })
+      .events,
   );
   const packet = buildEvidence(
     events,
@@ -29,7 +30,12 @@ export async function POST(req: Request) {
   );
   const summary = recap(events, input.time, input.mode);
   // No editorial choice to make: don't spend tokens to rephrase a quiet opening.
-  if (!packet.facts.some((f) => f.kind === "pattern" || f.kind === "moment"))
+  if (
+    !packet.facts.some(
+      (f) =>
+        f.kind === "pattern" || f.kind === "moment" || f.kind === "context",
+    )
+  )
     return json({
       summary,
       source: "offline",

@@ -1,9 +1,10 @@
+import { contextFacts } from "./context";
+import { recordedContext } from "../match-context";
 import { evidenceEvent } from "../sources/evidence-view";
 import { z } from "zod";
 import {
   detectInsights,
   rankInsights,
-  recap,
   type Mode,
   type StoryPreferences,
   type Insight,
@@ -20,16 +21,17 @@ import {
 export const preferencesSchema = z
   .object({
     team: z.enum(["all", "harbor", "riverside"]).optional(),
-    player: z.string().max(40).optional(),
+    player: z.string().max(160).optional(),
     categories: z
       .array(z.enum(["pressure", "chances", "rhythm"]))
       .max(3)
       .optional(),
-    seenEvidenceIds: z.array(z.string().max(40)).max(200).optional(),
+    seenEvidenceIds: z.array(z.string().max(160)).max(200).optional(),
   })
   .strict();
 export const matchRequestSchema = z.object({
   scenario: z.enum(["pressure", "substitution", "quiet"]),
+  profile: z.enum(["demo", "balanced"]).default("demo"),
   time: z.number().int().min(0).max(DURATION),
   mode: z.enum(["fan", "analyst"]),
   preferences: preferencesSchema.optional(),
@@ -45,7 +47,7 @@ export type Fact = {
   text: string;
   evidenceIds: string[];
   priority: number;
-  kind: "score" | "moment" | "pattern" | "abstention";
+  kind: "score" | "moment" | "pattern" | "context" | "abstention";
   why: string;
   watch: string;
 };
@@ -171,48 +173,15 @@ export function buildEvidence(
       why: "The score records completed goals only.",
       watch: "Watch how the next recorded passage develops.",
     });
-    const moments = recap(visible, time, mode).moments;
-    const latestGoal = goals.at(-1);
-    if (latestGoal && !moments.some((m) => m.event.id === latestGoal.id))
-      moments.unshift({
-        event: latestGoal,
-        label: `Goal by ${player(latestGoal.playerId).name}`,
-      });
-    for (const { event, label } of moments)
-      facts.push({
-        id: `moment-${event.id}`,
-        kind: "moment",
-        priority:
-          event.type === "goal" ? 9 : event.type === "substitution" ? 6 : 5,
-        text:
-          mode === "fan"
-            ? `${label} (${TEAMS[event.team].short}) at ${clock(event.time)}.`
-            : `At ${clock(event.time)}, ${TEAMS[event.team].short}: ${label}${event.type === "shot" ? `; synthetic chance probability ${(event.xg ?? 0).toFixed(2)}` : ""}.`,
-        evidenceIds: [event.id],
-        why:
-          event.type === "substitution"
-            ? "A recorded personnel change; these events alone do not establish its tactical effect."
-            : event.type === "goal"
-              ? "A recorded scoring moment changed the score."
-              : "A shot with a higher synthetic chance probability; this is not a calibrated prediction.",
-        watch:
-          event.type === "substitution"
-            ? `Watch the recorded actions involving ${player(event.playerId).name}.`
-            : "Watch whether subsequent attacks produce further attempts.",
-      });
-    if (!comparisons.length)
-      facts.push({
-        id: "no-pattern",
-        kind: "abstention",
-        priority: 7,
-        text:
-          time < 1800
-            ? "There is not yet enough match time for two complete comparison windows."
-            : "No recent change meets the selected evidence thresholds. There is no supported tactical shift to call.",
-        evidenceIds: [],
-        why: "Avoiding a weak claim is more useful than inventing a trend.",
-        watch: "Watch for a sustained change in ball wins or shot frequency.",
-      });
+    facts.push(
+      ...contextFacts(
+        recordedContext(visible, time, {
+          teams: TEAMS,
+          player: (id) => player(id).name,
+        }),
+        (event) => clock(event.time),
+      ).filter((f) => (comparisons.length ? f.kind !== "abstention" : true)),
+    );
   }
   const ids = new Set(facts.flatMap((f) => f.evidenceIds));
   return {
