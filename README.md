@@ -4,8 +4,6 @@
 
 Previously called Second Look. The product is now Between the Lines; the repository remains `jbellamy16/second-look`.
 
-**You saw the game. Here’s what you missed.**
-
 Between the Lines is a second-screen football intelligence experience. It turns synthetic match events into a small number of explainable stories, then lets viewers inspect the actions behind each claim. Built for an individual entry in Microsoft’s 2026 Inside the Game Developer Hackathon.
 
 ## The problem
