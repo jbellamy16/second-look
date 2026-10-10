@@ -57,6 +57,17 @@ test("scoreline and player views credit Milo only after Arlo scores", async ({
   await expect(page.locator(".score-contributions")).toHaveCount(0);
   await page.getByRole("button", { name: "Player focus", exact: true }).click();
   await page.getByLabel("Focus player").selectOption("harbor-6");
+  const completion = page
+    .locator(".player-metrics > div")
+    .filter({ hasText: "Pass completion" })
+    .locator("strong");
+  await timeline.fill("54");
+  await expect(completion).toHaveText("—");
+  await timeline.fill("55");
+  await expect(completion).toHaveText("100%");
+  await timeline.fill("54");
+  await expect(completion).toHaveText("—");
+  await timeline.fill("59");
   const assists = page
     .locator(".player-metrics > div")
     .filter({ hasText: "Assists" })

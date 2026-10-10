@@ -1,4 +1,5 @@
 import type { MatchData, MatchPlayer, NormalizedEvent } from "./model";
+import { passStatistics } from "./pass-statistics";
 
 export const isGoalkeeper = (player: MatchPlayer) =>
   /^(goalkeeper|goal keeper|gk)$/i.test(player.role.trim());
@@ -15,9 +16,7 @@ export function goalkeeperStatistics(
   let secondsPlayed = 0;
   let goalsConceded = 0;
   let shotsOnTargetFaced = 0;
-  let passAttempts = 0;
-  let completedPasses = 0;
-  let knownPasses = 0;
+  const passes: NormalizedEvent[] = [];
   const saves: NormalizedEvent[] = [];
   const shotsFaced: NormalizedEvent[] = [];
   for (const event of match.events) {
@@ -53,9 +52,7 @@ export function goalkeeperStatistics(
         saves.push(event);
     }
     if (event.type === "pass" && event.playerId === player.id) {
-      passAttempts++;
-      if (event.success !== undefined) knownPasses++;
-      if (event.success === true) completedPasses++;
+      passes.push(event);
     }
   }
   if (enteredAt !== null) secondsPlayed += cutoff - enteredAt;
@@ -69,11 +66,7 @@ export function goalkeeperStatistics(
         ? shotsOnTargetFaced
         : null,
     goalsConceded: match.capabilities.lineups ? goalsConceded : null,
-    passAttempts,
-    passCompletion:
-      knownPasses && knownPasses === passAttempts
-        ? Math.round((100 * completedPasses) / knownPasses)
-        : null,
+    ...passStatistics(passes),
     secondsPlayed,
     shotsFaced,
     // Reserve keepers and partial appearances do not receive a full-match clean sheet.

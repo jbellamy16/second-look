@@ -8,6 +8,7 @@ import {
   goalkeeperStatistics,
   isGoalkeeper,
 } from "@/lib/sources/goalkeeper-statistics";
+import { passStatistics } from "@/lib/sources/pass-statistics";
 import { Goal, Pass, Substitution } from "./icons";
 import { AnimatedDetails } from "./motion";
 import {
@@ -109,6 +110,7 @@ export function MatchPeople({
       e.type !== "possession" &&
       e.type !== "substitution",
   );
+  const passing = passStatistics(contributions);
   const playerStatus = (id: string) =>
     active.some((p) => p.id === id)
       ? "On the pitch"
@@ -250,18 +252,24 @@ export function MatchPeople({
               <span>Assists</span>
             </div>
           )}
-          {(["pass", "shot", "touch"] as const).map((type) => (
+          <div>
+            <strong>{passing.passAttempts}</strong>
+            <span>Pass attempts</span>
+          </div>
+          <div>
+            <strong>
+              {passing.passCompletion === null
+                ? "—"
+                : `${passing.passCompletion}%`}
+            </strong>
+            <span>Pass completion</span>
+          </div>
+          {(["shot", "touch"] as const).map((type) => (
             <div key={type}>
               <strong>
                 {contributions.filter((e) => e.type === type).length}
               </strong>
-              <span>
-                {type === "pass"
-                  ? "Pass attempts"
-                  : type === "shot"
-                    ? "Shots"
-                    : "Touches"}
-              </span>
+              <span>{type === "shot" ? "Shots" : "Touches"}</span>
             </div>
           ))}
         </div>
