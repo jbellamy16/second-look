@@ -27,7 +27,6 @@ import {
 import {
   IconArrowsExchange,
   IconBallFootball,
-  IconBuildingStadium,
   IconEye,
   IconPlayFootball,
   IconShirtSport,
@@ -104,7 +103,6 @@ function footballIcon(Glyph: TablerIcon) {
     );
   };
 }
-export const Stadium = footballIcon(IconBuildingStadium);
 export const FootballPitch = footballIcon(IconSoccerField);
 export const PlayerShirt = footballIcon(IconShirtSport);
 export const Watch = footballIcon(IconEye);
@@ -140,6 +138,15 @@ function FootballGlyph({
 }
 // Original diagrams extend Tabler's 24px canvas and 2px rounded strokes.
 // They accompany text: nuanced actions should never rely on a glyph alone.
+export function Stadium(props: IconProps) {
+  return (
+    <FootballGlyph {...props}>
+      <ellipse cx="12" cy="9" rx="9" ry="5" />
+      <path d="M3 9v6c0 2.8 4 5 9 5s9-2.2 9-5V9" />
+      <path d="M8 8h8l2 3H6Z" />
+    </FootballGlyph>
+  );
+}
 export function Formation(props: IconProps) {
   return (
     <FootballGlyph {...props}>
