@@ -1,8 +1,8 @@
-# Second Look — submission preparation
+# Between the Lines — submission preparation
 
 ## Project pitch
 
-You saw the game. Here’s what you missed. Second Look is an AI-assisted second-screen football experience that turns a synthetic live match into clear, evidence-linked stories. Discover what is changing, replay the events behind it, and switch between a fan’s explanation and an analyst’s view—all without losing your place in the match.
+More than the score. Between the Lines is an AI-assisted second-screen football experience that turns a synthetic live match into clear, evidence-linked stories. Discover what is changing, replay the events behind it, and switch between a fan’s explanation and an analyst’s view—all without losing your place in the match.
 
 ## Technical description
 
@@ -40,14 +40,14 @@ Foundry can select and order verified context for an insight or recap. OpenAI su
 5. Select the high-ball-win insight. Compare current and previous windows. Inspect Evidence, select a recovery, then **Show me the sequence**. The replay follows that possession at 8× recorded timing and holds the final frame.
 6. Switch to Analyst mode for event IDs, measurement notes, and equal-duration comparisons.
 7. With real Foundry configured, select **Explain with Microsoft Foundry** and wait for the explicitly labeled response. Rehearse request latency; successful exact-input requests are cached.
-8. Open **Catch me up**. The recap includes score, significant observed events, the leading current pattern, and what to watch. It opens instantly with a deterministic recap; optional on-demand AI selects verified statements. Expand **How Second Look knows** to inspect evidence and actual tool activity.
+8. Open **Catch me up**. The recap includes score, significant observed events, the leading current pattern, and what to watch. It opens instantly with a deterministic recap; optional on-demand AI selects verified statements. Expand **How Between the Lines knows** to inspect evidence and actual tool activity.
 9. Optional: rewind to kickoff to show future evidence disappears, or choose the quiet scenario to show that the system does not invent a story.
 
 ## Suggested 90-second video
 
 **0–12 seconds — the value**
 
-“You saw the game. Here’s what you missed. Second Look turns football events into stories you can understand—and verify.” Show the match centre and an emerging pattern.
+“More than the score. Between the Lines turns football events into stories you can understand—and verify.” Show the match centre and an emerging pattern.
 
 **12–30 seconds — the observation**
 
@@ -67,7 +67,7 @@ Foundry can select and order verified context for an insight or recap. OpenAI su
 
 **76–90 seconds — close**
 
-“Join late. Rewind. Follow your player. Second Look stays with your moment in the match. A deeper understanding, one moment at a time.” End on the pitch and tagline.
+“Join late. Rewind. Follow your player. Between the Lines stays with your moment in the match. Football insights that go deeper. More than the score.” End on the pitch and tagline.
 
 ## Remaining submission steps
 
@@ -82,3 +82,17 @@ Foundry can select and order verified context for an insight or recap. OpenAI su
 - [ ] Submit by **October 27, 2026, 11:59 p.m. Pacific (October 28, 1:59 a.m. Central)**.
 
 Source: [official Microsoft hackathon rules](https://github.com/microsoft/insidethegamehackathon/blob/main/OFFICIAL%20RULES.md), reviewed October 9, 2026. Recheck the official submission portal before entry.
+
+## Copy for the project profile (manual update)
+
+**Project name:** Between the Lines
+
+**Tagline:** More than the score.
+
+**Short description:** Football insights that go deeper. Between the Lines turns a synthetic match into clear, evidence-backed stories. Explore what is changing, replay the actions behind an observation, and switch between Fan and Analyst views without losing your place.
+
+**Project description:** The score tells you what happened. Between the Lines helps you understand how the match is changing. It connects event-based observations to comparable time windows, pitch maps, individual actions, and sequence replays. Catch Me Up brings late arrivals back into the story; player preferences help surface relevant evidence. The demo uses fictional clubs and seeded synthetic data, with every view tied to the same match clock. Optional Microsoft Foundry and OpenAI adapters can retrieve verified evidence and select supporting statements; the server validates the response and retains deterministic explanations when AI is unavailable. No live professional feed or continuous tracking is claimed.
+
+**Technology statement:** Next.js, React, TypeScript, interactive SVG, deterministic event analysis, optional server-side Microsoft Foundry / OpenAI Responses adapters, and shared Redis controls for public AI usage. Live Foundry validation and Azure deployment are separate readiness steps; this rebrand does not verify or claim them.
+
+Use [the video title graphic](../public/brand/video-title.png), [current application screenshots](brand/REVIEW.md), and [brand guidelines](brand/README.md) for the recording and profile. The repository remains `jbellamy16/second-look`. Update Innovation Studio manually; no account changes or submission were made.

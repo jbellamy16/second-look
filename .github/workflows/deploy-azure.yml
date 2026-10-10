@@ -34,5 +34,5 @@ jobs:
         run: |
           test -n "$APP_URL"
           curl --fail --retry 8 --retry-delay 10 --retry-all-errors "$APP_URL" -o /tmp/second-look-deployed.html
-          grep -q 'Second Look' /tmp/second-look-deployed.html
+          grep -q 'Between the Lines' /tmp/second-look-deployed.html
           curl --fail --retry 3 "$APP_URL/api/insights"

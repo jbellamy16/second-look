@@ -100,17 +100,17 @@ test("explanation provenance, category preferences, and arbitrary seeking are tr
   ).toBeVisible();
   await expect(page.getByRole("status")).toContainText("Offline demo");
   await page
-    .getByRole("button", { name: "Your experience", exact: true })
+    .getByRole("button", { name: "Settings", exact: true })
     .click();
   for (const name of ["Pressure", "Chances", "Rhythm"])
     await page.getByRole("checkbox", { name }).uncheck();
   await page.getByRole("button", { name: "Save my experience" }).click();
   await expect(
-    page.getByText("Choose an insight category in Your experience."),
+    page.getByText("Choose an insight category in Settings."),
   ).toBeVisible();
   await page.reload();
   await expect(
-    page.getByText("Choose an insight category in Your experience."),
+    page.getByText("Choose an insight category in Settings."),
   ).toBeVisible();
   const timeline = page.getByRole("slider", { name: "Match timeline" });
   await timeline.focus();
@@ -165,7 +165,7 @@ test("the demo shows a pattern emerging and reset clears custom filters", async 
   ).toHaveCount(2);
   await page.getByRole("button", { name: "Pause match", exact: true }).click();
   await page
-    .getByRole("button", { name: "Your experience", exact: true })
+    .getByRole("button", { name: "Settings", exact: true })
     .click();
   for (const name of ["Pressure", "Chances", "Rhythm"])
     await page.getByRole("checkbox", { name }).uncheck();
@@ -218,7 +218,7 @@ test("every major screen fits the viewport and captures review evidence", async 
     });
   }
   for (const [label, file] of [
-    ["Your experience", "preferences"],
+    ["Settings", "preferences"],
     ["Catch me up", "recap"],
   ]) {
     await page.getByRole("button", { name: label, exact: true }).click();
@@ -253,7 +253,7 @@ test("metadata, home-screen icons and social previews reference real files", asy
   request,
 }) => {
   await page.goto("/");
-  await expect(page).toHaveTitle("Second Look | Football beyond the score");
+  await expect(page).toHaveTitle("Between the Lines | More than the score.");
   await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute(
     "content",
     "1200",

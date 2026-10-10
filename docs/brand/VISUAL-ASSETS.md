@@ -1,12 +1,12 @@
-# Second Look visual asset system
+# Between the Lines visual asset system
 
-Reviewed and implemented 9 October 2026. This extends the original brand kit; the Second Look logo is retained.
+Reviewed and implemented 9 October 2026. The football glyphs and fictional club identities are retained through the Between the Lines rebrand. The original product logo has been replaced; current brand exports are documented in [the brand guide](README.md).
 
 ## Direction and family selection
 
 Use **Lucide outline** for the interface, with seven original football glyphs built to the same geometry. Club marks are identity artwork, not a second UI icon family. A solid crest does not make an inactive control look selected.
 
-| Family evaluated                                            | Assessment for Second Look                                                                                                                                                                   | Decision                                                                              |
+| Family evaluated                                            | Assessment for Between the Lines                                                                                                                                                             | Decision                                                                              |
 | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | [Lucide](https://lucide.dev/contribute/icons/specification) | Clear 24-unit construction, rounded 2-unit strokes, strong controls and chart vocabulary. Fits the product's precise, quiet visual language. Already installed, so no extra icon dependency. | Primary family; standardize its application rather than change libraries for novelty. |
 | [Phosphor](https://github.com/phosphor-icons/core)          | Expressive family with multiple weights and filled/duotone treatments. Good alternative for a warmer editorial product. Those extra treatments are unnecessary for this interface.           | Not included.                                                                         |
@@ -83,28 +83,14 @@ The pitch uses blue circles for Harbor and coral rounded squares for Riverside. 
 
 ### All existing public brand exports
 
-The following were inspected in a browser asset sheet, including the smallest favicon at its native dimensions. They share the established original Second Look mark and remain fit for their role.
-
-| Files                                                                                       | Decision                                                                                                                              |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `brand/second-look-mark-dark.svg`                                                           | Retain original scalable symbol.                                                                                                      |
-| `brand/second-look-horizontal-dark.svg`, `brand/second-look-horizontal-light.svg`           | Retain source lockups. These contain live text; production continues to use the existing raster wordmarks for predictable typography. |
-| `brand/second-look-horizontal-dark-1600.png`, `brand/second-look-horizontal-light-1600.png` | Retain crisp raster lockups. Light variant belongs on light surfaces only.                                                            |
-| `favicon.svg`, `icon.svg`, `favicon.ico`                                                    | Retain browser-compatible brand mark variants.                                                                                        |
-| `favicon-16x16.png`, `favicon-32x32.png`, `favicon-48x48.png`                               | Retain native-size favicon exports.                                                                                                   |
-| `icon-64.png`, `icon-192.png`, `icon-256.png`, `icon-512.png`, `icon-1024.png`              | Retain application icon sizes.                                                                                                        |
-| `icon-maskable-512.png`, `apple-touch-icon.png`                                             | Retain platform exports and safe-area treatment.                                                                                      |
-| `safari-pinned-tab.svg`                                                                     | Retain monochrome mask; browser supplies its display tint.                                                                            |
-| `opengraph-image.png`, `twitter-image.png`                                                  | Retain existing branded promotional artwork; not live match data.                                                                     |
-
-Repository screenshots and the brand guidelines are documentation, not shipped interface illustrations. No new raster artwork was necessary: these new marks and symbols benefit from crisp vectors. Existing PNGs remain appropriate for platform icons, social previews and typography-stable lockups. No remote image service, image font or new icon family is loaded.
+The current product identity uses original Between the Lines vector exports. See [the complete asset inventory](asset-inventory.json) for source files, PNG sizes, icon variants, and social compositions. Navigation now uses portable outlined SVG wordmarks. Football glyphs and fictional club marks remain unchanged.
 
 ## Licenses and provenance
 
 - Lucide: [ISC, plus MIT for Feather-derived portions](https://lucide.dev/license). Both full notices from the installed package are preserved in `public/icon-licenses.txt`, distributed by the app and linked from About. Keep this file when distributing the assets. No mandatory visible attribution banner is specified by these licenses; the About credit is also provided.
 - Evaluated alternatives: Phosphor, Iconoir and Tabler publish MIT licenses in their linked official repositories. None of their assets were copied or installed.
 - Seven football glyphs and two club marks: original project-authored vector artwork in `src/components/icons.tsx` and `public/teams/`. No external source assets or additional third-party attribution.
-- Existing Second Look logo exports: retained project-authored assets described in the original brand kit. No Premier League marks, real club crests or player photos are used.
+- Between the Lines logo exports: original project-authored vector assets described in the current brand guide. No Premier League marks, real club crests or player photos are used.
 
 ## Verification
 
@@ -116,9 +102,9 @@ Visual review caught and corrected a squeezed mobile playback glyph, unreadable 
 
 Review evidence:
 
-- [Asset contact sheet](../screenshots/visual-assets-board.png)
-- [Desktop match centre](../screenshots/visual-assets-desktop.png)
-- [Mobile match centre](../screenshots/visual-assets-mobile.png)
-- [320px match centre](../screenshots/visual-assets-small-mobile.png)
+- [Current identity overview](identity-preview.png)
+- [Current desktop, tablet and mobile screenshots](REVIEW.md)
 - [Riverside player identity](../screenshots/visual-assets-player.png)
 - [Mobile player identity](../screenshots/visual-assets-mobile-player.png)
+
+The earlier asset contact sheet and AI integration screenshots in `docs/screenshots/` are retained only as historical review evidence. They must not be reused for current marketing.

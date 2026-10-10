@@ -40,7 +40,7 @@ export function useAppearance() {
           : appearance;
       document.documentElement.dataset.theme = theme;
       document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
-        meta.setAttribute("content", theme === "dark" ? "#111416" : "#f5f4f0");
+        meta.setAttribute("content", theme === "dark" ? "#0b0f14" : "#f8fafc");
       });
     };
     apply();
@@ -74,12 +74,12 @@ export function BrandImage({
           className={`${className} theme-${theme}-logo`}
           src={
             symbol
-              ? `/brand/second-look-mark-${theme}.svg`
-              : `/brand/second-look-horizontal-${theme}-1600.png`
+              ? `/brand/btl-mark-${theme}.svg`
+              : `/brand/btl-horizontal-${theme}.svg`
           }
-          width={symbol ? 172 : 1600}
-          height={symbol ? 172 : 316}
-          alt="Second Look"
+          width={symbol ? 96 : 376}
+          height={symbol ? 96 : 112}
+          alt="Between the Lines"
         />
       ))}
     </>

@@ -1,5 +1,7 @@
 # Phase 4: motion and interaction system
 
+The screenshots and recordings in this directory are historical evidence from the motion implementation before the rebrand. See [current Between the Lines screenshots](../brand/REVIEW.md) for the shipping identity. Motion behavior is preserved.
+
 ## Design and architecture
 
 The existing brand, Lucide/football glyphs, fictional club crests and player identity cards are preserved in checkpoint `7aa8a65`. Motion is an additional layer; match generation, statistics, evidence selection and AI validation are unchanged.

@@ -20,10 +20,13 @@
     "ai:check": "node scripts/check-ai-config.mjs",
     "cloudflare:build": "node scripts/build-cloudflare.mjs",
     "cloudflare:preview": "wrangler dev --ip 127.0.0.1 --port 3100",
-    "cloudflare:deploy": "npm run cloudflare:build && wrangler deploy"
+    "cloudflare:deploy": "npm run cloudflare:build && wrangler deploy",
+    "brand:build": "node scripts/generate-brand.mjs",
+    "brand:review": "node scripts/review-brand.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource/barlow-condensed": "^5.3.0",
     "@redis/client": "^6.3.0",
     "@tabler/icons-react": "^3.49.0",
     "lucide-react": "^0.577.0",
@@ -41,6 +44,7 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "fontkit": "^2.0.4",
     "prettier": "^3.9.9",
     "sharp": "^0.35.5",
     "tailwindcss": "^4.2.1",

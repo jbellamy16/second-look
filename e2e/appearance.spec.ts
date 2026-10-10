@@ -12,7 +12,7 @@ test("appearance follows the system, persists overrides, and resumes system chan
   await page.emulateMedia({ colorScheme: "dark" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page
-    .getByRole("button", { name: "Your experience", exact: true })
+    .getByRole("button", { name: "Settings", exact: true })
     .click();
   await expect(page.getByLabel("Appearance", { exact: true })).toHaveValue(
     "system",
@@ -22,7 +22,7 @@ test("appearance follows the system, persists overrides, and resumes system chan
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page
-    .getByRole("button", { name: "Your experience", exact: true })
+    .getByRole("button", { name: "Settings", exact: true })
     .click();
   await expect(page.getByLabel("Appearance", { exact: true })).toHaveValue(
     "light",
@@ -36,7 +36,7 @@ test("appearance follows the system, persists overrides, and resumes system chan
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(
     page.locator('meta[name="theme-color"]').first(),
-  ).toHaveAttribute("content", "#111416");
+  ).toHaveAttribute("content", "#0b0f14");
   expect(errors).toEqual([]);
 });
 
@@ -55,7 +55,7 @@ test("appearance remains usable when browser storage is unavailable", async ({
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page
-    .getByRole("button", { name: "Your experience", exact: true })
+    .getByRole("button", { name: "Settings", exact: true })
     .click();
   await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");

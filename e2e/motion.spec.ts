@@ -182,7 +182,7 @@ test("320px touch controls, dialog focus trap and motion remain accessible", asy
   ).toEqual([]);
   await page.keyboard.press("Escape");
   await page
-    .getByRole("button", { name: "Your experience", exact: true })
+    .getByRole("button", { name: "Settings", exact: true })
     .click();
   await expect(page.getByRole("dialog")).toHaveAttribute(
     "aria-label",

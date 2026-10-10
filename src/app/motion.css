@@ -87,7 +87,7 @@ button:disabled {
   background: none;
   box-shadow: none;
   border-radius: 0;
-  border-bottom: 2px solid var(--sl-text);
+  border-bottom: 2px solid var(--sl-green);
 }
 .detail-tabs button.selected::after {
   content: none;

@@ -470,7 +470,7 @@ export function MatchApp() {
   return (
     <div className="app-shell" inert={!ready} aria-busy={!ready}>
       <aside className="sidebar">
-        <a href="/" className="brand" aria-label="Second Look home">
+        <a href="/" className="brand" aria-label="Between the Lines home">
           <BrandImage className="brand-wordmark" />
           <BrandImage className="brand-symbol" symbol />
         </a>
@@ -497,25 +497,23 @@ export function MatchApp() {
           ))}
         </SelectionGroup>
         <div className="sidebar-bottom">
-          <div className="demo-card">
-            <span className="tiny-label">SYNTHETIC MATCH</span>
-            <button onClick={() => setModal("about")}>
-              About this demo <ArrowUpRight size={16} />
-            </button>
-          </div>
           <button
             className="nav-item"
-            aria-label="Your experience"
+            aria-label="Settings"
             onClick={() => setModal("settings")}
           >
             <Settings2 size={20} />
-            Your experience
+            Settings
           </button>
         </div>
       </aside>
       <div className="workspace">
         <header className="topbar">
-          <a className="mobile-brand" href="/" aria-label="Second Look home">
+          <a
+            className="mobile-brand"
+            href="/"
+            aria-label="Between the Lines home"
+          >
             <BrandImage />
           </a>
           <div className="breadcrumb">
@@ -531,7 +529,7 @@ export function MatchApp() {
             </span>
             <button
               className="icon-button mobile-settings"
-              aria-label="Your experience"
+              aria-label="Settings"
               onClick={() => setModal("settings")}
             >
               <Settings2 size={20} />
@@ -539,7 +537,7 @@ export function MatchApp() {
             <button
               className="help-button"
               onClick={() => setModal("about")}
-              aria-label="About Second Look"
+              aria-label="About Between the Lines"
             >
               <CircleHelp size={20} />
             </button>
@@ -572,7 +570,7 @@ export function MatchApp() {
           <section className="scoreboard" aria-label="Match scoreboard">
             <div className="competition">
               <div>
-                <strong>Second Look Invitational</strong>
+                <strong>Between the Lines Invitational</strong>
                 <span>Matchday 12, synthetic fixture</span>
               </div>
             </div>
@@ -920,7 +918,7 @@ export function MatchApp() {
                           <strong>Let the game tell its story.</strong>
                           <p>
                             {prefs.categories.length === 0
-                              ? "Choose an insight category in Your experience."
+                              ? "Choose an insight category in Settings."
                               : "No strong change yet. We only surface patterns when the evidence is there."}
                           </p>
                         </div>
@@ -1219,7 +1217,7 @@ export function MatchApp() {
                   </>
                 ) : (
                   <div className="detail-empty">
-                    <FootballPitch size={32} />
+                    <BrandImage className="empty-brand" symbol />
                     <h3>A little patience. A better insight.</h3>
                     <p>
                       We’re looking for meaningful changes in the event stream.
@@ -1546,7 +1544,7 @@ export function MatchApp() {
             ? "Catch me up"
             : dialogContent === "settings"
               ? "Your experience"
-              : "About Second Look"
+              : "About Between the Lines"
         }
         className={`modal ${dialogContent === "recap" ? "recap-modal" : ""}`}
         onKeyDown={(e) => {
@@ -1589,7 +1587,7 @@ export function MatchApp() {
               ? "MAKE IT YOUR MATCH"
               : dialogContent === "recap"
                 ? "BACK IN THE GAME"
-                : "BEHIND SECOND LOOK"}
+                : "BEHIND BETWEEN THE LINES"}
           </span>
           <button
             className="icon-button"
@@ -1805,18 +1803,20 @@ export function MatchApp() {
             <button className="primary-button" onClick={() => setModal(null)}>
               Save my experience <Check size={16} />
             </button>
+            <button
+              className="text-button about-settings"
+              onClick={() => setModal("about")}
+            >
+              About Between the Lines <ArrowUpRight size={16} />
+            </button>
           </>
         ) : (
           <>
-            <h2>
-              You saw the game.
-              <br />
-              Here’s what you missed.
-            </h2>
+            <h2 className="brand-headline">More than the score.</h2>
             <p className="recap-summary">
-              Second Look turns football events into stories you can inspect.
-              Follow a pattern, see the evidence on the pitch, and understand
-              why it might matter.
+              Football insights that go deeper. Between the Lines turns football
+              events into stories you can inspect. Follow a pattern, see the
+              evidence on the pitch, and understand why it might matter.
             </p>
             <div className="about-stages">
               {[
@@ -1855,7 +1855,7 @@ export function MatchApp() {
             </p>
             <p className="limitations">
               Icons by Tabler and Lucide. Club marks and additional football
-              diagrams created for Second Look.{" "}
+              diagrams created for Between the Lines.{" "}
               <a
                 className="asset-license-link"
                 href="/icon-licenses.txt"

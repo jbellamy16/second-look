@@ -1,3 +1,7 @@
+# Current brand verification
+
+See [Between the Lines review](brand/REVIEW.md) for the rebrand, both appearance modes, six viewport sizes, and current screenshots. The AI screenshots below are historical evidence of the earlier integration; they are not current brand references or proof of a new live provider call.
+
 # Cloudflare preparation — October 9, 2026
 
 - OpenNext builds the existing Next.js 16.4 application in an isolated source copy; environment files are absent and the embedded environment map is verified empty.
@@ -37,7 +41,7 @@ The implementation and Phase 2 records below describe their earlier verification
 - 100 local unit/evaluation tests pass; the real Redis integration test is reserved for CI or a supplied disposable `REDIS_TEST_URL`.
 - The evaluation report contains 180 mocked cases across scenarios, seeds, timestamps, modes and providers. No live model-quality claim is made.
 - 30 production browser journeys pass across desktop, iPhone-sized and Android-sized Chromium. Includes expanded evidence accessibility, actual provider labels, on-demand requests and stale-result removal.
-- “How Second Look knows” remains inside the existing insight card and recap. The scrollable evidence region is keyboard focusable and passes the included axe checks.
+- “How Between the Lines knows” remains inside the existing insight card and recap. The scrollable evidence region is keyboard focusable and passes the included axe checks.
 - Reviewed the generated screenshots: [desktop evidence](screenshots/ai-desktop-evidence.png), [mobile recap](screenshots/ai-mobile-recap.png), [mobile evidence](screenshots/ai-mobile-evidence.png).
 - Zero live model requests and $0 actual inference cost for this implementation. Human semantic review and authorized live evaluation remain pending; see [the evaluation protocol](AI-EVALUATION.md).
 - No public deployment, API enablement or paid resource creation.

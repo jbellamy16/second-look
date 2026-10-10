@@ -22,7 +22,7 @@ export function ProvenanceDetails({
   );
   return (
     <details className="provenance">
-      <summary>How Second Look knows</summary>
+      <summary>How Between the Lines knows</summary>
       <div
         className="provenance-content"
         tabIndex={0}
@@ -36,7 +36,7 @@ export function ProvenanceDetails({
           Through {clock(provenance.cutoff)}
           {provenance.cached ? ". Reused a validated response" : ""}.{" "}
           {provenance.provider !== "offline"
-            ? "AI chose supporting observations; Second Look supplied required match context."
+            ? "AI chose supporting observations; Between the Lines supplied required match context."
             : "Computed directly from recorded events."}
         </p>
         <h4>Detected observations</h4>
