@@ -18,8 +18,8 @@ Watching football and understanding how a match is changing are different things
 - An interactive SVG pitch: actual event positions, numbered possession sequences, pass/shot endpoints, and progressive sequence replay. No invented tracking.
 - Event-derived score, attempts, shots on target, pass completion, high ball wins, and synthetic chance probabilities.
 - Pattern detection for attacking-third ball wins, shot frequency, and passing activity, with equal 15-minute comparison windows and supporting event IDs.
-- Fan mode, analyst mode, timestamp-safe Catch Me Up, lineups, and player action maps.
-- Device-local team, player, mode, and insight category preferences that filter and reorder observations.
+- Consistent detailed analysis, timestamp-safe Catch Me Up, lineups, and player action maps.
+- Device-local team, player, and insight category preferences that filter and reorder observations.
 - Server-side OpenAI (GPT-5.4 Mini) and Microsoft Foundry Responses API adapters with shared forced evidence retrieval, structured selection, validation, and honest provider attribution. **Both have offline contract tests. Foundry director investigations and both recap modes passed bounded live checks; see [the latest editorial/model comparison](docs/EDITORIAL-MODEL-COMPARISON.md). Human editorial review remains pending, and public inference is disabled.**
 - Optional AI Catch Me Up, contextual insight narration, and expandable “How Between the Lines knows” evidence.
 - Shared Redis quotas, cache, and deduplication; inference remains off by default.
