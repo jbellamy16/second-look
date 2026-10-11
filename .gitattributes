@@ -1,3 +1,6 @@
+# Preserve the licensed mapping files byte-for-byte, including source CRLF.
+data/historical/*.csv -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
 # Keep the narrative reports, rubric, harness and tests prominent in PR review.
 # Full sanitized machine receipts remain tracked and can be expanded/downloaded.
 docs/intelligence/pr18-intelligence-2026-10-10/cases.json linguist-generated=true
